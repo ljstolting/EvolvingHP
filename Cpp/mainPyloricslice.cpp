@@ -1,5 +1,5 @@
 // --------------------------------------------------------------
-//  Evaluate Pyloric fitness
+//  Evaluate Pyloric fitness at many parameter values on a grid 
 // --------------------------------------------------------------
 #include "TSearch.h"
 #include "CTRNN.h"
@@ -17,96 +17,43 @@ const int RunSteps = RunDuration/StepSize; // in steps
 const double burstthreshold = .5; //threshold that must be crossed for detecting bursts
 const double tolerance = .01; //for detecting double periodicity
 
-// Parameter variability modality only
-//const int Repetitions = 10; 
-//const int AnalysisReps = 100;
+// Parameter space resolution
+const double par1min = 0.0;
+const double par1max = 5.0;
+const double par1step = .01;
+const double par2min = -9;
+const double par2max = 0;
+const double par2step = .01;
 
 // Nervous system params
 const int N = 3;
-const double WR = 16.0; 
-const double BR = 16.0; //(WR*N)/2; //<-for allowing center crossing
-const double TMIN = 1; 
-const double TMAX = 2; 
+// const double WR = 16.0; 
+// const double BR = 16.0; //(WR*N)/2; //<-for allowing center crossing
+// const double TMIN = 1; 
+// const double TMAX = 2; 
 
 // Plasticity parameters
-const int WS = 120;		// Window Size of Plastic Rule (in steps size) (so 1 is no window)
-const double B = 0.1; 		// Plasticity Low Boundary (symmetric)
-const double BT = 20.0;		// Bias Time Constant
-const double WT = 40.0;		// Weight Time Constant
+// const int WS = 120;		// Window Size of Plastic Rule (in steps size) (so 1 is no window)
+// const double B = 0.1; 		// Plasticity Low Boundary (symmetric)
+// const double BT = 20.0;		// Bias Time Constant
+// const double WT = 40.0;		// Weight Time Constant
 
 int	VectSize = N*N + 2*N;
 
 // ------------------------------------
-// Genotype-Phenotype Mapping Functions
-// ------------------------------------
-void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
-{
-	int k = 1;
-	// Time-constants
-	for (int i = 1; i <= N; i++) {
-		phen(k) = MapSearchParameter(gen(k), TMIN, TMAX);
-		k++;
-	}
-	// Bias
-	for (int i = 1; i <= N; i++) {
-		phen(k) = MapSearchParameter(gen(k), -BR, BR);
-		k++;
-	}
-	// Weights
-	for (int i = 1; i <= N; i++) {
-			for (int j = 1; j <= N; j++) {
-				phen(k) = MapSearchParameter(gen(k), -WR, WR);
-				k++;
-			}
-	}
-}
-
-// ------------------------------------
 // Pyloric-like Fitness function
 // ------------------------------------
-double PyloricFitnessFunction(TVector<double> &genotype, RandomState &rs)
+double PyloricFitnessFunction(CTRNN Agent)
 {
-	// Map genootype to phenotype
-	TVector<double> phenotype;
-	phenotype.SetBounds(1, VectSize);
-	GenPhenMapping(genotype, phenotype);
-
 	TMatrix<double> OutputHistory;
 	OutputHistory.SetBounds(1,RunSteps,1,N);
 	OutputHistory.FillContents(0.0);
 	// TVector<double> CumRateChange(1,N);
 	double fitness = 0.0;
-	
-	// Create the agent
-	CTRNN Agent;
-
-	// Instantiate the nervous system
-	Agent.SetCircuitSize(N,WS,0.0,BT,WT,WR,BR);
-	int k = 1;
-	// Time-constants
-	for (int i = 1; i <= N; i++) {
-		Agent.SetNeuronTimeConstant(i,phenotype(k));
-		k++;
-	}
-	// Bias
-	for (int i = 1; i <= N; i++) {
-		Agent.SetNeuronBias(i,phenotype(k));
-		k++;
-	}
-	// Weights
-	for (int i = 1; i <= N; i++) {
-			for (int j = 1; j <= N; j++) {
-				Agent.SetConnectionWeight(i,j,phenotype(k));
-				k++;
-			}
-	}
-
-	// Initialize the state at an output of 0.5 for all neurons in the circuit
-	Agent.RandomizeCircuitOutput(0.5, 0.5);
 
 	// Run the circuit for an initial transient; HP is off and fitness is not evaluated
 	for (double t = StepSize; t <= TransientDuration; t += StepSize) {
-		Agent.EulerStep(StepSize);
+		Agent.EulerStep(StepSize,false,false); //no HP
 	}
 
 	TVector<double> maxoutput(1,N);
@@ -123,11 +70,11 @@ double PyloricFitnessFunction(TVector<double> &genotype, RandomState &rs)
 			if (Agent.NeuronOutput(i) > maxoutput[i]) {maxoutput[i]=Agent.NeuronOutput(i);}
 			if (Agent.NeuronOutput(i) < minoutput[i]) {minoutput[i]=Agent.NeuronOutput(i);}
 		}
-		Agent.EulerStep(StepSize);
+		Agent.EulerStep(StepSize,false,false);
 	}
 	int criteriamet = 0;
 	for (int i = 1; i <= N; i += 1) {
-		// SHORT HAND FOR ALL NEURONS OSCILLATING APPRECIABLY
+		// SHORT HAND FOR ALL NEURONS OSCILLATING APPRECIABLY around the threshold of .5
 		if (minoutput[i] <(burstthreshold-.05)) {
 			if (maxoutput[i]>burstthreshold) {
 				fitness += 0.05;
@@ -273,6 +220,9 @@ double PyloricFitnessFunction(TVector<double> &genotype, RandomState &rs)
 			}
 		}
 	}
+	// else{
+	// 	cout << "not oscillating" << endl;
+	// }
 	return (fitness);
 
 }
@@ -282,13 +232,44 @@ double PyloricFitnessFunction(TVector<double> &genotype, RandomState &rs)
 // ------------------------------------
 int main (int argc, const char* argv[]) 
 {
-	#ifdef PRINTOFILE
-	ofstream file;
-	file.open("evol.dat");
-	cout.rdbuf(file.rdbuf());
-	#endif
+	// Create file to hold data
+	ofstream slicefile;
+	slicefile.open("slice.dat");
+
+	// Load the base CTRNN parameters (no HP)
+	TVector<int> nullwindowsize(1,N);
+    nullwindowsize.FillContents(1);
+    TVector<double> nulllb(1,N);
+    nulllb.FillContents(0);
+    TVector<double> nullub(1,N);
+    nullub.FillContents(1);
+    TVector<double> nullbt(1,N);
+    nullbt.FillContents(1);
+    TMatrix<double> nullwt(1,N,1,N);
+    nullwt.FillContents(1);
 	
+    CTRNN Circuit(3, nullwindowsize, nulllb, nullub, nullbt, nullwt, 16, 16);
+    char fname[] = "Pete.ns";
+    ifstream ifs;
+    ifs.open(fname);
+    if (!ifs) {
+        cerr << "File not found: " << fname << endl;
+        exit(EXIT_FAILURE);
+    }
+    ifs >> Circuit; 
+	
+	// For every pair of parameter values specified, (right now, par1=theta1, par2=theta2)
+	for (double par1=par1min; par1<=par1max; par1+=par1step){
+		Circuit.SetNeuronBias(1,par1);
+		for (double par2=par2min; par2<=par2max; par2+=par2step){
+			Circuit.SetNeuronBias(3,par2);
+			Circuit.RandomizeCircuitState(0,0);
+			double fitness = PyloricFitnessFunction(Circuit); // Calculate pyloric fitness
+			slicefile << fitness << " "; //store in the file
+		}
+		slicefile << endl;
+	}
 		
-	
+	slicefile.close();
   return 0;
 }

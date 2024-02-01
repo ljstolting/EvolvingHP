@@ -45,6 +45,7 @@ public:
 	// Vector i/o
 	void BinaryWriteVector(ofstream& bofs);
 	void BinaryReadVector(ifstream& binfs);
+	EltType Max(void);
 	// Overloaded operators
 	EltType &operator[](int index)
 	{
@@ -141,6 +142,18 @@ void TVector<EltType>::FillContents(EltType value)
 		Vector[i] = value;
 }
 
+// Return the maximum value of a vector
+// Added by Lindsay Stolting
+template<class EltType>
+EltType TVector<EltType>::Max(void){
+	EltType f = Vector[lb];
+	for (int i = lb+1; i <= ub; i++){
+		if (Vector[i] > f){
+			f = Vector[i];
+		}
+	}
+	return f;
+}
 
 // Push an element to the front
 // The whole lists shifts and the last element is dropped

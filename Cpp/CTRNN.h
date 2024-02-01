@@ -55,13 +55,13 @@ inline double InverseSigmoid(double y)
 class CTRNN {
     public:
         // The constructor
-        CTRNN(int newsize = 0, int newwindowsize = 1, double b=0.0, double bt=20.0, double wt=40.0, double wr=16.0, double br=16.0);
+        CTRNN(int newsize, TVector<int> newwindowsize, TVector<double> lb, TVector<double> ub, TVector<double> bt, TMatrix<double> wt, double wr, double br);
         // The destructor
         ~CTRNN();
 
         // Accessors
         int CircuitSize(void) {return size;};
-        void SetCircuitSize(int newsize, int newwindowsize, double b, double bt, double wt,double newwr, double newbr);
+        void SetCircuitSize(int newsize, TVector<int> windowsize, TVector<double> lb,TVector<double> ub, TVector<double> bt, TMatrix<double> wt,double newwr, double newbr);
         double NeuronState(int i) {return states[i];};
         double &NeuronStateReference(int i) {return states[i];};
         void SetNeuronState(int i, double value)
@@ -84,12 +84,16 @@ class CTRNN {
         // -- NEW
         double NeuronRho(int i) {return rhos[i];};
         void SetNeuronRho(int i, double value) {rhos[i] = value;};
-        double PlasticityBoundary(int i) {return boundary[i];};
-        void SetPlasticityBoundary(int i, double value) {boundary[i] = value;};
+        double PlasticityLB(int i) {return l_boundary[i];};
+        void SetPlasticityLB(int i, double value) {l_boundary[i] = value;};
+        double PlasticityUB(int i) {return u_boundary[i];};
+        void SetPlasticityUB(int i, double value) {u_boundary[i] = value;};
         double NeuronBiasTimeConstant(int i) {return tausBiases[i];};
         void SetNeuronBiasTimeConstant(int i, double value) {tausBiases[i] = value; RtausBiases[i] = 1/value;};
         double ConnectionWeightTimeConstant(int from, int to) {return tausWeights[from][to];};
         void SetConnectionWeightTimeConstant(int from, int to, double value) {tausWeights[from][to] = value; RtausWeights[from][to] = 1/value;};
+        int SlidingWindow(int i) {return windowsize[i];};
+        void SetSlidingWindow(int i, int windsize) {windowsize[i]=windsize;};
         // --
         void LesionNeuron(int n)
         {
@@ -109,14 +113,15 @@ class CTRNN {
         void RandomizeCircuitState(double lb, double ub, RandomState &rs);
         void RandomizeCircuitOutput(double lb, double ub);
         void RandomizeCircuitOutput(double lb, double ub, RandomState &rs);
-        void EulerStep(double stepsize);
+        void EulerStep(double stepsize, bool adaptbiases, bool adaptweights);
         void RK4Step(double stepsize);
 
         int size;
-        int windowsize; // NEW for AVERAGING
+        TVector<int> windowsize; // NEW for AVERAGING
         double wr, br; // NEWER for CAPPING
+        int max_windowsize;
         TVector<double> states, outputs, biases, gains, taus, Rtaus, externalinputs;
-        TVector<double> rhos, tausBiases, RtausBiases, boundary; // NEW
+        TVector<double> rhos, tausBiases, RtausBiases, l_boundary, u_boundary; // NEW
         TVector<double> avgoutputs; // NEW for AVERAGING
         TMatrix<double> weights;
         TMatrix<double> tausWeights, RtausWeights; // NEW

@@ -1,5 +1,7 @@
 // --------------------------------------------------------------
 //  Evolve a Pyloric-like CTRNN around which to center the slices
+//  Current version does not seem quite right... must have been successful
+//  at some point to create savinggoodgenomes file
 // --------------------------------------------------------------
 #include "TSearch.h"
 #include "CTRNN.h"
@@ -8,19 +10,19 @@
 //#define PRINTOFILE
 
 // Task params
-const double TransientDuration = 400; //in seconds
-const double RunDuration = 200; //in seconds
+const double TransientDuration = 500; //in seconds
+const double RunDuration = 250; //in seconds
 const double StepSize = 0.01;
 const int RunSteps = RunDuration/StepSize; // in steps
 
 // Detection params
 const double burstthreshold = .5; //threshold that must be crossed for detecting bursts
-const double tolerance = .01; //for detecting double periodicity
+const double tolerance = .05; //for detecting double periodicity
 
 // EA params
 const int POPSIZE = 50;
-const int GENS = 200;
-const int trials = 1000;    // number of times to run the EA from random starting pop
+const int GENS = 500;
+const int trials = 10;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
 const double EXPECTED = 1.1;
@@ -34,7 +36,7 @@ const double ELITISM = 0.1;
 const int N = 3;
 const double WR = 16.0; 
 const double BR = 16.0; //(WR*N)/2; //<-for allowing center crossing
-const double TMIN = 1; 
+const double TMIN = .1; 
 const double TMAX = 2; 
 
 // Plasticity parameters
@@ -115,7 +117,7 @@ double PyloricFitnessFunction(TVector<double> &genotype, RandomState &rs)
 
 	// Run the circuit for an initial transient; HP is off and fitness is not evaluated
 	for (double t = StepSize; t <= TransientDuration; t += StepSize) {
-		Agent.EulerStep(StepSize);
+		Agent.EulerStep(StepSize,false,false);
 	}
 
 	TVector<double> maxoutput(1,N);
@@ -132,14 +134,14 @@ double PyloricFitnessFunction(TVector<double> &genotype, RandomState &rs)
 			if (Agent.NeuronOutput(i) > maxoutput[i]) {maxoutput[i]=Agent.NeuronOutput(i);}
 			if (Agent.NeuronOutput(i) < minoutput[i]) {minoutput[i]=Agent.NeuronOutput(i);}
 		}
-		Agent.EulerStep(StepSize);
+		Agent.EulerStep(StepSize,false,false);
 	}
 	int criteriamet = 0;
 	for (int i = 1; i <= N; i += 1) {
 		// SHORT HAND FOR ALL NEURONS OSCILLATING APPRECIABLY
 		if (minoutput[i] <(burstthreshold-.05)) {
 			if (maxoutput[i]>burstthreshold) {
-				fitness += 0.05;
+				// fitness += 0.05;
 				criteriamet += 1;
 			}
 		}

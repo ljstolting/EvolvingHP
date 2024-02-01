@@ -1,15 +1,7 @@
-################################################################################
-# CTRNN class in python, templated by Eduardo Izquierdo, adapted to include HP
-#
-# Also contains functionality for performing discrete perturbations in random 
-# direction or direction orthogonal to limit cycle
-#
-# Future to do: option to prevent HP from exceeding given parameter boundaries
-################################################################################
-
-
 import numpy as np
 import matplotlib.pyplot as plt
+
+########could someday add option to cut HP off at the designated boundaries or not###############
 
 def sigmoid(x):
     return 1/(1+np.exp(-x))
