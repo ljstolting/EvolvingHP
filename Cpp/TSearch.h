@@ -3,8 +3,8 @@
 // *****************************
 
 // Uncomment the following line to enable multithreading
-#define THREADED_SEARCH
-#define THREAD_COUNT 16
+// #define THREADED_SEARCH
+// #define THREAD_COUNT 16
 
 
 #pragma once
@@ -112,7 +112,7 @@ class TSearch {
 			{EvaluationFunction = EvalFn;};
 		void SetBestActionFunction(void (*BestFn)(int Generation,TVector<double> &v))
 			{BestActionFunction = BestFn;};
-		void SetPopulationStatisticsDisplayFunction(void (*DisplayFn)(int Generation,double BestPerf,double AvgPerf,double PerfVar))
+		void SetPopulationStatisticsDisplayFunction(void (*DisplayFn)(TSearch &s))
 			{PopulationStatisticsDisplayFunction = DisplayFn;};
 		void SetSearchTerminationFunction(int (*TerminationFn)(int Generation,double BestPerf,double AvgPerf,double PerfVar))
 			{SearchTerminationFunction = TerminationFn;};
@@ -126,6 +126,7 @@ class TSearch {
 		double BestPerformance (void) {return BestPerf;};
 		TVector<double> &BestIndividual(void) {return bestVector;};
 		double AvgPerformance (void) {return AvgPerf;};
+		double PerfVariance (void) {return PerfVar;};
 		// Control
 		void InitializeSearch(void);
 		void ExecuteSearch(void);
@@ -198,7 +199,7 @@ class TSearch {
 		// Function Pointers
 		double (*EvaluationFunction)(TVector<double> &v, RandomState &rs);
 		void (*BestActionFunction)(int Generation,TVector<double> &v);
-		void (*PopulationStatisticsDisplayFunction)(int Generation,double BestPerf,double AvgPerf,double PerfVar);
+		void (*PopulationStatisticsDisplayFunction)(TSearch &s);
 		int (*SearchTerminationFunction)(int Generation,double BestPerf,double AvgPerf,double PerfVar);
 		void (*SearchResultsDisplayFunction)(TSearch &s);
 };

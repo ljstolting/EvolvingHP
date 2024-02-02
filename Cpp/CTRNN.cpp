@@ -319,6 +319,67 @@ void CTRNN::SetCenterCrossing(void)
     }
 }
 
+// Define the HP mechanism based on an input file
+
+void CTRNN::SetHPGenome(istream& is){
+  // Right now, set for the condition where only theta_1 and theta_3 are under HP control
+  // Read the bias time constants
+  double btau1;
+	is >> btau1;
+  SetNeuronBiasTimeConstant(1,btau1);
+
+  double btau3;
+	is >> btau3;
+  SetNeuronBiasTimeConstant(3,btau3);
+
+  // Read the lower bounds
+  double lb1;
+  is >> lb1;
+  SetPlasticityLB(1,lb1);
+
+  double lb3;
+  is >> lb3;
+  SetPlasticityLB(3,lb3);
+
+  // Read the upper bounds
+  double ub1;
+  is >> ub1;
+  SetPlasticityUB(1,ub1);
+
+  double ub3;
+  is >> ub3;
+  SetPlasticityUB(1,ub3);
+
+  // Read the sliding windows
+  int sw1;
+  is >> sw1;
+  SetSlidingWindow(1,sw1);
+
+  int sw3;
+  is >> sw3;
+  SetSlidingWindow(3,sw3);
+
+	return;
+}
+
+void CTRNN::WriteHPGenome(ostream& os){
+  // Right now, set for the condition where only theta_1 and theta_3 are under HP control
+  os << setprecision(32);
+  // write the bias time constants
+	os << NeuronBiasTimeConstant(1) << " " << NeuronBiasTimeConstant(3) << endl << endl;
+
+  // write the lower bounds
+  os << PlasticityLB(1) << " " << PlasticityLB(3) << endl;
+
+  // write the upper bounds
+  os << PlasticityUB(1) << " " << PlasticityUB(3) << endl << endl;
+
+  // write the sliding windows
+  os << SlidingWindow(1) << " " << SlidingWindow(3);
+
+	return;
+}
+
 
 // ****************
 // Input and Output

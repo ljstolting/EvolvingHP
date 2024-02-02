@@ -103,6 +103,8 @@ class CTRNN {
             }
         }
         void SetCenterCrossing(void);
+        void SetHPGenome(istream& is);
+        void WriteHPGenome(ostream& os);
 
         // Input and output
         friend ostream& operator<<(ostream& os, CTRNN& c);

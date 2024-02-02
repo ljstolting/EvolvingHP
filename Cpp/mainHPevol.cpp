@@ -9,9 +9,9 @@
 //#define PRINTOFILE
 
 // Task params
-const double TransientDuration = 500; //seconds without HP
+const double TransientDuration = 1000; //seconds without HP
 const double PlasticDuration = 2000; //seconds allowing HP to act
-const double TestDuration = 250; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
+const double TestDuration = 500; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
 const bool HPtest = true;       //does HP remain on during test (shouldn't matter if platicity time constants are slow enough)
 const double StepSize = 0.01;
 const int TestSteps = TestDuration/StepSize; // in steps
@@ -22,7 +22,7 @@ const double tolerance = .05; //for detecting double periodicity
 
 // EA params
 const int POPSIZE = 50;
-const int GENS = 250;
+const int GENS = 100;
 const int trials = 10;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
@@ -99,28 +99,32 @@ double PyloricPerformance(CTRNN Agent)
 	// Run the circuit to calculate Pyloric fitness -- HP is either left on or turned OFF depending on specification.
 
 	// Run the circuit until you identify 3 PD starts (capping 2 full cycles), keeping track of whether each other neuron crossed the threshold or not
-	int tstep = 0;
-	double time = StepSize;
+	int tstep = 1;
 	int PDstartcount = 0;
 	TVector<int> PDstarts(1,3);
 	PDstarts.FillContents(0);
-	while (time <= TestDuration && PDstartcount < 3) {
-		tstep += 1;
+	// cout << "PDstarts initialized"<< endl;
+	while (tstep <= TestSteps && PDstartcount < 3) {
 		for (int i = 1; i <= N; i += 1) {
-			OutputHistory[tstep][i] = Agent.NeuronOutput(i);
-			if (Agent.NeuronOutput(i) > maxoutput[i]) {maxoutput[i]=Agent.NeuronOutput(i);}
-			if (Agent.NeuronOutput(i) < minoutput[i]) {minoutput[i]=Agent.NeuronOutput(i);}
+			OutputHistory(tstep,i) = Agent.NeuronOutput(i);
+			if (Agent.NeuronOutput(i) > maxoutput(i)) {maxoutput(i)=Agent.NeuronOutput(i);}
+			if (Agent.NeuronOutput(i) < minoutput(i)) {minoutput(i)=Agent.NeuronOutput(i);}
 		}
+
 		Agent.EulerStep(StepSize,HPtest,HPtest);
 
+		// cout << OutputHistory(tstep,3) << endl << endl;
+		// cout << Agent.NeuronOutput(3) << endl;
+
 		//Check for PD start
-		if (OutputHistory[tstep][3] < burstthreshold && Agent.NeuronOutput(3) > burstthreshold){
-			PDstarts[3-PDstartcount] = tstep;
+		if (OutputHistory(tstep,3) < burstthreshold && Agent.NeuronOutput(3) > burstthreshold){
 			PDstartcount += 1;
+			PDstarts[PDstartcount] = tstep;
 			//cout << "PDstarts";
 		}
+		tstep += 1;
 	}
-
+	// cout << "PD starts identified" << endl;
 	int criteriamet = 0;
 	for (int i = 1; i <= N; i += 1) {
 		// SHORT HAND FOR ALL NEURONS OSCILLATING APPRECIABLY
@@ -131,9 +135,13 @@ double PyloricPerformance(CTRNN Agent)
 			}
 		}
 	}
-		
+	if (criteriamet < 3){
+		return fitness;
+	}
+
 	if (PDstartcount < 3){
 		cout << "unable to find two full cycles; may want to increase transient, lengthen runtime, or speed up slowest timescale" << endl;
+		return fitness;
 	}
 	else{
 		int PDend = 0;
@@ -146,8 +154,8 @@ double PyloricPerformance(CTRNN Agent)
 		int PYend = 0;
 		for (int step=PDstarts(1); step<=PDstarts(2); step ++){
 			if (PDendcount == 0){
-				if (OutputHistory[step][3]>burstthreshold){
-					if (OutputHistory[step+1][3]<burstthreshold){
+				if (OutputHistory(step,3)>burstthreshold){
+					if (OutputHistory(step+1,3)<burstthreshold){
 						PDend = step;
 						PDendcount ++;
 						//cout << "PDend";
@@ -155,8 +163,8 @@ double PyloricPerformance(CTRNN Agent)
 				}
 			}
 			if (LPstartcount == 0){
-				if (OutputHistory[step][1]<burstthreshold){
-					if (OutputHistory[step+1][1]>burstthreshold){
+				if (OutputHistory(step,1)<burstthreshold){
+					if (OutputHistory(step+1,1)>burstthreshold){
 						LPstart = step;
 						LPstartcount ++;
 						//cout << "LPstart";
@@ -164,8 +172,8 @@ double PyloricPerformance(CTRNN Agent)
 				}
 			}
 			if (PYstartcount == 0){
-				if (OutputHistory[step][2]<burstthreshold){
-					if (OutputHistory[step+1][2]>burstthreshold){
+				if (OutputHistory(step,2)<burstthreshold){
+					if (OutputHistory(step+1,2)>burstthreshold){
 						PYstart = step;
 						PYstartcount ++;
 						//cout << "PYstart";
@@ -175,8 +183,8 @@ double PyloricPerformance(CTRNN Agent)
 		}
 		if (LPstartcount == 1){
 			for (int step=LPstart;step<=PDstarts(3);step++){
-				if (OutputHistory[step][1]>burstthreshold){
-					if (OutputHistory[step+1][1]<burstthreshold){
+				if (OutputHistory(step,1)>burstthreshold){
+					if (OutputHistory(step+1,1)<burstthreshold){
 						LPend = step;
 						//cout << "LPend";
 						break;
@@ -184,12 +192,12 @@ double PyloricPerformance(CTRNN Agent)
 				}
 			}
 		}
-		else{cout << "LPstart not found during cycle" << endl;}
+		else{cout << "LPstart not found during cycle" << endl; return fitness;}
 
 		if (PYstartcount == 1){
 			for (int step=PYstart;step<=PDstarts(3);step++){
-				if (OutputHistory[step][2]>burstthreshold){
-					if (OutputHistory[step+1][2]<burstthreshold){
+				if (OutputHistory(step,2)>burstthreshold){
+					if (OutputHistory(step+1,2)<burstthreshold){
 						PYend = step;
 						//cout << "PYend" << endl;
 						break;
@@ -197,51 +205,52 @@ double PyloricPerformance(CTRNN Agent)
 				}
 			}
 		}
-		else {cout << "PYstart not found during cycle" << endl;}
+		else {cout << "PYstart not found during cycle" << endl; return fitness;}
 
 
-		if (abs(OutputHistory[PDstarts[1]][1] - OutputHistory[PDstarts[2]][1])<tolerance){      //at the two points where PD crosses up,
-			if (abs(OutputHistory[PDstarts[1]][2] - OutputHistory[PDstarts[2]][2])<tolerance){  //are the other two neurons approximately in the same place?
-				// 	ORDERING CRITERIA
-				if (LPstart <= PYstart){
-					//cout << "order1" << endl;
-					fitness += 0.05;
-					criteriamet += 1;
-				}
-				if (LPend <= PYend){
-					//cout << "order2" << endl;
-					fitness += 0.05;
-					criteriamet += 1;
-				}
-				if (PDend <= LPstart){
-					//cout << "order3" << endl;
-					fitness += 0.05;
-					criteriamet += 1;
-				}
-				if (criteriamet == 6){
-					//cout << LPstart << ", " << LPend << ", " << PYstart <<", " << PYend << ", " <<PDstarts[1] << ", " <<PDend <<endl;
-					int period = PDstarts[2] - PDstarts[1];
-					double LPfoo = LPend - LPstart; 
-					double LPdutycycle = LPfoo/period; //burstduration/period
-					double LPdutycyclezscore = abs(LPdutycycle - .264)/.059;
-					double PYfoo = PYend-PYstart;
-					double PYdutycycle = PYfoo/period; //burstduration/period
-					double PYdutycyclezscore = abs(PYdutycycle - .348)/.054;
-					double PDfoo = PDend-PDstarts[1];
-					double PDdutycycle = PDfoo/period; //burstduration/period
-					double PDdutycyclezscore = abs(PDdutycycle - .385)/.040;
-					double LPbar = LPstart-PDstarts[1];
-					double LPstartphase = LPbar/period; //delay/period
-					double LPstartphasezscore = abs(LPstartphase - .533)/.054;
-					double PYbar = PYstart-PDstarts[1];
-					double PYstartphase = PYbar/period; //delay/period
-					double PYstartphasezscore = abs(PYstartphase - .758)/.060;
-					//cout << "Period:" << period << endl;
-					//cout << LPdutycyclezscore<< ", "<<PYdutycyclezscore<<", "<<PDdutycyclezscore<<", "<<LPstartphasezscore<<", "<<PYstartphasezscore<<endl;
-					double average = (LPdutycyclezscore+PYdutycyclezscore+PDdutycyclezscore+LPstartphasezscore+PYstartphasezscore)/5;
-					fitness += 1/(average);
-				}
+		if ((abs(OutputHistory(PDstarts[1],1) - OutputHistory(PDstarts[2],1))<tolerance)&&(abs(OutputHistory(PDstarts[1],2) - OutputHistory(PDstarts[2],2))<tolerance)){
+			// at the two points where PD crosses up, are the other two neurons approximately in the same place?
+			// 	ORDERING CRITERIA
+			if (LPstart <= PYstart){
+				//cout << "order1" << endl;
+				fitness += 0.05;
+				criteriamet += 1;
 			}
+			if (LPend <= PYend){
+				//cout << "order2" << endl;
+				fitness += 0.05;
+				criteriamet += 1;
+			}
+			if (PDend <= LPstart){
+				//cout << "order3" << endl;
+				fitness += 0.05;
+				criteriamet += 1;
+			}
+			if (criteriamet == 6){
+				//cout << LPstart << ", " << LPend << ", " << PYstart <<", " << PYend << ", " <<PDstarts[1] << ", " <<PDend <<endl;
+				int period = PDstarts[2] - PDstarts[1];
+				double LPfoo = LPend - LPstart; 
+				double LPdutycycle = LPfoo/period; //burstduration/period
+				double LPdutycyclezscore = abs(LPdutycycle - .264)/.059;
+				double PYfoo = PYend-PYstart;
+				double PYdutycycle = PYfoo/period; //burstduration/period
+				double PYdutycyclezscore = abs(PYdutycycle - .348)/.054;
+				double PDfoo = PDend-PDstarts[1];
+				double PDdutycycle = PDfoo/period; //burstduration/period
+				double PDdutycyclezscore = abs(PDdutycycle - .385)/.040;
+				double LPbar = LPstart-PDstarts[1];
+				double LPstartphase = LPbar/period; //delay/period
+				double LPstartphasezscore = abs(LPstartphase - .533)/.054;
+				double PYbar = PYstart-PDstarts[1];
+				double PYstartphase = PYbar/period; //delay/period
+				double PYstartphasezscore = abs(PYstartphase - .758)/.060;
+				// cout << "Period:" << period << endl;
+				// cout << LPstart << " " << LPend << " " << PYstart << " " << PYend << " " << PDstarts[1] << " " << PDend << endl;
+				// cout << LPdutycyclezscore<< ", "<<PYdutycyclezscore<<", "<<PDdutycyclezscore<<", "<<LPstartphasezscore<<", "<<PYstartphasezscore<<endl;
+				double average = (LPdutycyclezscore+PYdutycyclezscore+PDdutycyclezscore+LPstartphasezscore+PYstartphasezscore)/5;
+				fitness += 1/(average);
+			}
+			
 		}
 		else{
 			cout << "possible multi-periodicity" << endl;
@@ -271,6 +280,7 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 	TVector<double> phenotype;
 	phenotype.SetBounds(1, VectSize);
 	GenPhenMapping(genotype, phenotype);
+	// cout << phenotype << endl;
 	
 	// Create the agent
     TVector<int> nullwindowsize(1,N);
@@ -357,12 +367,6 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 ofstream Evolfile;
 ofstream BestIndividualsFile;
 
-void EvolutionaryRunDisplay(int Generation, double BestPerf, double AvgPerf, double PerfVar)
-{
-	
-	//cout << Generation << " " << BestPerf << " " << AvgPerf << " " << PerfVar << endl;
-	Evolfile << Generation << " " << BestPerf << " " << AvgPerf << " " << PerfVar << endl;
-}
 int trial = 1;
 void ResultsDisplay(TSearch &s)
 {
@@ -383,6 +387,24 @@ void ResultsDisplay(TSearch &s)
 	trial ++;
 }
 
+void EvolutionaryRunDisplay(TSearch &s)
+{
+	
+	//cout << Generation << " " << BestPerf << " " << AvgPerf << " " << PerfVar << endl;
+	Evolfile << s.Generation() << " " << s.BestPerformance() << " " << s.AvgPerformance() << " " << s.PerfVariance() << endl;
+
+	TVector<double> bestVector;
+	TVector<double> phenotype;
+	phenotype.SetBounds(1, VectSize);
+
+	// Save the genotype of the best individual
+	bestVector = s.BestIndividual();
+	GenPhenMapping(bestVector, phenotype);
+
+	Evolfile << phenotype << endl;
+}
+
+
 // ------------------------------------
 // The main program
 // ------------------------------------
@@ -393,12 +415,6 @@ int main (int argc, const char* argv[])
 	for (int i=1;i<=trials;i++){
 		long IDUM=-time(0);
 		TSearch s(VectSize);
-
-		#ifdef PRINTOFILE
-		ofstream file;
-		file.open("evol.dat");
-		cout.rdbuf(file.rdbuf());
-		#endif
 
 		// Configure the search
 		s.SetRandomSeed(IDUM);
@@ -427,6 +443,44 @@ int main (int argc, const char* argv[])
 	}
 	Evolfile.close();
 	BestIndividualsFile.close();
+
+
+	// TESTING CONDITION
+	// Load the base CTRNN parameters
+    // TVector<int> Window_Sizes(1,N);
+    // Window_Sizes.FillContents(1);
+
+    // TVector<double> Lower_Bounds(1,N);
+    // Lower_Bounds.FillContents(0);
+    // Lower_Bounds[2] = 0;
+
+    // TVector<double> Upper_Bounds(1,N);
+    // Upper_Bounds.FillContents(1);
+    // Upper_Bounds[2] = 1;
+
+    // TVector<double> Btaus(1,N);
+    // Btaus.FillContents(20);
+
+    // TMatrix<double> Wtaus(1,N,1,N);
+    // Wtaus.FillContents(40);
+
+    // // Set HP parameters
+    // CTRNN Circuit(3, Window_Sizes, Lower_Bounds, Upper_Bounds, Btaus, Wtaus, 16, 16);
+    // // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
+    // // cout << Circuit.br;
+    // char fname[] = "Pete.ns";
+    // ifstream ifs;
+    // ifs.open(fname);
+    // if (!ifs) {
+    //     cerr << "File not found: " << fname << endl;
+    //     exit(EXIT_FAILURE);
+    // }
+    // ifs >> Circuit; 
+
+	// for(double t=StepSize;t<=TransientDuration;t+=StepSize){
+	// 	Circuit.EulerStep(StepSize,true,true);
+	// }
+	// cout << PyloricPerformance(Circuit);
 
   return 0;
 }

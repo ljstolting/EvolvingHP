@@ -441,10 +441,11 @@ void TSearch::UpdatePopulationStatistics(void)
 void TSearch::DisplayPopulationStatistics(void)
 {
 	if (PopulationStatisticsDisplayFunction != NULL)
-		(*PopulationStatisticsDisplayFunction)(Gen,BestPerf,AvgPerf,PerfVar);
+		(*PopulationStatisticsDisplayFunction)(*this);
 	else {
 		cout << "Generation " << Gen << ": Best = " << BestPerf;
 		cout << ", Average = " << AvgPerf << ", Variance = " << PerfVar << endl;
+
 	}
 }
 

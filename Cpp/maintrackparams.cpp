@@ -27,22 +27,32 @@ const double BR = 100;      // Range that biases cannot exceed (make large to no
 
 int	VectSize = N*N + 2*N;
 
+//Filenames for parameter traces
+char redfname[] = "redparamtrack2.dat";
+char orangefname[] = "orangeparamtrack2.dat";
+char yellowfname[] = "yellowparamtrack2.dat";
+char greenfname[] = "greenparamtrack2.dat";
+char bluefname[] = "blueparamtrack2.dat";
+char purplefname[] = "purpleparamtrack2.dat";
+
+char HPfname[] = "HP2.gn";
+
 // Will eventually need a function to map genotype of HP into phenotype of values
 
 int main(){
     // Create files to hold data
 	ofstream redfile;
-	redfile.open("redparamtrack.dat");
+	redfile.open(redfname);
     ofstream orangefile;
-	orangefile.open("orangeparamtrack.dat");
+	orangefile.open(orangefname);
     ofstream yellowfile;
-	yellowfile.open("yellowparamtrack.dat");
+	yellowfile.open(yellowfname);
     ofstream greenfile;
-	greenfile.open("greenparamtrack.dat");
+	greenfile.open(greenfname);
     ofstream bluefile;
-	bluefile.open("blueparamtrack.dat");
+	bluefile.open(bluefname);
     ofstream purplefile;
-	purplefile.open("purpleparamtrack.dat");
+	purplefile.open(purplefname);
 
 	// Load the base CTRNN parameters
     TVector<int> Window_Sizes(1,N);
@@ -74,7 +84,14 @@ int main(){
         exit(EXIT_FAILURE);
     }
     ifs >> Circuit; 
-    // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
+    // Set the proper HP parameters 
+    ifstream HPifs;
+    HPifs.open(HPfname);
+    Circuit.SetHPGenome(HPifs);
+
+    cout << "Confirm LB1: " << Circuit.PlasticityLB(1) << endl;
+
+
     // Run the red point
     Circuit.SetNeuronBias(1,.1);
     Circuit.SetNeuronBias(3,-5);
