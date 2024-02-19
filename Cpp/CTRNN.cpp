@@ -133,6 +133,11 @@ void CTRNN::SetCircuitSize(int newsize, TVector<int> newwindowsize, TVector<doub
   outputhist.SetBounds(1,size,1,max_windowsize);
   outputhist.FillContents(-1.0);  //some number that would never be taken on by the neurons
 
+  minavg.SetBounds(1,size);
+  minavg.FillContents(1);
+  maxavg.SetBounds(1,size);
+  maxavg.FillContents(0);
+
   // NEW for CAPPING
   wr = newwr;
   br = newbr;
@@ -219,9 +224,10 @@ void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
   }
   // Update the outputs of all neurons.
   for (int i = 1; i <= size; i++)
-    outputs[i] = sigmoid(gains[i] * (states[i] + biases[i]));
+    {outputs[i] = sigmoid(gains[i] * (states[i] + biases[i]));}
 
-  if (adaptbiases || adaptweights){
+  if (adaptbiases==true || adaptweights==true)
+  {
     // cout << l_boundary << " " << u_boundary << endl;
     // Keep track of the running average of the outputs for some predetermined window of time.
     // 1. Update window
@@ -237,13 +243,15 @@ void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
     for (int i = 1; i <= size; i++){
       if(checkoutputhist(outputhist[1],windowsize[i])){
         avgoutputs[i] = 0.0;
-        for (int k = 1; k <= windowsize[i]; k++){
+        for (int k = (max_windowsize-windowsize[i])+1; k <= max_windowsize; k++){  
           avgoutputs[i] += outputhist[i][k];
         }
         avgoutputs[i] = avgoutputs[i]/windowsize[i];
-        // cout << avgoutputs[i] << endl;
+        if(avgoutputs(i)<minavg(i)){minavg(i)=avgoutputs(i);}; //diagnostic purposes
+        if(avgoutputs(i)>maxavg(i)){maxavg(i)=avgoutputs(i);};
       }
     }
+
 
     // NEW: Update rho for each neuron.
     for (int i = 1; i <= size; i++) {
@@ -269,7 +277,7 @@ void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
       // cout << l_boundary[i] << " " << u_boundary[i] << endl << endl;
     }
     // NEW: Update Biases
-    if(adaptbiases)
+    if(adaptbiases==true)
     { for (int i = 1; i <= size; i++){
         biases[i] += stepsize * RtausBiases[i] * rhos[i];
         if (biases[i] > br){
@@ -283,15 +291,22 @@ void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
       } 
     }
     // NEW: Update Weights
-    if(adaptweights)
-      {for (int i = 1; i <= size; i++) {
-        for (int j = 1; j <= size; j++){
+    if(adaptweights==true)
+    { 
+      for (int i = 1; i <= size; i++) 
+      {
+        for (int j = 1; j <= size; j++)
+        {
           weights[i][j] += stepsize * RtausWeights[i][j] * rhos[j] * fabs(weights[i][j]);
-          if (weights[i][j] > wr){
+          cout << "weight change flag" << endl;
+          if (weights[i][j] > wr)
+          {
               weights[i][j] = wr;
           }
-          else{
-              if (weights[i][j] < -wr){
+          else
+          {
+              if (weights[i][j] < -wr)
+              {
                   weights[i][j] = -wr;
               }
           }
@@ -299,6 +314,11 @@ void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
       }
     }
   }
+}
+
+void CTRNN::PrintMaxMinAvgs(void){
+  cout << "Minimum detected:" << minavg << endl;
+  cout << "Maximum detected:" << maxavg << endl;
 }
 
 
@@ -321,7 +341,7 @@ void CTRNN::SetCenterCrossing(void)
 
 // Define the HP mechanism based on an input file
 
-void CTRNN::SetHPGenome(istream& is){
+void CTRNN::SetHPPhenotype(istream& is){
   // Right now, set for the condition where only theta_1 and theta_3 are under HP control
   // Read the bias time constants
   double btau1;
@@ -348,7 +368,7 @@ void CTRNN::SetHPGenome(istream& is){
 
   double ub3;
   is >> ub3;
-  SetPlasticityUB(1,ub3);
+  SetPlasticityUB(3,ub3);
 
   // Read the sliding windows
   int sw1;
@@ -358,6 +378,14 @@ void CTRNN::SetHPGenome(istream& is){
   int sw3;
   is >> sw3;
   SetSlidingWindow(3,sw3);
+
+  max_windowsize = windowsize.Max();
+  avgoutputs.SetBounds(1,size);
+  for(int i=1;i<=size;i++){
+    avgoutputs[i] = (l_boundary[i]+u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
+  }
+  outputhist.SetBounds(1,size,1,max_windowsize);
+  outputhist.FillContents(-1.0);  //some number that would never be taken on by the neurons
 
 	return;
 }

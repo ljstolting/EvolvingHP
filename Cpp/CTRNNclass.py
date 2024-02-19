@@ -138,7 +138,7 @@ class CTRNN():
         if adapt == True:
             self.plasticFacilitationCalc()
             self.updateBiases()
-            self.updateWeights()
+            # self.updateWeights() #turned off weight update
         self.Stepnum += 1
         
     def run(self,adapt):

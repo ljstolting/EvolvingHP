@@ -28,14 +28,14 @@ const double BR = 100;      // Range that biases cannot exceed (make large to no
 int	VectSize = N*N + 2*N;
 
 //Filenames for parameter traces
-char redfname[] = "redparamtrack2.dat";
-char orangefname[] = "orangeparamtrack2.dat";
-char yellowfname[] = "yellowparamtrack2.dat";
-char greenfname[] = "greenparamtrack2.dat";
-char bluefname[] = "blueparamtrack2.dat";
-char purplefname[] = "purpleparamtrack2.dat";
+char redfname[] = "./redparamtrack2.dat";
+char orangefname[] = "./orangeparamtrack2.dat";
+char yellowfname[] = "./yellowparamtrack2.dat";
+char greenfname[] = "./greenparamtrack2.dat";
+char bluefname[] = "./blueparamtrack2.dat";
+char purplefname[] = "./purpleparamtrack2.dat";
 
-char HPfname[] = "HP2.gn";
+char HPfname[] = "./HP2.gn";
 
 // Will eventually need a function to map genotype of HP into phenotype of values
 
@@ -87,9 +87,11 @@ int main(){
     // Set the proper HP parameters 
     ifstream HPifs;
     HPifs.open(HPfname);
-    Circuit.SetHPGenome(HPifs);
+    Circuit.SetHPPhenotype(HPifs);
 
-    cout << "Confirm LB1: " << Circuit.PlasticityLB(1) << endl;
+    cout << "Confirm B1: " << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityUB(1) << endl;
+    cout << "Confirm B3: " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(3) << endl;
+    cout << "Confirm SW: " << Circuit.SlidingWindow(3) << endl;
 
 
     // Run the red point
@@ -105,6 +107,8 @@ int main(){
         Circuit.EulerStep(StepSize,1,0);
         // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
     }
+    Circuit.PrintMaxMinAvgs();
+    cout << "confirm end red" << Circuit.biases(1) << " " << Circuit.biases(3) << endl;
 
     // Run the orange point
     Circuit.SetNeuronBias(1,2.5);
@@ -117,6 +121,8 @@ int main(){
         orangefile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         Circuit.EulerStep(StepSize,1,0);
     }
+    Circuit.PrintMaxMinAvgs();
+    cout << "confirm end orange" << Circuit.biases(1) << " " << Circuit.biases(3) << endl;
     
     // Run the yellow point
     Circuit.SetNeuronBias(1,4.5);
@@ -129,6 +135,8 @@ int main(){
         yellowfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         Circuit.EulerStep(StepSize,1,0);
     }
+    Circuit.PrintMaxMinAvgs();
+    cout << "confirm end yellow" << Circuit.biases(1) << " " << Circuit.biases(3) << endl;
     
     // Run the green point
     Circuit.SetNeuronBias(1,4.5);
@@ -141,6 +149,8 @@ int main(){
         greenfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         Circuit.EulerStep(StepSize,1,0);
     }
+    Circuit.PrintMaxMinAvgs();
+    cout << "confirm end green" << Circuit.biases(1) << " " << Circuit.biases(3) << endl;
     
     // Run the blue point
     Circuit.SetNeuronBias(1,2.5);
@@ -153,6 +163,8 @@ int main(){
         bluefile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         Circuit.EulerStep(StepSize,1,0);
     }
+    Circuit.PrintMaxMinAvgs();
+    cout << "confirm end blue" << Circuit.biases(1) << " " << Circuit.biases(3) << endl;
 
     // Run the purple point
     Circuit.SetNeuronBias(1,.1);
@@ -165,6 +177,8 @@ int main(){
         purplefile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         Circuit.EulerStep(StepSize,1,0);
     }
+    Circuit.PrintMaxMinAvgs();
+    cout << "confirm end purple" << Circuit.biases(1) << " " << Circuit.biases(3) << endl;
     
     return 0;
 }

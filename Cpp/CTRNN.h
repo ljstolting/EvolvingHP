@@ -103,8 +103,9 @@ class CTRNN {
             }
         }
         void SetCenterCrossing(void);
-        void SetHPGenome(istream& is);
+        void SetHPPhenotype(istream& is);
         void WriteHPGenome(ostream& os);
+        void PrintMaxMinAvgs(void);
 
         // Input and output
         friend ostream& operator<<(ostream& os, CTRNN& c);
@@ -123,7 +124,7 @@ class CTRNN {
         double wr, br; // NEWER for CAPPING
         int max_windowsize;
         TVector<double> states, outputs, biases, gains, taus, Rtaus, externalinputs;
-        TVector<double> rhos, tausBiases, RtausBiases, l_boundary, u_boundary; // NEW
+        TVector<double> rhos, tausBiases, RtausBiases, l_boundary, u_boundary, minavg, maxavg; // NEW
         TVector<double> avgoutputs; // NEW for AVERAGING
         TMatrix<double> weights;
         TMatrix<double> tausWeights, RtausWeights; // NEW

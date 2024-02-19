@@ -12,6 +12,9 @@ int	VectSize = N*N + 2*N;
 
 int main(int argc, const char* argv[])
 {
+    ofstream testfile;
+    testfile.open("testfile.dat");
+
     TVector<int> nullwindowsize(1,N);
     nullwindowsize.FillContents(1);
     TVector<double> nulllb(1,N);
@@ -33,17 +36,30 @@ int main(int argc, const char* argv[])
         exit(EXIT_FAILURE);
     }
     ifs >> Circuit;
-    cout << Circuit.NeuronState(1) << endl;
-    cout << Circuit.NeuronBias(1) << endl;
+
+    ifstream HPin;
+    HPin.open("HP2.gn");
+
+    Circuit.SetHPPhenotype(HPin);
+
+    
+    // cout << Circuit.NeuronState(1) << endl;
+    // cout << Circuit.NeuronBias(1) << endl;
     for (double time = StepSize; time <= RunDuration; time += StepSize) {
         Circuit.EulerStep(StepSize,false,false);
+        testfile << Circuit.outputs(1) << " " << Circuit.outputs(2) << " " << Circuit.outputs(3) << endl;
     }
-    cout << Circuit.NeuronState(1) << endl;
-    cout << Circuit.NeuronBias(1) << endl;
+    // cout << Circuit.NeuronState(1) << endl;
+    // cout << Circuit.NeuronBias(1) << endl;
     for (double time = StepSize; time <= RunDuration; time += StepSize) {
-        Circuit.EulerStep(StepSize,false,false);
+        Circuit.EulerStep(StepSize,true,false);
+        testfile << Circuit.outputs(1) << " " << Circuit.outputs(2) << " " << Circuit.outputs(3) << endl;
     }
-    cout << Circuit.NeuronState(1) << endl;
-    cout << Circuit.NeuronBias(1) << endl;
+    // cout << Circuit.NeuronState(1) << endl;
+    // cout << Circuit.NeuronBias(1) << endl;
+
+    HPin.close();
+    testfile.close();
+
     return 0;
 }

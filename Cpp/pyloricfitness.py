@@ -11,25 +11,32 @@ burst_off_thresh = .45  #the "firing rate" at which the neuron is considered to 
 
 initial_states = np.array([3.,3.,3.])  #initial states of the neurons
 dt=.01
-transientdur = 500 #in seconds
+transientdur = 1000 #in seconds
 transient = int(transientdur/dt) #in timesteps
-duration = 250 #time to simulate CTRNN for in seconds
-duration = duration + transient
+plasticdur = 2000 #in seconds
+plastic = int(plasticdur/dt)
+testdur = 500 #time to simulate CTRNN for in seconds
+test = int(testdur/dt)
+duration = testdur + plasticdur + transientdur
 #----------------------------------------
 
 def run_timeseries(neurongenome,HPgenome = None,plotting=False,debugging=False):
     CTRNNsize = int(np.sqrt(1+len(neurongenome))-1)
     if np.all(HPgenome) == None:
-        #print('You have not specified an HP genome, so HP will not be used')
+        print('You have not specified an HP genome, so HP will not be used')
         HPgenome = np.ones(2*CTRNNsize+3)
-        HPgenome[0:CTRNNsize] = 0
+        HPgenome[CTRNNsize*2:CTRNNsize*3] = 0
         HP = 0
     else:
         HP = 1
     C = CTRNN(CTRNNsize,dt,duration,HPgenome,neurongenome)
-    C.initializeState(initial_states)
+    C.initializeOutput(np.array([.5,.5,.5]))
     C.resetStepcount()
-    for i in range(len(C.time)):        #run the CTRNN for the allotted duration
+    for i in range(transient):        #run the CTRNN for the allotted transient duration
+        C.ctrnnstep(0)
+    for i in range(plastic):        #run the CTRNN for the allotted plasticity duration
+        C.ctrnnstep(HP)
+    for i in range(test):        #run the CTRNN for the allotted test duration
         C.ctrnnstep(HP)
     if plotting:
         C.plot()
@@ -43,17 +50,17 @@ def calcfeatures(CTRNNrecord,debugging=False):
     PDstart3 = 0
     PDstart2 = 0
     PDstart1 = 0
-    for i in range(len(CTRNNrecord[0]))[:transient:-1]:
+    for i in range(len(CTRNNrecord[0]))[:-test:-1]:
         if CTRNNrecord[2,i] > burst_on_thresh:
             if CTRNNrecord[2,i-1] < burst_on_thresh:
                 PDstart3 = i
                 break
-    for i in range(PDstart3)[:transient:-1]:
+    for i in range(PDstart3)[:-test:-1]:
         if CTRNNrecord[2,i] > burst_on_thresh:
             if CTRNNrecord[2,i-1] < burst_on_thresh:
                 PDstart2 = i
                 break
-    for i in range(PDstart2)[:transient:-1]:
+    for i in range(PDstart2)[:-test:-1]:
         if CTRNNrecord[2,i] > burst_on_thresh:
             if CTRNNrecord[2,i-1] < burst_on_thresh:
                 PDstart1 = i
@@ -188,49 +195,52 @@ def calc_features_subsequent(CTRNNrecord,debugging=False):
     return LPstarts,LPends,PYstarts,PYends,PDstarts,PDends,periods
 
 def pyloriclike_fromfeats(LPstart,LPend,PYstart,PYend,PDstart,PDend,period,debugging=False):
-    fitness = .3
+    fitness = .15 #assume all oscillating if using this function
     if LPstart <= PYstart:
             fitness += 0.05
     if LPend <= PYend:
         fitness += 0.05
     if PDend <= LPstart:
         fitness += 0.05
-    LPdutycycle = (LPend-LPstart)/period #burstduration/period
-    LPdutycyclezscore = abs(LPdutycycle - .264)/.059
-    PYdutycycle = (PYend-PYstart)/period #burstduration/period
-    PYdutycyclezscore = abs(PYdutycycle - .348)/.054
-    PDdutycycle = (PDend-PDstart)/period #burstduration/period
-    PDdutycyclezscore = abs(PDdutycycle - .385)/.040
-    LPstartphase = (LPstart-PDstart)/period #delay/period
-    LPstartphasezscore = abs(LPstartphase - .533)/.054
-    PYstartphase = (PYstart-PDstart)/period #delay/period
-    PYstartphasezscore = abs(PYstartphase - .758)/.060
+    if fitness==.3:
+        LPdutycycle = (LPend-LPstart)/period #burstduration/period
+        LPdutycyclezscore = abs(LPdutycycle - .264)/.059
+        PYdutycycle = (PYend-PYstart)/period #burstduration/period
+        PYdutycyclezscore = abs(PYdutycycle - .348)/.054
+        PDdutycycle = (PDend-PDstart)/period #burstduration/period
+        PDdutycyclezscore = abs(PDdutycycle - .385)/.040
+        LPstartphase = (LPstart-PDstart)/period #delay/period
+        LPstartphasezscore = abs(LPstartphase - .533)/.054
+        PYstartphase = (PYstart-PDstart)/period #delay/period
+        PYstartphasezscore = abs(PYstartphase - .758)/.060
+        fitness += 1/(np.average([LPdutycyclezscore,PYdutycyclezscore,PDdutycyclezscore,LPstartphasezscore,PYstartphasezscore]))
+        
     if debugging == True:
         print('LPdutycyclezscore ',LPdutycyclezscore)
         print('PYdutycyclezscore ',PYdutycyclezscore)
         print('PDdutycyclezscore ',PDdutycyclezscore)
         print('LPstartphasezscore ',LPstartphasezscore)
         print('PYstartphasezscore ',PYstartphasezscore)
-    fitness += 1/(np.average([LPdutycyclezscore,PYdutycyclezscore,PDdutycyclezscore,LPstartphasezscore,PYstartphasezscore]))
     return fitness
 
 def pyloriclike(neurongenome,HPgenome = None,debugging=False,plotting=False):
-    '''input is CTRNN genome [weights,biases,timeconsts] and HP genome is [lbs,ubs,taub,tauw,slidingwindow].
+    '''input is CTRNN genome [weights,biases,timeconsts] and HP genome is [btau1,btau2,btau3,wtau1,wtau2,wtau3,lb1,lb2,lb3,ub1,ub2,ub3,sw1,sw2,sw3].
     Output is pyloric fitness, with .05 awarded for each oscillating neuron, .05 awarded for each met ordering
     criterion, and additional fitness awarded depending on how close statistics are to experimentally observed
     averages'''
-    ctrnn_record = run_timeseries(neurongenome,HPgenome,plotting,debugging)
+    ctrnn_record = run_timeseries(neurongenome,HPgenome=HPgenome,plotting=plotting,debugging=debugging)
     #check if first three neurons were oscillating (all the way from silent to burst) by the end of the run
     osc = np.zeros(3)
+    # print(ctrnn_record[0,-test:])
     for i in range(3):
         #print(max(C.ctrnn_record[i,transient:]),min(C.ctrnn_record[i,transient:]))
-        if max(ctrnn_record[i,transient:]) > burst_on_thresh:
-            if min(ctrnn_record[i,transient:]) < burst_on_thresh-.025:
+        if max(ctrnn_record[i,-test:]) > burst_on_thresh:
+            if min(ctrnn_record[i,-test:]) < burst_on_thresh-.025:
                 osc[i] = 1
     #print(osc)
     fitness = sum(osc)*0.05 #initialize a fitness value based on how many neurons oscillate sufficiently
     if np.all(osc):
-        LPstart,LPend,PYstart,PYend,PDstart,PDend,period = calcfeatures(ctrnn_record[:,transient:])[0:-1]
+        LPstart,LPend,PYstart,PYend,PDstart,PDend,period = calcfeatures(ctrnn_record[:,-test:])[0:-1]
         if LPstart <= PYstart:
             fitness += 0.05
         if LPend <= PYend:
@@ -258,8 +268,8 @@ def pyloriclike(neurongenome,HPgenome = None,debugging=False,plotting=False):
     return fitness
 
 HPongenome = [.25,.25,.25,.75,.75,.75,40,20,1]
-def pyloriclikewithHP(neurongenome):
-    return(pyloriclike(neurongenome,HPgenome=HPongenome))
+def pyloriclikewithHP(neurongenome,plot):
+    return(pyloriclike(neurongenome,HPgenome=HPongenome,plotting=plot))
 
 def continuous_pyloricfitness(neurongenome,HPgenome = None,specificpars=np.ones(15),debugging=False):
     '''New, continuous pyloric fitness function without discrete requirements. Simply does not award extra 
