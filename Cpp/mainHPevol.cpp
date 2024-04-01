@@ -9,9 +9,10 @@
 //#define PRINTOFILE
 
 // Task params
-const double TransientDuration = 1000; //seconds without HP
-const double PlasticDuration = 2000; //seconds allowing HP to act
-const double TestDuration = 500; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
+const double TransientDuration = 250; //seconds without HP
+const double PlasticDuration1 = 2500; //seconds allowing HP to act
+const double PlasticDuration2 = 2500; //number of seconds to wait before testing again, to make sure not relying on precise timing
+const double TestDuration = 250; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
 const bool HPtest = true;       //does HP remain on during test (shouldn't matter if platicity time constants are slow enough)
 const double StepSize = 0.01;
 const int TestSteps = TestDuration/StepSize; // in steps
@@ -28,7 +29,7 @@ const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
 const double EXPECTED = 1.1;
 const double ELITISM = 0.1;
-const double scaling_factor = 200; // what to multiply each discrete critereon by (osc and ordering) to value them more in HP evolution
+const double scaling_factor = 100; // what to multiply each discrete critereon by (osc and ordering) to value them more in HP evolution
 
 // Parameter variability modality only
 //const int Repetitions = 10; 
@@ -334,30 +335,35 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
     Agent.SetPlasticityLB(3,phenotype[4]);
     Agent.SetPlasticityUB(1,phenotype[5]);
     Agent.SetPlasticityUB(3,phenotype[6]);
-    Agent.SetSlidingWindow(1,int(phenotype[7]));
-    Agent.SetSlidingWindow(3,int(phenotype[8]));
+    Agent.SetSlidingWindow(1,int(phenotype[7]),StepSize);
+    Agent.SetSlidingWindow(3,int(phenotype[8]),StepSize);
+
+	// IT IS CRUCIAL TO FIX THE SLIDING WINDOW AVERAGING BEFORE EVALUATION
+	Agent.max_windowsize = Agent.windowsize.Max();
+	Agent.avgoutputs.SetBounds(1,Agent.size);
+	for(int i=1;i<=Agent.size;i++){
+		Agent.avgoutputs[i] = (Agent.l_boundary[i]+Agent.u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
+	}
+	Agent.outputhist.SetBounds(1,Agent.size,1,Agent.max_windowsize);
+	Agent.outputhist.FillContents(-1.0);  //some number that would never be taken on by the neurons
 	
 	//////////////////////////
 	// ifstream HP1;
-	// HP1.open("HP1.gn");
-
-	// ifstream HPnull;
-	// HPnull.open("HPnull.gn");
+	// HP1.open("./HP_SWworks/HP2.gn");
 	
 	// Agent.SetHPPhenotype(HP1);
 	// HP1.close();
-	// HPnull.close();
 	//////////////////////////
-
+	//diagnostic that determined weights were being changed
 	// cout << "parameters" << Agent.NeuronBias(1) << " " << Agent.NeuronBias(2) << " " << Agent.NeuronBias(3) << " " << Agent.ConnectionWeight(1,1) << endl;
     double fitness = 0;
     for (int i=1;i<=par1s.UpperBound();i++){
-        Agent.SetNeuronBias(1,par1s[i]);
         for (int j=1;j<=par2s.UpperBound();j++){
+			Agent.SetNeuronBias(1,par1s[i]);
             Agent.SetNeuronBias(3,par2s[j]);
 			// cout << "parameters " << Agent.NeuronBias(1) << " " << Agent.NeuronBias(2) << " " << Agent.NeuronBias(3) << " " << Agent.ConnectionWeight(1,1) << endl;
             // Initialize the outputs at 0.5 for all neurons in the circuit
-            Agent.RandomizeCircuitOutput(0.5, 0.5);
+            for (int n=1;n<=N;n++){Agent.SetNeuronState(n,0);}
 
             // Run the circuit for an initial transient; HP is off and fitness is not evaluated
             for (double t = StepSize; t <= TransientDuration; t += StepSize) {
@@ -365,19 +371,36 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
             }
 
 			// For testing purposes, run the circuit to see its initial pyloric fitness
-			// cout << Agent.NeuronBias(1) << " " << Agent.NeuronBias(3) << " " << PyloricPerformance(Agent) << " ";
+			// cout << Agent.NeuronBias(1) << " " << Agent.NeuronBias(3) << endl;
 
             // Run the circuit for a period of time with HP so the paramters can change
-            for (double t = StepSize; t<= PlasticDuration; t+= StepSize){
+            for (double t = StepSize; t<= PlasticDuration1; t+= StepSize){
                 Agent.EulerStep(StepSize,true,false);  //set to only adapt biases, not weights
             }
 
 
             // Calculate the Pyloric Fitness
 			double fit = PyloricPerformance(Agent);
+
 			// Transform it so Pyloricness at all is worth a lot
 			if (fit <= .3){fit = fit*scaling_factor;}
-			else {fit = fit+60;}
+			else {fit = fit+(.3*scaling_factor);}
+
+			// cout << fit << endl;
+			fitness += fit;
+
+			// repeat process after another duration of time to ensure solution is stable
+			for (double t = StepSize; t<= PlasticDuration2; t+= StepSize){
+                Agent.EulerStep(StepSize,true,false);  //set to only adapt biases, not weights
+            }
+
+            // Calculate the Pyloric Fitness
+			fit = PyloricPerformance(Agent);
+
+			// Transform it so Pyloricness at all is worth a lot
+			if (fit <= .3){fit = fit*scaling_factor;}
+			else {fit = fit+(.3*scaling_factor);}
+
 			// cout << fit << endl;
 			fitness += fit;
 			
@@ -386,7 +409,7 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 			// cout << fitness << endl;
         }
     }  
-    return fitness;
+    return fitness/12; //fitness averaged across all times it is taken
 }
 
 // ------------------------------------
@@ -431,6 +454,54 @@ void EvolutionaryRunDisplay(TSearch &s)
 
 	Evolfile << phenotype << endl;
 }
+
+double PointsRun(CTRNN Circuit){
+	TVector<double> par1s(1,3);
+    par1s[1] = 0.1;
+    par1s[2] = 2.5;
+    par1s[3] = 4.5;
+    TVector<double> par2s(1,2);
+    par2s[1] = -5;
+    par2s[2] = -8.1;
+
+	double perf = 0.0;
+    for (int i=1;i<=par1s.UpperBound();i++){
+        Circuit.SetNeuronBias(1,par1s[i]);
+        for (int j=1;j<=par2s.UpperBound();j++){
+            Circuit.SetNeuronBias(3,par2s[j]);
+			// cout << "Biases " << Agent.NeuronBias(1) << " " << Agent.NeuronBias(3) << endl;
+            // Initialize the states at 0 for all neurons in the circuit
+			for (int n=1;n<=N;n++){Circuit.SetNeuronState(n,0);}
+
+            // Run the circuit for an initial transient; HP is off and fitness is not evaluated
+            for (double t = StepSize; t <= TransientDuration; t += StepSize) {
+				pyloricoutput << t << " ";
+				for(int n=1;n<=N;n++){pyloricoutput << Circuit.NeuronOutput(n)<<" ";}
+				pyloricoutput<<endl;
+                Circuit.EulerStep(StepSize,false,false);
+            }
+
+			// For testing purposes, run the circuit to see its initial pyloric fitness
+			// cout << PyloricPerformance(Circuit,pyloricoutput) << " ";
+
+            // Run the circuit for a period of time with HP so the paramters can change
+            for (double t = StepSize; t<= PlasticDuration1; t+= StepSize){
+				pyloricoutput << t << " ";
+				for(int n=1;n<=N;n++){pyloricoutput << Circuit.NeuronOutput(n)<<" ";}
+				pyloricoutput<<endl;
+                Circuit.EulerStep(StepSize,true,false);
+            }
+
+
+            // Calculate the Pyloric Fitness
+            double fit = PyloricPerformance(Circuit);
+			// cout << fit << endl;
+			perf = perf + fit;
+        }
+	}
+	return perf;
+}
+
 // ------------------------------------
 // The main program
 // ------------------------------------
@@ -469,108 +540,13 @@ int main (int argc, const char* argv[])
 	// TVector<double> genotype(1, VectSize);
 	// genefile >> genotype;
 	// cout << genotype << endl;
+	// RandomState rs;
+	// cout << HPFitnessFunction(genotype,rs) << endl;
 		
 	}
 	Evolfile.close();
 	BestIndividualsFile.close();
-
-
-	// TESTING CONDITION
-	// RandomState rs;
-	// pyloricoutput.open("pylorichist.dat");
-	// double perf = HPFitnessFunction(genotype,rs);
-
-	// Manual copy of HPfitness function
-	// Load the base CTRNN parameters
-    // TVector<int> Window_Sizes(1,N);
-    // Window_Sizes.FillContents(1);
-
-    // TVector<double> Lower_Bounds(1,N);
-    // Lower_Bounds.FillContents(0);
-    // Lower_Bounds[2] = 0;
-
-    // TVector<double> Upper_Bounds(1,N);
-    // Upper_Bounds.FillContents(1);
-    // Upper_Bounds[2] = 1;
-
-    // TVector<double> Btaus(1,N);
-    // Btaus.FillContents(20);
-
-    // TMatrix<double> Wtaus(1,N,1,N);
-    // Wtaus.FillContents(40);
-
-    // // Set HP parameters
-    // CTRNN Circuit(3, Window_Sizes, Lower_Bounds, Upper_Bounds, Btaus, Wtaus, 16, 16);
-    // // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
-    // // cout << Circuit.br;
-    // char fname[] = "Pete.ns";
-    // ifstream ifs;
-    // ifs.open(fname);
-    // if (!ifs) {
-    //     cerr << "File not found: " << fname << endl;
-    //     exit(EXIT_FAILURE);
-    // }
-    // ifs >> Circuit; 
-
-	// // ifstream HP1;
-	// // HP1.open("HP1.gn");
-
-	// // ifstream HPnull;
-	// // HPnull.open("HPnull.gn");
-
-	// // Circuit.SetHPGenome(HP1);
-	// // cout << Circuit.PlasticityLB(1) << Circuit.PlasticityUB(1) << endl;
-
-	// TVector<double> par1s(1,3);
-    // par1s[1] = 0.1;
-    // par1s[2] = 2.5;
-    // par1s[3] = 4.5;
-    // TVector<double> par2s(1,2);
-    // par2s[1] = -5;
-    // par2s[2] = -8.1;
-
-	// double perf = 0.0;
-    // for (int i=1;i<=par1s.UpperBound();i++){
-    //     Circuit.SetNeuronBias(1,par1s[i]);
-    //     for (int j=1;j<=par2s.UpperBound();j++){
-    //         Circuit.SetNeuronBias(3,par2s[j]);
-	// 		// cout << "Biases " << Agent.NeuronBias(1) << " " << Agent.NeuronBias(3) << endl;
-    //         // Initialize the states at 0 for all neurons in the circuit
-	// 		for (int n=1;n<=N;n++){Circuit.SetNeuronState(n,0);}
-
-    //         // Run the circuit for an initial transient; HP is off and fitness is not evaluated
-    //         for (double t = StepSize; t <= TransientDuration; t += StepSize) {
-	// 			pyloricoutput << t << " ";
-	// 			for(int n=1;n<=N;n++){pyloricoutput << Circuit.NeuronOutput(n)<<" ";}
-	// 			pyloricoutput<<endl;
-    //             Circuit.EulerStep(StepSize,false,false);
-    //         }
-
-	// 		// For testing purposes, run the circuit to see its initial pyloric fitness
-	// 		// cout << PyloricPerformance(Circuit,pyloricoutput) << " ";
-
-    //         // Run the circuit for a period of time with HP so the paramters can change
-    //         for (double t = StepSize; t<= PlasticDuration; t+= StepSize){
-	// 			pyloricoutput << t << " ";
-	// 			for(int n=1;n<=N;n++){pyloricoutput << Circuit.NeuronOutput(n)<<" ";}
-	// 			pyloricoutput<<endl;
-    //             Circuit.EulerStep(StepSize,true,true);
-    //         }
-
-
-    //         // Calculate the Pyloric Fitness
-    //         double fit = PyloricPerformance(Circuit);
-	// 		// cout << fit << endl;
-	// 		perf = perf + fit;
-    //     }
-    // }
-	
-	// HP1.close();
-	// HPnull.close();
-	
-	// cout << endl << perf;
 	pyloricoutput.close();
-	
 
   return 0;
 }
