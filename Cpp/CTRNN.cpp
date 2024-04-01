@@ -397,7 +397,7 @@ void CTRNN::SetHPPhenotype(istream& is, double dt){
 
 void CTRNN::WriteHPGenome(ostream& os){
   // Right now, set for the condition where only theta_1 and theta_3 are under HP control
-  os << setprecision(32);
+  // os << setprecision(32);
   // write the bias time constants
 	os << NeuronBiasTimeConstant(1) << " " << NeuronBiasTimeConstant(3) << endl << endl;
 
