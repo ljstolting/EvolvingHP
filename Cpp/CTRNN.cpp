@@ -210,26 +210,9 @@ bool checkoutputhist(double array[], int size)
   return true; //all elements checked
 }
 
-// Integrate a circuit one step using Euler integration.
-
-void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
-{
-  // cout << l_boundary << " " << u_boundary << endl;
-  // Update the state of all neurons.
-  for (int i = 1; i <= size; i++) {
-    double input = externalinputs[i];
-    for (int j = 1; j <= size; j++)
-      input += weights[j][i] * outputs[j];
-    states[i] += stepsize * Rtaus[i] * (input - states[i]);
-  }
-  // Update the outputs of all neurons.
-  for (int i = 1; i <= size; i++)
-    {outputs[i] = sigmoid(gains[i] * (states[i] + biases[i]));}
-
-  if (adaptbiases==true || adaptweights==true)
-  {
-    // cout << l_boundary << " " << u_boundary << endl;
-    // Keep track of the running average of the outputs for some predetermined window of time.
+// Update the averages and rhos of a neuron
+void CTRNN::RhoCalc(void){
+  // Keep track of the running average of the outputs for some predetermined window of time.
     // 1. Update window
     for (int i = 1; i <= size; i++){
       // Slide all the values down by one (effectively deleting the oldest one, and making room for a new one)
@@ -276,6 +259,28 @@ void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
       }
       // cout << l_boundary[i] << " " << u_boundary[i] << endl << endl;
     }
+}
+
+// Integrate a circuit one step using Euler integration.
+
+void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
+{
+  // cout << l_boundary << " " << u_boundary << endl;
+  // Update the state of all neurons.
+  for (int i = 1; i <= size; i++) {
+    double input = externalinputs[i];
+    for (int j = 1; j <= size; j++)
+      input += weights[j][i] * outputs[j];
+    states[i] += stepsize * Rtaus[i] * (input - states[i]);
+  }
+  // Update the outputs of all neurons.
+  for (int i = 1; i <= size; i++)
+    {outputs[i] = sigmoid(gains[i] * (states[i] + biases[i]));}
+
+  if (adaptbiases==true || adaptweights==true)
+  {
+    // cout << l_boundary << " " << u_boundary << endl;
+    RhoCalc();
     // NEW: Update Biases
     if(adaptbiases==true)
     { for (int i = 1; i <= size; i++){
@@ -341,7 +346,7 @@ void CTRNN::SetCenterCrossing(void)
 
 // Define the HP mechanism based on an input file
 
-void CTRNN::SetHPPhenotype(istream& is){
+void CTRNN::SetHPPhenotype(istream& is, double dt){
   // Right now, set for the condition where only theta_1 and theta_3 are under HP control
   // Read the bias time constants
   double btau1;
@@ -371,13 +376,13 @@ void CTRNN::SetHPPhenotype(istream& is){
   SetPlasticityUB(3,ub3);
 
   // Read the sliding windows
-  int sw1;
+  double sw1;
   is >> sw1;
-  SetSlidingWindow(1,sw1);
+  SetSlidingWindow(1,sw1,dt);
 
-  int sw3;
+  double sw3;
   is >> sw3;
-  SetSlidingWindow(3,sw3);
+  SetSlidingWindow(3,sw3,dt);
 
   max_windowsize = windowsize.Max();
   avgoutputs.SetBounds(1,size);

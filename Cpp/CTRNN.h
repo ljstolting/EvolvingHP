@@ -93,7 +93,10 @@ class CTRNN {
         double ConnectionWeightTimeConstant(int from, int to) {return tausWeights[from][to];};
         void SetConnectionWeightTimeConstant(int from, int to, double value) {tausWeights[from][to] = value; RtausWeights[from][to] = 1/value;};
         int SlidingWindow(int i) {return windowsize[i];};
-        void SetSlidingWindow(int i, int windsize) {windowsize[i]=windsize;};
+        // Built in protections against changing step sizes -- entered SW is always time-based
+        void SetSlidingWindow(int i, double windsize, double dt) {windowsize[i]=int(1+(windsize/dt));};
+        void SetMaxavg(int i, double a) {maxavg[i] = a;};
+        void SetMinavg(int i, double a) {minavg[i] = a;};
         // --
         void LesionNeuron(int n)
         {
@@ -103,7 +106,7 @@ class CTRNN {
             }
         }
         void SetCenterCrossing(void);
-        void SetHPPhenotype(istream& is);
+        void SetHPPhenotype(istream& is, double dt);
         void WriteHPGenome(ostream& os);
         void PrintMaxMinAvgs(void);
 
@@ -116,6 +119,7 @@ class CTRNN {
         void RandomizeCircuitState(double lb, double ub, RandomState &rs);
         void RandomizeCircuitOutput(double lb, double ub);
         void RandomizeCircuitOutput(double lb, double ub, RandomState &rs);
+        void RhoCalc(void);
         void EulerStep(double stepsize, bool adaptbiases, bool adaptweights);
         void RK4Step(double stepsize);
 

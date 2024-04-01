@@ -8,8 +8,8 @@
 //#define PRINTOFILE
 
 // Task params
-const double TransientDuration = 250; //Seconds with HP off
-const double RunDuration = 1000; //Seconds with HP running
+const double TransientDuration = 1000; //Seconds with HP off
+const double PlasticDuration = 100000; //Seconds with HP running
 const double StepSize = 0.01;
 
 // Nervous system params
@@ -28,14 +28,14 @@ const double BR = 100;      // Range that biases cannot exceed (make large to no
 int	VectSize = N*N + 2*N;
 
 //Filenames for parameter traces
-char redfname[] = "./redparamtrack2.dat";
-char orangefname[] = "./orangeparamtrack2.dat";
-char yellowfname[] = "./yellowparamtrack2.dat";
-char greenfname[] = "./greenparamtrack2.dat";
-char bluefname[] = "./blueparamtrack2.dat";
-char purplefname[] = "./purpleparamtrack2.dat";
+char redfname[] = "./HP_unevolved/redparamtrack_handdesign.dat";
+char orangefname[] = "./HP_unevolved/orangeparamtrack_handdesign.dat";
+char yellowfname[] = "./HP_unevolved/yellowparamtrack_handdesign.dat";
+char greenfname[] = "./HP_unevolved/greenparamtrack_handdesign.dat";
+char bluefname[] = "./HP_unevolved/blueparamtrack_handdesign.dat";
+char purplefname[] = "./HP_unevolved/purpleparamtrack_handdesign.dat";
 
-char HPfname[] = "./HP2.gn";
+char HPfname[] = "./HP_unevolved/HPhanddesign.gn";
 
 // Will eventually need a function to map genotype of HP into phenotype of values
 
@@ -87,7 +87,7 @@ int main(){
     // Set the proper HP parameters 
     ifstream HPifs;
     HPifs.open(HPfname);
-    Circuit.SetHPPhenotype(HPifs);
+    Circuit.SetHPPhenotype(HPifs,StepSize);
 
     cout << "Confirm B1: " << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityUB(1) << endl;
     cout << "Confirm B3: " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(3) << endl;
@@ -102,7 +102,8 @@ int main(){
         Circuit.EulerStep(StepSize,0,0);
         // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
     }
-    for(double t=0;t<RunDuration;t+=StepSize){
+    // Circuit.PrintMaxMinAvgs();
+    for(double t=0;t<PlasticDuration;t+=StepSize){
         redfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         Circuit.EulerStep(StepSize,1,0);
         // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
@@ -117,7 +118,7 @@ int main(){
     for(double t=0;t<TransientDuration;t+=StepSize){
         Circuit.EulerStep(StepSize,0,0);
     }
-    for(double t=0;t<RunDuration;t+=StepSize){
+    for(double t=0;t<PlasticDuration;t+=StepSize){
         orangefile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         Circuit.EulerStep(StepSize,1,0);
     }
@@ -131,7 +132,7 @@ int main(){
     for(double t=0;t<TransientDuration;t+=StepSize){
         Circuit.EulerStep(StepSize,0,0);
     }
-    for(double t=0;t<RunDuration;t+=StepSize){
+    for(double t=0;t<PlasticDuration;t+=StepSize){
         yellowfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         Circuit.EulerStep(StepSize,1,0);
     }
@@ -145,7 +146,7 @@ int main(){
     for(double t=0;t<TransientDuration;t+=StepSize){
         Circuit.EulerStep(StepSize,0,0);
     }
-    for(double t=0;t<RunDuration;t+=StepSize){
+    for(double t=0;t<PlasticDuration;t+=StepSize){
         greenfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         Circuit.EulerStep(StepSize,1,0);
     }
@@ -159,7 +160,7 @@ int main(){
     for(double t=0;t<TransientDuration;t+=StepSize){
         Circuit.EulerStep(StepSize,0,0);
     }
-    for(double t=0;t<RunDuration;t+=StepSize){
+    for(double t=0;t<PlasticDuration;t+=StepSize){
         bluefile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         Circuit.EulerStep(StepSize,1,0);
     }
@@ -173,7 +174,7 @@ int main(){
     for(double t=0;t<TransientDuration;t+=StepSize){
         Circuit.EulerStep(StepSize,0,0);
     }
-    for(double t=0;t<RunDuration;t+=StepSize){
+    for(double t=0;t<PlasticDuration;t+=StepSize){
         purplefile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         Circuit.EulerStep(StepSize,1,0);
     }

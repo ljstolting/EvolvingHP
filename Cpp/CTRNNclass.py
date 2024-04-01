@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+transient = 1000
+
 ########could someday add option to cut HP off at the designated boundaries or not###############
 
 def sigmoid(x):
@@ -142,6 +144,9 @@ class CTRNN():
         self.Stepnum += 1
         
     def run(self,adapt):
+        for i in range(transient):
+            self.ctrnnstep(0)
+        self.Stepnum = 0;
         for i in range(len(self.time)):
             self.ctrnnstep(adapt)
 
