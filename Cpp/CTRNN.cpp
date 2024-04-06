@@ -396,8 +396,8 @@ void CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt){
   SetPlasticityLB(3,phenotype[4]);
   SetPlasticityUB(1,phenotype[5]);
   SetPlasticityUB(3,phenotype[6]);
-  SetSlidingWindow(1,int(phenotype[7]),dt);
-  SetSlidingWindow(3,int(phenotype[8]),dt);
+  SetSlidingWindow(1,phenotype[7],dt); //phenotype sliding window is time based
+  SetSlidingWindow(3,phenotype[8],dt);
 
   // IT IS CRUCIAL TO FIX THE SLIDING WINDOW AVERAGING BEFORE EVALUATION
   max_windowsize = windowsize.Max();

@@ -40,7 +40,7 @@ const double scaling_factor = 25; // boost to add to solutions that are fully py
 // const int N = 3;
 
 // Plasticity parameters
-const double SWR = 120;		// Max Window Size of Plastic Rule (in steps size) (so 1 is no window)
+const double SWR = 10;		// Max Window Size of Plastic Rule (in seconds now)
 const double LBMIN = 0;
 const double UBMIN = 0; 		// Plasticity Boundaries
 const double LBMAX = 1;
@@ -75,10 +75,9 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 		if (phen(k) < phen(k-2)){phen(k)=phen(k-2);}
 		k++;
 	}
-    // Sliding Window -- must be an integer, so round to nearest integer
+    // Sliding Window -- changed to be time-based (gets rounded to the nearest stepsize in the SetSlidingWindow function)
     for (int i = 1; i <= num; i++) {
 		phen(k) = MapSearchParameter(gen(k), 1, SWR);
-        phen(k) = round(phen(k));
 		k++;
 	}
 }

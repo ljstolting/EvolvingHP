@@ -20,7 +20,7 @@ int main(int argc, const char* argv[])
     }
     ifs >> Circuit;
 
-	char HPfname[] = "HP_SWworks/HPnew.gn";
+	char HPfname[] = "HP_unevolved/HPhanddesign.gn";
     ifstream HPin;
     HPin.open(HPfname);
 	if (!HPin) {
