@@ -6,6 +6,7 @@
 
 #include "CTRNN.h"
 #include "random.h"
+#include "VectorMatrix.h"
 #include <stdlib.h>
 
 
@@ -42,10 +43,9 @@ double fastsigmoid(double x)
 // ****************************
 
 // The constructor
-
-CTRNN::CTRNN(int newsize, TVector<int> newwindowsize, TVector<double> lb, TVector<double> ub, TVector<double> bt, TMatrix<double> wt, double wr, double br)
+CTRNN::CTRNN(int newsize)
 {
-	SetCircuitSize(newsize,newwindowsize,lb,ub,bt,wt,wr,br);
+	SetCircuitSize(newsize);
 #ifdef FAST_SIGMOID
   InitSigmoidTable();
 #endif
@@ -55,17 +55,7 @@ CTRNN::CTRNN(int newsize, TVector<int> newwindowsize, TVector<double> lb, TVecto
 
 CTRNN::~CTRNN()
 {
-  TVector<int> null_windowsize(1,size);
-  null_windowsize.FillContents(1);
-  TVector<double> null_lb(1,size);
-  null_lb.FillContents(0);
-  TVector<double> null_ub(1,size);
-  null_ub.FillContents(1);
-  TVector<double> null_bt(1,size);
-  null_bt.FillContents(1);
-  TMatrix<double> null_wt(1,size,1,size);
-  null_wt.FillContents(1);
-	SetCircuitSize(0,null_windowsize,null_lb,null_ub,null_bt,null_wt,0,0);
+	SetCircuitSize(0);
 }
 
 
@@ -75,7 +65,7 @@ CTRNN::~CTRNN()
 
 // Resize a circuit.
 
-void CTRNN::SetCircuitSize(int newsize, TVector<int> newwindowsize, TVector<double> lb, TVector<double> ub, TVector<double> bt, TMatrix<double> wt, double newwr, double newbr)
+void CTRNN::SetCircuitSize(int newsize)
 {
 	size = newsize;
 	states.SetBounds(1,size);
@@ -96,42 +86,44 @@ void CTRNN::SetCircuitSize(int newsize, TVector<int> newwindowsize, TVector<doub
 	weights.FillContents(0.0);
 	TempStates.SetBounds(1,size);
 	TempOutputs.SetBounds(1,size);
+  stepnum = 0; 
 
   // NEW
   rhos.SetBounds(1,size);
   rhos.FillContents(0.0);
   l_boundary.SetBounds(1,size);
   for(int i=1;i<=size;i++){
-    l_boundary[i] = lb[i];
+    l_boundary[i] = 0;
   }
   u_boundary.SetBounds(1,size);
   for(int i=1;i<=size;i++){
-    u_boundary[i] = ub[i];
+    u_boundary[i] = 1;
   }
   tausBiases.SetBounds(1,size);
   RtausBiases.SetBounds(1,size);
   for(int i=1;i<=size;i++){
-    tausBiases[i] = bt[i];
-    RtausBiases[i] = 1/bt[i];
+    tausBiases[i] = 1;
+    RtausBiases[i] = 1/tausBiases[i];
   }
   tausWeights.SetBounds(1,size,1,size);
   RtausWeights.SetBounds(1,size,1,size);
   for(int i=1;i<=size;i++){
     for(int j=1;j<=size;j++){
-      tausWeights[i][j] = wt[i][j];
-      RtausWeights[i][j] = 1/(wt[i][j]);
+      tausWeights[i][j] = 1;
+      RtausWeights[i][j] = 1/(tausWeights[i][j]);
     }
   }
 
   // NEW for AVERAGING
-  windowsize = newwindowsize; // just using the copy constructor here...hope it works?
+  windowsize.SetBounds(1,size);
+  windowsize.FillContents(1); 
   max_windowsize = windowsize.Max();
   avgoutputs.SetBounds(1,size);
   for(int i=1;i<=size;i++){
     avgoutputs[i] = (l_boundary[i]+u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
   }
   outputhist.SetBounds(1,size,1,max_windowsize);
-  outputhist.FillContents(-1.0);  //some number that would never be taken on by the neurons
+  outputhist.FillContents(0.0);  //fill with zeros
 
   minavg.SetBounds(1,size);
   minavg.FillContents(1);
@@ -139,8 +131,8 @@ void CTRNN::SetCircuitSize(int newsize, TVector<int> newwindowsize, TVector<doub
   maxavg.FillContents(0);
 
   // NEW for CAPPING
-  wr = newwr;
-  br = newbr;
+  wr = 16;
+  br = 16;
 }
 
 
@@ -192,45 +184,35 @@ void CTRNN::RandomizeCircuitOutput(double lb, double ub, RandomState &rs)
     SetNeuronOutput(i, rs.UniformRandom(lb, ub));
     SetNeuronState(i, (InverseSigmoid(outputs[i])/gains[i])-biases[i]);
   }
-  // Fill the window with the first value
-//  for (int i = 1; i <= size; i++)
-//    for (int k = 1; k <= windowsize; k++)
-//      outputhist[i][k] = NeuronOutput(i);
 }
+
+
 
 // Way to check if all the elements of the output array are now valid CTRNN outputs
-bool checkoutputhist(double array[], int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-      if(array[i] < 0)
-          return false; // return false at the first found
+// bool checkoutputhist(double array[], int size)
+// {
+//   for (int i = 0; i < size; i++)
+//   {
+//       if(array[i] < 0)
+//           return false; // return false at the first found
 
-  }
-  return true; //all elements checked
-}
+//   }
+//   return true; //all elements checked
+// }
 
 // Update the averages and rhos of a neuron
 void CTRNN::RhoCalc(void){
   // Keep track of the running average of the outputs for some predetermined window of time.
-    // 1. Update window
-    for (int i = 1; i <= size; i++){
-      // Slide all the values down by one (effectively deleting the oldest one, and making room for a new one)
-      for (int k = 1; k < max_windowsize; k++){
-        outputhist[i][k] = outputhist[i][k+1];
-      }
-      // Add the new one at the end (in the empty space)
-      outputhist[i][max_windowsize] = outputs[i];
-    }
+    // 1. Window should always stay updated no matter whether adapting or not (faster so not expensive)
     // 2. Take average for each neuron (unless its sliding window has not yet passed; in that case leave average in between ub and lb to turn HP off)
     for (int i = 1; i <= size; i++){
-      if(checkoutputhist(outputhist[1],windowsize[i])){
+      if(stepnum > windowsize[i]){
         avgoutputs[i] = 0.0;
-        for (int k = (max_windowsize-windowsize[i])+1; k <= max_windowsize; k++){  
+        for (int k = 1; k <= windowsize[i]; k++){  
           avgoutputs[i] += outputhist[i][k];
         }
         avgoutputs[i] = avgoutputs[i]/windowsize[i];
-        if(avgoutputs(i)<minavg(i)){minavg(i)=avgoutputs(i);}; //diagnostic purposes
+        if(avgoutputs(i)<minavg(i)){minavg(i)=avgoutputs(i);}; //calc of max and min detected values
         if(avgoutputs(i)>maxavg(i)){maxavg(i)=avgoutputs(i);};
       }
     }
@@ -265,7 +247,11 @@ void CTRNN::RhoCalc(void){
 
 void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
 {
-  // cout << l_boundary << " " << u_boundary << endl;
+  for (int i = 1; i <= size; i++){
+    // replace the appropriate oldest needed value (ordering doesn't matter so made faster)
+    outputhist[i][(stepnum%windowsize[i]+1)] = NeuronOutput(i); 
+  }
+
   // Update the state of all neurons.
   for (int i = 1; i <= size; i++) {
     double input = externalinputs[i];
@@ -319,6 +305,7 @@ void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
       }
     }
   }
+  stepnum ++ ; 
 }
 
 void CTRNN::PrintMaxMinAvgs(void){
@@ -384,15 +371,42 @@ void CTRNN::SetHPPhenotype(istream& is, double dt){
   is >> sw3;
   SetSlidingWindow(3,sw3,dt);
 
+  // IT IS CRUCIAL TO FIX THE SLIDING WINDOW AVERAGING BEFORE EVALUATION
+  // Just in case there is not a transient long enough to fill up the history before HP needs to activate
   max_windowsize = windowsize.Max();
   avgoutputs.SetBounds(1,size);
   for(int i=1;i<=size;i++){
     avgoutputs[i] = (l_boundary[i]+u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
   }
   outputhist.SetBounds(1,size,1,max_windowsize);
-  outputhist.FillContents(-1.0);  //some number that would never be taken on by the neurons
+  outputhist.FillContents(0.0);  // fill with zeros 
 
 	return;
+}
+
+void CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt){
+  //Eventually, will work like this
+  // int k = 1;
+  // for(int i=1;i<=N;i++){
+  //     Agent.SetPlasticityBoundary(i,phenotype[k]);
+  // }  //....
+  SetNeuronBiasTimeConstant(1,phenotype[1]);
+  SetNeuronBiasTimeConstant(3,phenotype[2]);
+  SetPlasticityLB(1,phenotype[3]);
+  SetPlasticityLB(3,phenotype[4]);
+  SetPlasticityUB(1,phenotype[5]);
+  SetPlasticityUB(3,phenotype[6]);
+  SetSlidingWindow(1,int(phenotype[7]),dt);
+  SetSlidingWindow(3,int(phenotype[8]),dt);
+
+  // IT IS CRUCIAL TO FIX THE SLIDING WINDOW AVERAGING BEFORE EVALUATION
+  max_windowsize = windowsize.Max();
+	avgoutputs.SetBounds(1,size);
+	for(int i=1;i<=size;i++){
+	  avgoutputs[i] = (l_boundary[i]+u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
+	}
+	outputhist.SetBounds(1,size,1,max_windowsize);
+	outputhist.FillContents(0.0);  //some number that would never be taken on by the neurons
 }
 
 void CTRNN::WriteHPGenome(ostream& os){

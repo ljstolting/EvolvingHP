@@ -10,7 +10,7 @@
 // Task params
 const double TransientDuration = 1000; //Seconds with HP off
 const double PlasticDuration = 10000; //Seconds with HP running
-const double RunDuration = 100; //How long to test for pyloricness
+const double RunDuration = 150; //How long to test for pyloricness
 const double StepSize = 0.025;
 const int RunSteps = RunDuration/StepSize;
 
@@ -42,11 +42,11 @@ const int num_ICs = 1000;
 
 //Filenames
 char Nfname[] = "Sven.ns";
-char HPfname[] = "./HP_unevolved/HPhanddesignstat.gn";
-char Fitnessesfname[] = "SvenFinalFitnesseslong.dat";
-char ICsfname[] = "SvenICslong.dat";
-char biastrackfname[] = "SvenBiasTracklong.dat";
-char statestrackfname[] = "SvenStatesTracklong.dat";
+char HPfname[] = "./HP_SWworks/HPnew.gn";
+char Fitnessesfname[] = "SvenFinalFitnessesnew.dat";
+char ICsfname[] = "SvenICsnew.dat";
+char biastrackfname[] = "SvenBiasTracknew.dat";
+char statestrackfname[] = "SvenStatesTracknew.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials

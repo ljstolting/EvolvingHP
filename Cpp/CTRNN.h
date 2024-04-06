@@ -55,13 +55,13 @@ inline double InverseSigmoid(double y)
 class CTRNN {
     public:
         // The constructor
-        CTRNN(int newsize, TVector<int> newwindowsize, TVector<double> lb, TVector<double> ub, TVector<double> bt, TMatrix<double> wt, double wr, double br);
+        CTRNN(int size);
         // The destructor
         ~CTRNN();
 
         // Accessors
         int CircuitSize(void) {return size;};
-        void SetCircuitSize(int newsize, TVector<int> windowsize, TVector<double> lb,TVector<double> ub, TVector<double> bt, TMatrix<double> wt,double newwr, double newbr);
+        void SetCircuitSize(int newsize);
         double NeuronState(int i) {return states[i];};
         double &NeuronStateReference(int i) {return states[i];};
         void SetNeuronState(int i, double value)
@@ -107,6 +107,7 @@ class CTRNN {
         }
         void SetCenterCrossing(void);
         void SetHPPhenotype(istream& is, double dt);
+        void SetHPPhenotype(TVector<double>& phenotype, double dt);
         void WriteHPGenome(ostream& os);
         void PrintMaxMinAvgs(void);
 
@@ -121,9 +122,9 @@ class CTRNN {
         void RandomizeCircuitOutput(double lb, double ub, RandomState &rs);
         void RhoCalc(void);
         void EulerStep(double stepsize, bool adaptbiases, bool adaptweights);
-        void RK4Step(double stepsize);
+        // void RK4Step(double stepsize);
 
-        int size;
+        int size, stepnum;
         TVector<int> windowsize; // NEW for AVERAGING
         double wr, br; // NEWER for CAPPING
         int max_windowsize;

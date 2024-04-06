@@ -236,19 +236,8 @@ int main (int argc, const char* argv[])
 	ofstream slicefile;
 	slicefile.open("Sven_slice.dat");
 
-	// Load the base CTRNN parameters (no HP)
-	TVector<int> nullwindowsize(1,N);
-    nullwindowsize.FillContents(1);
-    TVector<double> nulllb(1,N);
-    nulllb.FillContents(0);
-    TVector<double> nullub(1,N);
-    nullub.FillContents(1);
-    TVector<double> nullbt(1,N);
-    nullbt.FillContents(1);
-    TMatrix<double> nullwt(1,N,1,N);
-    nullwt.FillContents(1);
-	
-    CTRNN Circuit(3, nullwindowsize, nulllb, nullub, nullbt, nullwt, 16, 16);
+	// Load the base CTRNN parameters
+    CTRNN Circuit(3);
     char fname[] = "Sven.ns";
     ifstream ifs;
     ifs.open(fname);

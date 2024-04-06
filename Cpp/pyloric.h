@@ -1,0 +1,444 @@
+// ---------------------------------------------------------------
+//  Breaking out the family of pyloric fitness functions that are
+//  copied in every main file
+//
+//  Lindsay 4/6/24
+// ---------------------------------------------------------------
+
+#include "CTRNN.h"
+#include "random.h"
+#include "VectorMatrix.h"
+#include <iostream>
+
+using namespace std;
+
+// Task params
+const double TransientDuration = 500; //seconds without HP
+const double PlasticDuration1 = 5000; //seconds allowing HP to act
+const double PlasticDuration2 = 5000; //number of seconds to wait before testing again, to make sure not relying on precise timing
+const double TestDuration = 150; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
+const bool HPtest = true;       //does HP remain on during test (shouldn't matter if platicity time constants are slow enough)
+const double StepSize = 0.025;
+const int TestSteps = TestDuration/StepSize; // in steps
+
+// Detection params
+const double burstthreshold = .5; //threshold that must be crossed for detecting bursts
+const double tolerance = .1; //for detecting double periodicity
+
+double PyloricPerfwTransient(CTRNN &Agent)
+{
+	int N = Agent.CircuitSize();
+	TMatrix<double> OutputHistory;
+	OutputHistory.SetBounds(1,TestSteps,1,N);
+	OutputHistory.FillContents(0.0);
+	// TVector<double> CumRateChange(1,N);
+	double fitness = 0.0;
+
+	// Initialize the outputs at 0.5 for all neurons in the circuit
+	Agent.RandomizeCircuitOutput(0.5, 0.5);
+
+	// Run the circuit for an initial transient; HP is off and fitness is not evaluated
+	for (double t = StepSize; t <= TransientDuration; t += StepSize) {
+		Agent.EulerStep(StepSize,false,false);
+	}
+
+	TVector<double> maxoutput(1,N);
+	maxoutput.FillContents(0.0);
+	TVector<double> minoutput(1,N);
+	minoutput.FillContents(1.0);
+
+	// Run the circuit to calculate Pyloric fitness while HP is turned OFF.
+	int temp = 0;
+	for (double time = StepSize; time <= TestDuration; time += StepSize) {
+		temp += 1;
+		for (int i = 1; i <= N; i += 1) {
+			OutputHistory[temp][i] = Agent.NeuronOutput(i);
+			if (Agent.NeuronOutput(i) > maxoutput[i]) {maxoutput[i]=Agent.NeuronOutput(i);}
+			if (Agent.NeuronOutput(i) < minoutput[i]) {minoutput[i]=Agent.NeuronOutput(i);}
+		}
+		Agent.EulerStep(StepSize,false,false);
+	}
+	int criteriamet = 0;
+	for (int i = 1; i <= N; i += 1) {
+		// SHORT HAND FOR ALL NEURONS OSCILLATING APPRECIABLY
+		if (minoutput[i] <(burstthreshold-.05)) {
+			if (maxoutput[i]>burstthreshold) {
+				fitness += 0.05;
+				criteriamet += 1;
+			}
+		}
+	}
+	
+	if (criteriamet == 3){
+		int PDstartcount = 0;
+		TVector<int> PDstarts(1,3);
+		PDstarts.FillContents(0);
+		//LOCATE SECOND TO LAST FULL CYCLE of PD
+		for (int step = TestSteps; step >= 2; step --) {
+			if (PDstartcount < 3){
+				if (OutputHistory[step][3] > burstthreshold){
+					if (OutputHistory[step-1][3] < burstthreshold){
+						PDstarts[3-PDstartcount] = step;
+						PDstartcount += 1;
+						//cout << "PDstarts";
+					}
+				}
+			}
+			else{
+				break;
+			}
+		}
+		if (PDstartcount < 3){
+			cout << "unable to find two full cycles; may want to increase transient, lengthen runtime, or speed up slowest timescale" << endl;
+		}
+		else{
+			int PDend = 0;
+			int PDendcount = 0;
+			int LPstart = 0;
+			int LPstartcount = 0;
+			int LPend = 0;
+			int PYstart = 0;
+			int PYstartcount = 0;
+			int PYend = 0;
+			for (int step=PDstarts(1); step<=PDstarts(2); step ++){
+				if (PDendcount == 0){
+					if (OutputHistory[step][3]>burstthreshold){
+						if (OutputHistory[step+1][3]<burstthreshold){
+							PDend = step;
+							PDendcount ++;
+							//cout << "PDend";
+						}
+					}
+				}
+				if (LPstartcount == 0){
+					if (OutputHistory[step][1]<burstthreshold){
+						if (OutputHistory[step+1][1]>burstthreshold){
+							LPstart = step;
+							LPstartcount ++;
+							//cout << "LPstart";
+						}
+					}
+				}
+				if (PYstartcount == 0){
+					if (OutputHistory[step][2]<burstthreshold){
+						if (OutputHistory[step+1][2]>burstthreshold){
+							PYstart = step;
+							PYstartcount ++;
+							//cout << "PYstart";
+						}
+					}
+				}
+			}
+			if (LPstartcount == 1){
+				for (int step=LPstart;step<=PDstarts(3);step++){
+					if (OutputHistory[step][1]>burstthreshold){
+						if (OutputHistory[step+1][1]<burstthreshold){
+							LPend = step;
+							//cout << "LPend";
+							break;
+						}
+					}
+				}
+			}
+			else{cout << "LPstart not found during cycle" << endl;}
+
+			if (PYstartcount == 1){
+				for (int step=PYstart;step<=PDstarts(3);step++){
+					if (OutputHistory[step][2]>burstthreshold){
+						if (OutputHistory[step+1][2]<burstthreshold){
+							PYend = step;
+							//cout << "PYend" << endl;
+							break;
+						}
+					}
+				}
+			}
+			else {cout << "PYstart not found during cycle" << endl;}
+
+
+			if (abs(OutputHistory[PDstarts[1]][1] - OutputHistory[PDstarts[2]][1])<tolerance){      //at the two points where PD crosses up,
+				if (abs(OutputHistory[PDstarts[1]][2] - OutputHistory[PDstarts[2]][2])<tolerance){  //are the other two neurons approximately in the same place?
+					// 	ORDERING CRITERIA
+					if (LPstart <= PYstart){
+						//cout << "order1" << endl;
+						fitness += 0.05;
+						criteriamet += 1;
+					}
+					if (LPend <= PYend){
+						//cout << "order2" << endl;
+						fitness += 0.05;
+						criteriamet += 1;
+					}
+					if (PDend <= LPstart){
+						//cout << "order3" << endl;
+						fitness += 0.05;
+						criteriamet += 1;
+					}
+					if (criteriamet == 6){
+						//cout << LPstart << ", " << LPend << ", " << PYstart <<", " << PYend << ", " <<PDstarts[1] << ", " <<PDend <<endl;
+						int period = PDstarts[2] - PDstarts[1];
+						double LPfoo = LPend - LPstart; 
+						double LPdutycycle = LPfoo/period; //burstduration/period
+						double LPdutycyclezscore = abs(LPdutycycle - .264)/.059;
+						double PYfoo = PYend-PYstart;
+						double PYdutycycle = PYfoo/period; //burstduration/period
+						double PYdutycyclezscore = abs(PYdutycycle - .348)/.054;
+						double PDfoo = PDend-PDstarts[1];
+						double PDdutycycle = PDfoo/period; //burstduration/period
+						double PDdutycyclezscore = abs(PDdutycycle - .385)/.040;
+						double LPbar = LPstart-PDstarts[1];
+						double LPstartphase = LPbar/period; //delay/period
+						double LPstartphasezscore = abs(LPstartphase - .533)/.054;
+						double PYbar = PYstart-PDstarts[1];
+						double PYstartphase = PYbar/period; //delay/period
+						double PYstartphasezscore = abs(PYstartphase - .758)/.060;
+						//cout << "Period:" << period << endl;
+						//cout << LPdutycyclezscore<< ", "<<PYdutycyclezscore<<", "<<PDdutycyclezscore<<", "<<LPstartphasezscore<<", "<<PYstartphasezscore<<endl;
+						double average = (LPdutycyclezscore+PYdutycyclezscore+PDdutycyclezscore+LPstartphasezscore+PYstartphasezscore)/5;
+						fitness += 1/(average);
+					}
+				}
+			}
+			else{
+				cout << "possible multi-periodicity" << endl;
+				// cout << "LPstartcount = " << LPstartcount << " ,PYstartcount = " << PYstartcount << endl;
+				// NO ORDERING POINTS FOR MULTIPERIODIC
+			}
+		}
+	}
+	return (fitness);
+
+}
+
+
+double PyloricPerformance(CTRNN &Agent)
+//Main difference is that it does not include transient -- assumes circuit is already equilibrated.
+//Also only runs until three PDstarts are detected to save time
+{
+    int N = Agent.CircuitSize();
+    TMatrix<double> OutputHistory;
+	OutputHistory.SetBounds(1,TestSteps,1,N);
+	OutputHistory.FillContents(0.0);
+	double fitness = 0.0;
+
+	TVector<double> maxoutput(1,N);
+	maxoutput.FillContents(0.0);
+	TVector<double> minoutput(1,N);
+	minoutput.FillContents(1.0);
+
+	// Run the circuit to calculate Pyloric fitness -- HP is either left on or turned OFF depending on specification.
+
+	// Run the circuit until you identify 3 PD starts (capping 2 full cycles), keeping track of whether each other neuron crossed the threshold or not
+	int tstep = 1;
+	double t = StepSize;
+	int PDstartcount = 0;
+	TVector<int> PDstarts(1,3);
+	PDstarts.FillContents(0);
+	while (tstep <= TestSteps && PDstartcount < 3) {
+		for (int i = 1; i <= N; i += 1) {
+			OutputHistory(tstep,i) = Agent.NeuronOutput(i);
+			if (Agent.NeuronOutput(i) > maxoutput(i)) {maxoutput(i)=Agent.NeuronOutput(i);}
+			if (Agent.NeuronOutput(i) < minoutput(i)) {minoutput(i)=Agent.NeuronOutput(i);}
+		}
+
+		Agent.EulerStep(StepSize,HPtest,0); // adapt only biases, not weights
+
+		//Check for PD start
+		if (OutputHistory(tstep,3) < burstthreshold && Agent.NeuronOutput(3) > burstthreshold){
+			PDstartcount += 1;
+			PDstarts[PDstartcount] = tstep;
+		}
+		tstep += 1;
+		t += StepSize;
+	}
+	for (int i = 1; i <= N; i += 1) {
+		// SHORT HAND FOR ALL NEURONS OSCILLATING APPRECIABLY
+		if (minoutput[i] <(burstthreshold-.05)) {
+			if (maxoutput[i]>burstthreshold) {
+				fitness += 0.05;
+			}
+		}
+	}
+	if (fitness < 0.15){
+		return fitness;
+	}
+
+	if (PDstartcount < 3){
+		cout << "unable to find two full cycles; may want to increase transient, lengthen runtime, or speed up slowest timescale" << endl;
+		return fitness;
+	}
+
+	else{
+		int PDend = 0;
+		int PDendcount = 0;
+		int LPstart = 0;
+		int LPstartcount = 0;
+		int LPend = 0;
+		int PYstart = 0;
+		int PYstartcount = 0;
+		int PYend = 0;
+		for (int step=PDstarts(1); step<=PDstarts(2); step ++){
+			if (PDendcount == 0){
+				if (OutputHistory(step,3)>burstthreshold){
+					if (OutputHistory(step+1,3)<burstthreshold){
+						PDend = step;
+						PDendcount ++;
+						//cout << "PDend";
+					}
+				}
+			}
+			if (LPstartcount == 0){
+				if (OutputHistory(step,1)<burstthreshold){
+					if (OutputHistory(step+1,1)>burstthreshold){
+						LPstart = step;
+						LPstartcount ++;
+						//cout << "LPstart";
+					}
+				}
+			}
+			if (PYstartcount == 0){
+				if (OutputHistory(step,2)<burstthreshold){
+					if (OutputHistory(step+1,2)>burstthreshold){
+						PYstart = step;
+						PYstartcount ++;
+						//cout << "PYstart";
+					}
+				}
+			}
+		}
+		if (LPstartcount == 1){
+			for (int step=LPstart;step<=PDstarts(3);step++){
+				if (OutputHistory(step,1)>burstthreshold){
+					if (OutputHistory(step+1,1)<burstthreshold){
+						LPend = step;
+						//cout << "LPend";
+						break;
+					}
+				}
+			}
+		}
+		else{cout << "LPstart not found during cycle" << endl; return fitness;}
+
+		if (PYstartcount == 1){
+			for (int step=PYstart;step<=PDstarts(3);step++){
+				if (OutputHistory(step,2)>burstthreshold){
+					if (OutputHistory(step+1,2)<burstthreshold){
+						PYend = step;
+						//cout << "PYend" << endl;
+						break;
+					}
+				}
+			}
+		}
+		else {cout << "PYstart not found during cycle" << endl; return fitness;}
+
+
+		if ((abs(OutputHistory(PDstarts[1],1) - OutputHistory(PDstarts[2],1))<tolerance)&&(abs(OutputHistory(PDstarts[1],2) - OutputHistory(PDstarts[2],2))<tolerance)){
+			// at the two points where PD crosses up, are the other two neurons approximately in the same place?
+			// 	ORDERING CRITERIA
+			if (LPstart <= PYstart){
+				//cout << "order1" << endl;
+				fitness += 0.05;
+			}
+			if (LPend <= PYend){
+				//cout << "order2" << endl;
+				fitness += 0.05;
+			}
+			if (PDend <= LPstart){
+				//cout << "order3" << endl;
+				fitness += 0.05;
+			}
+			if (fitness == 0.3){
+				int period = PDstarts[2] - PDstarts[1];
+				double LPfoo = LPend - LPstart; 
+				double LPdutycycle = LPfoo/period; //burstduration/period
+				double LPdutycyclezscore = abs(LPdutycycle - .264)/.059;
+				double PYfoo = PYend-PYstart;
+				double PYdutycycle = PYfoo/period; //burstduration/period
+				double PYdutycyclezscore = abs(PYdutycycle - .348)/.054;
+				double PDfoo = PDend-PDstarts[1];
+				double PDdutycycle = PDfoo/period; //burstduration/period
+				double PDdutycyclezscore = abs(PDdutycycle - .385)/.040;
+				double LPbar = LPstart-PDstarts[1];
+				double LPstartphase = LPbar/period; //delay/period
+				double LPstartphasezscore = abs(LPstartphase - .533)/.054;
+				double PYbar = PYstart-PDstarts[1];
+				double PYstartphase = PYbar/period; //delay/period
+				double PYstartphasezscore = abs(PYstartphase - .758)/.060;
+				// cout << "Period:" << period << endl;
+				// cout << LPstart << " " << LPend << " " << PYstart << " " << PYend << " " << PDstarts[1] << " " << PDend << endl;
+				// cout << LPdutycyclezscore<< ", "<<PYdutycyclezscore<<", "<<PDdutycyclezscore<<", "<<LPstartphasezscore<<", "<<PYstartphasezscore<<endl;
+				double average = (LPdutycyclezscore+PYdutycyclezscore+PDdutycyclezscore+LPstartphasezscore+PYstartphasezscore)/5;
+				fitness += 1/(average);
+			}
+			
+		}
+		else{
+			cout << "possible multi-periodicity" << endl;
+			// NO ORDERING POINTS FOR MULTIPERIODIC
+		}
+	}
+	return fitness;
+
+}
+
+double HPPerformance(CTRNN &Agent, double scaling_factor){
+	// Agent should already have HP mechanism instantiated
+
+    //Starting parameters
+    TVector<double> par1s(1,3);
+    par1s[1] = -8;
+    par1s[2] = 0;
+    par1s[3] = 8;
+    TVector<double> par2s(1,3);
+    par2s[1] = -8;
+    par2s[2] = -0;
+	par2s[3] = 8;
+
+    double fitness = 0;
+    for (int i=1;i<=par1s.UpperBound();i++){
+        for (int j=1;j<=par2s.UpperBound();j++){
+			Agent.SetNeuronBias(1,par1s[i]);
+            Agent.SetNeuronBias(3,par2s[j]);
+			// cout << "parameters " << Agent.NeuronBias(1) << " " << Agent.NeuronBias(2) << " " << Agent.NeuronBias(3) << " " << Agent.ConnectionWeight(1,1) << endl;
+            // Initialize the outputs at 0.5 for all neurons in the circuit
+            for (int n=1;n<=Agent.CircuitSize();n++){Agent.SetNeuronState(n,0);}
+
+            // Run the circuit for an initial transient; HP is off and fitness is not evaluated
+            for (double t = StepSize; t <= TransientDuration; t += StepSize) {
+                Agent.EulerStep(StepSize,false,false);
+            }
+
+            // Run the circuit for a period of time with HP so the paramters can change
+            for (double t = StepSize; t<= PlasticDuration1; t+= StepSize){
+                Agent.EulerStep(StepSize,true,false);  //set to only adapt biases, not weights
+			}
+
+            // Calculate the Pyloric Fitness
+			// cout << Agent.NeuronBias(1) << " " << Agent.NeuronBias(3) << ":";
+			double fit = PyloricPerformance(Agent);
+
+			// Transform it so Pyloricness at all is worth a lot
+			if (fit >= .3){fit = fit+scaling_factor;}
+
+			// cout << fit << endl;
+			fitness += fit;
+
+			// repeat process after another duration of time to ensure solution is stable
+			for (double t = StepSize; t<= PlasticDuration2; t+= StepSize){
+                Agent.EulerStep(StepSize,true,false);  //set to only adapt biases, not weights
+            }
+
+            // Calculate the Pyloric Fitness
+			// cout << Agent.NeuronBias(1) << " " << Agent.NeuronBias(3) << ":";
+			fit = PyloricPerformance(Agent);
+
+			// Transform it so Pyloricness at all is worth a lot
+			if (fit >= .3){fit = fit+scaling_factor;}
+
+			// cout << fit << endl;
+			fitness += fit;
+        }
+    }
+    return fitness/(par1s.UpperBound()*par2s.UpperBound()*2);
+}

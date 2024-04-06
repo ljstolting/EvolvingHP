@@ -143,7 +143,7 @@ void TVector<EltType>::FillContents(EltType value)
 }
 
 // Return the maximum value of a vector
-// Added by Lindsay Stolting
+// Added by Lindsay Stolting, don't know if it works or not
 template<class EltType>
 EltType TVector<EltType>::Max(void){
 	EltType f = Vector[lb];
