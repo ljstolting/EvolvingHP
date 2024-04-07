@@ -118,6 +118,8 @@ void CTRNN::SetCircuitSize(int newsize)
   windowsize.SetBounds(1,size);
   windowsize.FillContents(1); 
   max_windowsize = windowsize.Max();
+  sumoutputs.SetBounds(1,size);
+  sumoutputs.FillContents(0);
   avgoutputs.SetBounds(1,size);
   for(int i=1;i<=size;i++){
     avgoutputs[i] = (l_boundary[i]+u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
@@ -206,12 +208,18 @@ void CTRNN::RhoCalc(void){
     // 1. Window should always stay updated no matter whether adapting or not (faster so not expensive)
     // 2. Take average for each neuron (unless its sliding window has not yet passed; in that case leave average in between ub and lb to turn HP off)
     for (int i = 1; i <= size; i++){
-      if(stepnum > windowsize[i]){
-        avgoutputs[i] = 0.0;
+      if(stepnum == windowsize[i]){ //do initial add-up
         for (int k = 1; k <= windowsize[i]; k++){  
-          avgoutputs[i] += outputhist[i][k];
+          sumoutputs[i] += outputhist[i][k];
         }
-        avgoutputs[i] = avgoutputs[i]/windowsize[i];
+        avgoutputs[i] = sumoutputs[i]/windowsize[i];
+        if(avgoutputs(i)<minavg(i)){minavg(i)=avgoutputs(i);}; //calc of max and min detected values
+        if(avgoutputs(i)>maxavg(i)){maxavg(i)=avgoutputs(i);};
+      }
+      if(stepnum > windowsize[i]){ //do truncated add-up
+        sumoutputs[i] -= outputhist[i][(stepnum%windowsize[i])+1];
+        sumoutputs[i] += NeuronOutput(i);
+        avgoutputs[i] = sumoutputs[i]/windowsize[i];
         if(avgoutputs(i)<minavg(i)){minavg(i)=avgoutputs(i);}; //calc of max and min detected values
         if(avgoutputs(i)>maxavg(i)){maxavg(i)=avgoutputs(i);};
       }
@@ -247,9 +255,14 @@ void CTRNN::RhoCalc(void){
 
 void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
 {
+  if (adaptbiases==true || adaptweights==true)
+  {
+    RhoCalc();
+  }
+
   for (int i = 1; i <= size; i++){
     // replace the appropriate oldest needed value (ordering doesn't matter so made faster)
-    outputhist[i][(stepnum%windowsize[i]+1)] = NeuronOutput(i); 
+    outputhist[i][(stepnum%windowsize[i])+1] = NeuronOutput(i); 
   }
 
   // Update the state of all neurons.
@@ -263,44 +276,40 @@ void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
   for (int i = 1; i <= size; i++)
     {outputs[i] = sigmoid(gains[i] * (states[i] + biases[i]));}
 
-  if (adaptbiases==true || adaptweights==true)
-  {
-    // cout << l_boundary << " " << u_boundary << endl;
-    RhoCalc();
+  
     // NEW: Update Biases
-    if(adaptbiases==true)
-    { for (int i = 1; i <= size; i++){
-        biases[i] += stepsize * RtausBiases[i] * rhos[i];
-        if (biases[i] > br){
-            biases[i] = br;
-        }
-        else{
-            if (biases[i] < -br){
-                biases[i] = -br;
-            }
-        }
-      } 
-    }
-    // NEW: Update Weights
-    if(adaptweights==true)
-    { 
-      for (int i = 1; i <= size; i++) 
+  if(adaptbiases==true)
+  { for (int i = 1; i <= size; i++){
+      biases[i] += stepsize * RtausBiases[i] * rhos[i];
+      if (biases[i] > br){
+          biases[i] = br;
+      }
+      else{
+          if (biases[i] < -br){
+              biases[i] = -br;
+          }
+      }
+    } 
+  }
+  // NEW: Update Weights
+  if(adaptweights==true)
+  { 
+    for (int i = 1; i <= size; i++) 
+    {
+      for (int j = 1; j <= size; j++)
       {
-        for (int j = 1; j <= size; j++)
+        weights[i][j] += stepsize * RtausWeights[i][j] * rhos[j] * fabs(weights[i][j]);
+        cout << "weight change flag" << endl;
+        if (weights[i][j] > wr)
         {
-          weights[i][j] += stepsize * RtausWeights[i][j] * rhos[j] * fabs(weights[i][j]);
-          cout << "weight change flag" << endl;
-          if (weights[i][j] > wr)
-          {
-              weights[i][j] = wr;
-          }
-          else
-          {
-              if (weights[i][j] < -wr)
-              {
-                  weights[i][j] = -wr;
-              }
-          }
+            weights[i][j] = wr;
+        }
+        else
+        {
+            if (weights[i][j] < -wr)
+            {
+                weights[i][j] = -wr;
+            }
         }
       }
     }

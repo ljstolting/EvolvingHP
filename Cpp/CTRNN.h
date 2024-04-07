@@ -130,7 +130,7 @@ class CTRNN {
         int max_windowsize;
         TVector<double> states, outputs, biases, gains, taus, Rtaus, externalinputs;
         TVector<double> rhos, tausBiases, RtausBiases, l_boundary, u_boundary, minavg, maxavg; // NEW
-        TVector<double> avgoutputs; // NEW for AVERAGING
+        TVector<double> avgoutputs, sumoutputs; // NEW for AVERAGING
         TMatrix<double> weights;
         TMatrix<double> tausWeights, RtausWeights; // NEW
         TMatrix<double> outputhist; // NEW for AVERAGING
