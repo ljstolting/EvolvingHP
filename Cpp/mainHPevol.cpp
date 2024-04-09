@@ -164,8 +164,8 @@ void EvolutionaryRunDisplay(TSearch &s)
 int main (int argc, const char* argv[]) 
 {
 	// Evolution condition
-	Evolfile.open("evol.dat");
-	BestIndividualsFile.open("bestinds.dat");
+	Evolfile.open("evol2.dat");
+	BestIndividualsFile.open("bestinds2.dat");
 	for (int i=1;i<=trials;i++){
 		long IDUM=-time(0);
 		TSearch s(VectSize);
