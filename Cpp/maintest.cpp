@@ -20,7 +20,7 @@ int main(int argc, const char* argv[])
     }
     ifs >> Circuit;
 
-	char HPfname[] = "HP_unevolved/HPhanddesign.gn";
+	char HPfname[] = "HP_unevolved/HPtest.gn";
     ifstream HPin;
     HPin.open(HPfname);
 	if (!HPin) {
@@ -38,8 +38,8 @@ int main(int argc, const char* argv[])
 		Circuit.EulerStep(StepSize,false,false);
 	}
 	auto start = high_resolution_clock::now();
-
-    cout << HPPerformance(Circuit,100) << endl ;
+    cout << PyloricPerformance(Circuit) << endl ;
+    Circuit.PrintMaxMinAvgs();
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
 	cout << "duration:" << duration.count() << endl;

@@ -41,12 +41,12 @@ const double par2max = 16;
 const int num_ICs = 1000;
 
 //Filenames
-char Nfname[] = "Sven.ns";
-char HPfname[] = "./HP_SWworks/HPnew.gn";
-char Fitnessesfname[] = "SvenFinalFitnessesnew.dat";
-char ICsfname[] = "SvenICsnew.dat";
-char biastrackfname[] = "SvenBiasTracknew.dat";
-char statestrackfname[] = "SvenStatesTracknew.dat";
+char Nfname[] = "Pete.ns";
+char HPfname[] = "./HP_SWworks/HPsuper4.gn";
+char Fitnessesfname[] = "FinalFitnessessuper4.dat";
+char ICsfname[] = "PeteICssuper4.dat";
+char biastrackfname[] = "PeteBiasTracksuper4.dat";
+char statestrackfname[] = "PeteStatesTracksuper4.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
@@ -243,26 +243,7 @@ int main(){
 	ofstream statestrack;
 	statestrack.open(statestrackfname);
 
-	// Load the base CTRNN parameters
-    TVector<int> Window_Sizes(1,N);
-    Window_Sizes.FillContents(1);
-
-    TVector<double> Lower_Bounds(1,N);
-    Lower_Bounds.FillContents(B);
-    Lower_Bounds[2] = 0;
-
-    TVector<double> Upper_Bounds(1,N);
-    Upper_Bounds.FillContents(1-B);
-    Upper_Bounds[2] = 1;
-
-    TVector<double> Btaus(1,N);
-    Btaus.FillContents(BT);
-
-    TMatrix<double> Wtaus(1,N,1,N);
-    Wtaus.FillContents(WT);
-
-    // Set HP parameters
-    CTRNN Circuit(3, Window_Sizes, Lower_Bounds, Upper_Bounds, Btaus, Wtaus, BR, WR);
+    CTRNN Circuit(3);
     // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
     // cout << Circuit.br;
     ifstream ifs;

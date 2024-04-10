@@ -25,7 +25,7 @@
 // EA params
 const int POPSIZE = 50;
 const int GENS = 100;
-const int trials = 10;    // number of times to run the EA from random starting pop
+const int trials = 1;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
 const double EXPECTED = 1.1;
@@ -77,7 +77,7 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 	}
     // Sliding Window -- changed to be time-based (gets rounded to the nearest stepsize in the SetSlidingWindow function)
     for (int i = 1; i <= num; i++) {
-		phen(k) = MapSearchParameter(gen(k), 1, SWR);
+		phen(k) = MapSearchParameter(gen(k), 0, SWR);
 		k++;
 	}
 }
@@ -164,8 +164,8 @@ void EvolutionaryRunDisplay(TSearch &s)
 int main (int argc, const char* argv[]) 
 {
 	// Evolution condition
-	Evolfile.open("evol2.dat");
-	BestIndividualsFile.open("bestinds2.dat");
+	Evolfile.open("evolfast.dat");
+	BestIndividualsFile.open("bestindsfast.dat");
 	for (int i=1;i<=trials;i++){
 		long IDUM=-time(0);
 		TSearch s(VectSize);

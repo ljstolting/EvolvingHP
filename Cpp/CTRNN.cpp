@@ -117,15 +117,12 @@ void CTRNN::SetCircuitSize(int newsize)
   // NEW for AVERAGING
   windowsize.SetBounds(1,size);
   windowsize.FillContents(1); 
-  max_windowsize = windowsize.Max();
   sumoutputs.SetBounds(1,size);
   sumoutputs.FillContents(0);
   avgoutputs.SetBounds(1,size);
   for(int i=1;i<=size;i++){
     avgoutputs[i] = (l_boundary[i]+u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
   }
-  outputhist.SetBounds(1,size,1,max_windowsize);
-  outputhist.FillContents(0.0);  //fill with zeros
 
   minavg.SetBounds(1,size);
   minavg.FillContents(1);
@@ -208,18 +205,26 @@ void CTRNN::RhoCalc(void){
     // 1. Window should always stay updated no matter whether adapting or not (faster so not expensive)
     // 2. Take average for each neuron (unless its sliding window has not yet passed; in that case leave average in between ub and lb to turn HP off)
     for (int i = 1; i <= size; i++){
+      // cout << stepnum << " " << windowsize[i] << endl;
+      if(stepnum < windowsize[i]){
+        outputhist[i][stepnum+1] = NeuronOutput(i);
+      }
       if(stepnum == windowsize[i]){ //do initial add-up
+      // cout << outputhist(i,1) << endl;
         for (int k = 1; k <= windowsize[i]; k++){  
           sumoutputs[i] += outputhist[i][k];
         }
+        // cout << sumoutputs(i) << endl;
         avgoutputs[i] = sumoutputs[i]/windowsize[i];
         if(avgoutputs(i)<minavg(i)){minavg(i)=avgoutputs(i);}; //calc of max and min detected values
         if(avgoutputs(i)>maxavg(i)){maxavg(i)=avgoutputs(i);};
       }
       if(stepnum > windowsize[i]){ //do truncated add-up
-        sumoutputs[i] -= outputhist[i][(stepnum%windowsize[i])+1];
-        sumoutputs[i] += NeuronOutput(i);
-        avgoutputs[i] = sumoutputs[i]/windowsize[i];
+        sumoutputs(i) -= outputhist(i,(stepnum%windowsize(i))+1);
+        sumoutputs(i) += NeuronOutput(i);
+        // replace oldest value
+        outputhist(i,(stepnum%windowsize(i))+1) = NeuronOutput(i);
+        avgoutputs(i) = sumoutputs(i)/windowsize(i);
         if(avgoutputs(i)<minavg(i)){minavg(i)=avgoutputs(i);}; //calc of max and min detected values
         if(avgoutputs(i)>maxavg(i)){maxavg(i)=avgoutputs(i);};
       }
@@ -255,16 +260,6 @@ void CTRNN::RhoCalc(void){
 
 void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
 {
-  if (adaptbiases==true || adaptweights==true)
-  {
-    RhoCalc();
-  }
-
-  for (int i = 1; i <= size; i++){
-    // replace the appropriate oldest needed value (ordering doesn't matter so made faster)
-    outputhist[i][(stepnum%windowsize[i])+1] = NeuronOutput(i); 
-  }
-
   // Update the state of all neurons.
   for (int i = 1; i <= size; i++) {
     double input = externalinputs[i];
@@ -272,10 +267,14 @@ void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
       input += weights[j][i] * outputs[j];
     states[i] += stepsize * Rtaus[i] * (input - states[i]);
   }
-  // Update the outputs of all neurons.
+  // Update the outputs of all neurons and record them in the outputhist
   for (int i = 1; i <= size; i++)
-    {outputs[i] = sigmoid(gains[i] * (states[i] + biases[i]));}
-
+    {outputs[i] = sigmoid(gains[i] * (states[i] + biases[i]));
+    if (adaptbiases == true || adaptweights == true){
+      RhoCalc();
+      stepnum ++;
+    }
+    }
   
     // NEW: Update Biases
   if(adaptbiases==true)
@@ -314,7 +313,7 @@ void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
       }
     }
   }
-  stepnum ++ ; 
+  // cout << "step" << stepnum << "complete"<< endl;
 }
 
 void CTRNN::PrintMaxMinAvgs(void){
@@ -389,7 +388,7 @@ void CTRNN::SetHPPhenotype(istream& is, double dt){
   }
   outputhist.SetBounds(1,size,1,max_windowsize);
   outputhist.FillContents(0.0);  // fill with zeros 
-
+  // cout << outputhist << endl;
 	return;
 }
 

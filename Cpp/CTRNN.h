@@ -94,7 +94,10 @@ class CTRNN {
         void SetConnectionWeightTimeConstant(int from, int to, double value) {tausWeights[from][to] = value; RtausWeights[from][to] = 1/value;};
         int SlidingWindow(int i) {return windowsize[i];};
         // Built in protections against changing step sizes -- entered SW is always time-based
-        void SetSlidingWindow(int i, double windsize, double dt) {windowsize[i]=int(1+(windsize/dt));};
+        void SetSlidingWindow(int i, double windsize, double dt) 
+        {
+          windowsize[i]=int(1+(windsize/dt));
+        };
         void SetMaxavg(int i, double a) {maxavg[i] = a;};
         void SetMinavg(int i, double a) {minavg[i] = a;};
         // --
