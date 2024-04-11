@@ -97,7 +97,7 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 	CTRNN Agent(3);
 
 	// Instantiate the nervous system
-	char fname[] = "Pete.ns";
+	char fname[] = "../Pete.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -164,14 +164,17 @@ void EvolutionaryRunDisplay(TSearch &s)
 int main (int argc, const char* argv[]) 
 {
 	// Evolution condition
-	Evolfile.open("evolfast.dat");
-	BestIndividualsFile.open("bestindsfast.dat");
+	Evolfile.open("evolfastsuper.dat");
+	BestIndividualsFile.open("bestindsfastsuper.dat");
 	for (int i=1;i<=trials;i++){
-		long IDUM=-time(0);
+		long randomseed = static_cast<long>(time(NULL));
+		if (argc == 2)
+			randomseed += atoi(argv[1]);
+		// long IDUM=-time(0);
 		TSearch s(VectSize);
 
 		// Configure the search
-		s.SetRandomSeed(IDUM);
+		s.SetRandomSeed(randomseed);
 		//cout << IDUM << endl;
 		s.SetSearchResultsDisplayFunction(ResultsDisplay);
 		s.SetPopulationStatisticsDisplayFunction(EvolutionaryRunDisplay);
