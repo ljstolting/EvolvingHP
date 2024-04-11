@@ -341,7 +341,7 @@ void CTRNN::SetCenterCrossing(void)
 
 // Define the HP mechanism based on an input file
 
-void CTRNN::SetHPPhenotype(istream& is, double dt){
+void CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding = true){
   // Right now, set for the condition where only theta_1 and theta_3 are under HP control
   // Read the bias time constants
   double btau1;
@@ -361,14 +361,31 @@ void CTRNN::SetHPPhenotype(istream& is, double dt){
   is >> lb3;
   SetPlasticityLB(3,lb3);
 
-  // Read the upper bounds
-  double ub1;
-  is >> ub1;
-  SetPlasticityUB(1,ub1);
+  if(range_encoding){
+    // Read the ranges and derive the upper bounds
+    double range1;
+    is >> range1;
+    double ub1 = lb1 + range1;
+    // if (ub1 > 1){ub1 = 1;} //clipping built into the set funciton
+    SetPlasticityUB(1,ub1);
 
-  double ub3;
-  is >> ub3;
-  SetPlasticityUB(3,ub3);
+    double range3;
+    is >> range3;
+    double ub3 = lb3 + range3;
+    // if (ub3 > 1){ub3 = 1;} //clipping built into the set funciton
+    SetPlasticityUB(3,ub3);
+  }
+
+  else
+  {  // Read the upper bounds
+    double ub1;
+    is >> ub1;
+    SetPlasticityUB(1,ub1);
+
+    double ub3;
+    is >> ub3;
+    SetPlasticityUB(3,ub3);
+  }
 
   // Read the sliding windows
   double sw1;
@@ -392,7 +409,7 @@ void CTRNN::SetHPPhenotype(istream& is, double dt){
 	return;
 }
 
-void CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt){
+void CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding=true){
   //Eventually, will work like this
   // int k = 1;
   // for(int i=1;i<=N;i++){
@@ -402,8 +419,14 @@ void CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt){
   SetNeuronBiasTimeConstant(3,phenotype[2]);
   SetPlasticityLB(1,phenotype[3]);
   SetPlasticityLB(3,phenotype[4]);
+  if (range_encoding){
+    SetPlasticityUB(1,phenotype[3] + phenotype[5]); 
+    SetPlasticityUB(3,phenotype[4] + phenotype[6]);
+  }
+  else{
   SetPlasticityUB(1,phenotype[5]);
   SetPlasticityUB(3,phenotype[6]);
+  }
   SetSlidingWindow(1,phenotype[7],dt); //phenotype sliding window is time based
   SetSlidingWindow(3,phenotype[8],dt);
 

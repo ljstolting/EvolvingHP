@@ -72,7 +72,7 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 	// Upper Bounds -- must be greater than lower bound
 	for (int i = 1; i <= num; i++) {
 		phen(k) = MapSearchParameter(gen(k), UBMIN, UBMAX);
-		if (phen(k) < phen(k-2)){phen(k)=phen(k-2);}
+		// if (phen(k) < phen(k-num)){phen(k)=phen(k-num);} //clipping now happens in the Set functions
 		k++;
 	}
     // Sliding Window -- changed to be time-based (gets rounded to the nearest stepsize in the SetSlidingWindow function)

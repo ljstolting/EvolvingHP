@@ -85,9 +85,28 @@ class CTRNN {
         double NeuronRho(int i) {return rhos[i];};
         void SetNeuronRho(int i, double value) {rhos[i] = value;};
         double PlasticityLB(int i) {return l_boundary[i];};
-        void SetPlasticityLB(int i, double value) {l_boundary[i] = value;};
+        void SetPlasticityLB(int i, double value) {
+          if (value <0){
+            value = 0;
+          }
+          if (value > 1){
+            value = 1;
+          }
+          l_boundary[i] = value;
+          } //putting clipping here just to be safe
         double PlasticityUB(int i) {return u_boundary[i];};
-        void SetPlasticityUB(int i, double value) {u_boundary[i] = value;};
+        void SetPlasticityUB(int i, double value) {
+          if (value < 0){
+            value = 0;
+          }
+          else if (value < l_boundary[i]){
+            value = l_boundary[i];
+          }
+          else if (value > 1){
+            value = 1;
+          }
+          u_boundary[i] = value;
+          } //putting clipping here just to be safe
         double NeuronBiasTimeConstant(int i) {return tausBiases[i];};
         void SetNeuronBiasTimeConstant(int i, double value) {tausBiases[i] = value; RtausBiases[i] = 1/value;};
         double ConnectionWeightTimeConstant(int from, int to) {return tausWeights[from][to];};
@@ -109,8 +128,8 @@ class CTRNN {
             }
         }
         void SetCenterCrossing(void);
-        void SetHPPhenotype(istream& is, double dt);
-        void SetHPPhenotype(TVector<double>& phenotype, double dt);
+        void SetHPPhenotype(istream& is, double dt, bool range_encoding=true);
+        void SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding=true);
         void WriteHPGenome(ostream& os);
         void PrintMaxMinAvgs(void);
 
