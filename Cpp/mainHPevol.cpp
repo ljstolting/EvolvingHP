@@ -50,9 +50,8 @@ const double BTMAX = 200.0;		// Bias Time Constant
 // const double WTMIN = 40.0;		// Weight Time Constant
 // const double WTMAX = 40.0;		// Weight Time Constant
 
-int	VectSize = 8;
-
 int num = 2; // Number of parameters being changed--temporary
+int	VectSize = num*4;
 // ------------------------------------
 // Genotype-Phenotype Mapping Functions
 // ------------------------------------
@@ -81,7 +80,6 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 		k++;
 	}
 }
-ofstream pyloricoutput;
 
 // ------------------------------------
 // Recovery Fitness Function
@@ -108,7 +106,7 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 	ifs.close();
 
 	// Instantiate the HP mechanism
-	Agent.SetHPPhenotype(phenotype,StepSize);
+	Agent.SetHPPhenotype(phenotype,StepSize,true); //range encoding active
 
 	double fitness = HPPerformance(Agent, scaling_factor);
 
@@ -164,8 +162,8 @@ void EvolutionaryRunDisplay(TSearch &s)
 int main (int argc, const char* argv[]) 
 {
 	// Evolution condition
-	Evolfile.open("evolfastsuper.dat");
-	BestIndividualsFile.open("bestindsfastsuper.dat");
+	Evolfile.open("evolrangeencoding.dat");
+	BestIndividualsFile.open("bestindsrangeencoding.dat");
 	for (int i=1;i<=trials;i++){
 		long randomseed = static_cast<long>(time(NULL));
 		if (argc == 2)
@@ -205,7 +203,6 @@ int main (int argc, const char* argv[])
 	}
 	Evolfile.close();
 	BestIndividualsFile.close();
-	pyloricoutput.close();
 
   return 0;
 }

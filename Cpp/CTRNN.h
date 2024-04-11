@@ -128,8 +128,8 @@ class CTRNN {
             }
         }
         void SetCenterCrossing(void);
-        void SetHPPhenotype(istream& is, double dt, bool range_encoding=true);
-        void SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding=true);
+        void SetHPPhenotype(istream& is, double dt, bool range_encoding);
+        void SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding);
         void WriteHPGenome(ostream& os);
         void PrintMaxMinAvgs(void);
 

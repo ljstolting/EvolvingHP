@@ -341,7 +341,7 @@ void CTRNN::SetCenterCrossing(void)
 
 // Define the HP mechanism based on an input file
 
-void CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding = true){
+void CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding){
   // Right now, set for the condition where only theta_1 and theta_3 are under HP control
   // Read the bias time constants
   double btau1;
@@ -409,7 +409,7 @@ void CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding = true){
 	return;
 }
 
-void CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding=true){
+void CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding){
   //Eventually, will work like this
   // int k = 1;
   // for(int i=1;i<=N;i++){
