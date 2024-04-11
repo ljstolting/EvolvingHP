@@ -4,14 +4,15 @@
 #include "TSearch.h"
 #include "CTRNN.h"
 #include "random.h"
+#include "pyloric.h"
 
 //#define PRINTOFILE
 
 // Task params
-const double TransientDuration = 1000; //Seconds with HP off
+// const double TransientDuration = 1000; //Seconds with HP off
 const double PlasticDuration = 10000; //Seconds with HP running
 const double RunDuration = 150; //How long to test for pyloricness
-const double StepSize = 0.025;
+// const double StepSize = 0.025;
 const int RunSteps = RunDuration/StepSize;
 
 // Nervous system params
@@ -30,8 +31,8 @@ const double BR = 100;      // Range that biases cannot exceed (make large to no
 int	VectSize = N*N + 2*N;
 
 // Pyloric Detection params
-const double burstthreshold = .5; //threshold that must be crossed for detecting bursts
-const double tolerance = .01; //for detecting double periodicity
+// const double burstthreshold = .5; //threshold that must be crossed for detecting bursts
+// const double tolerance = .01; //for detecting double periodicity
 
 // Sampling Parameters
 const double par1min = -16;
@@ -42,9 +43,9 @@ const int num_ICs = 1000;
 
 //Filenames
 char Nfname[] = "Pete.ns";
-char HPfname[] = "./HP_SWworks/HPsuper4.gn";
-char Fitnessesfname[] = "FinalFitnessessuper4.dat";
-char ICsfname[] = "PeteICssuper4.dat";
+char HPfname[] = "./HP_SWworks/HPfast.gn";
+char Fitnessesfname[] = "FinalFitnessesfastnewfitness.dat";
+char ICsfname[] = "PeteICsfastnewfitness.dat";
 char biastrackfname[] = "PeteBiasTracksuper4.dat";
 char statestrackfname[] = "PeteStatesTracksuper4.dat";
 
@@ -286,7 +287,7 @@ int main(){
         ICsfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl << endl;
 
         // Test for Pyloricness with HP
-        double fit = PyloricFitnessFunction(Circuit,true);
+        double fit = PyloricPerformance(Circuit);
 
         fitnesses << fit << endl;
     }

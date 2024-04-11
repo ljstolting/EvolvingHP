@@ -54,26 +54,8 @@ int main(){
     ofstream purplefile;
 	purplefile.open(purplefname);
 
-	// Load the base CTRNN parameters
-    TVector<int> Window_Sizes(1,N);
-    Window_Sizes.FillContents(1);
-
-    TVector<double> Lower_Bounds(1,N);
-    Lower_Bounds.FillContents(B);
-    Lower_Bounds[2] = 0;
-
-    TVector<double> Upper_Bounds(1,N);
-    Upper_Bounds.FillContents(1-B);
-    Upper_Bounds[2] = 1;
-
-    TVector<double> Btaus(1,N);
-    Btaus.FillContents(BT);
-
-    TMatrix<double> Wtaus(1,N,1,N);
-    Wtaus.FillContents(WT);
-
-    // Set HP parameters
-    CTRNN Circuit(3, Window_Sizes, Lower_Bounds, Upper_Bounds, Btaus, Wtaus, BR, WR);
+	// Load the base CTRNN parameters and Set HP parameters
+    CTRNN Circuit(3);
     // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
     // cout << Circuit.br;
     char fname[] = "Pete.ns";

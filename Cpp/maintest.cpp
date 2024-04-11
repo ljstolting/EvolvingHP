@@ -5,6 +5,14 @@
 #include <chrono>
 using namespace std::chrono;
 
+// Task params
+const double TransientDurationold = 500; //Seconds with HP off
+const double PlasticDuration = 2000; //Seconds with HP running
+const double RunDuration = 150; //How long to test for pyloricness
+// const double StepSize = 0.025;
+const int RunSteps = RunDuration/StepSize;
+const int N = 3;
+
 int main(int argc, const char* argv[])
 {
     ofstream testfile;
@@ -20,7 +28,7 @@ int main(int argc, const char* argv[])
     }
     ifs >> Circuit;
 
-	char HPfname[] = "HP_unevolved/HPtest.gn";
+	char HPfname[] = "HP_unevolved/HPhanddesign.gn";
     ifstream HPin;
     HPin.open(HPfname);
 	if (!HPin) {
@@ -38,7 +46,8 @@ int main(int argc, const char* argv[])
 		Circuit.EulerStep(StepSize,false,false);
 	}
 	auto start = high_resolution_clock::now();
-    cout << PyloricPerformance(Circuit) << endl ;
+    double scaling_factor = 25;
+    cout << "Fitness: " << PyloricPerformance(Circuit) << endl ;
     Circuit.PrintMaxMinAvgs();
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
