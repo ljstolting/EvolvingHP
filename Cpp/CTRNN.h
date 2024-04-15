@@ -131,6 +131,7 @@ class CTRNN {
         void SetHPPhenotype(istream& is, double dt, bool range_encoding);
         void SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding);
         void WriteHPGenome(ostream& os);
+        void SetHPPhenotypebestind(istream& is, double dt, bool range_encoding);
         void PrintMaxMinAvgs(void);
 
         // Input and output

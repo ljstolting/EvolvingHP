@@ -458,6 +458,21 @@ void CTRNN::WriteHPGenome(ostream& os){
 	return;
 }
 
+void CTRNN::SetHPPhenotypebestind(istream &is, double dt, bool range_encoding){
+  int trial;
+  is >> trial;
+  TVector<double> gen(1,4*2); //for now, specific to only two parameters being changed
+  TVector<double> phen(1,gen.UpperBound());
+  for (int i=1;i<=gen.UpperBound();i++){ 
+    is >> gen[i];
+  }
+  for (int i=1;i<=phen.UpperBound();i++){ 
+    is >> phen[i];
+  }
+  // cout << trial << endl<< gen << endl << phen << endl;
+  SetHPPhenotype(phen,dt,range_encoding);
+}
+
 
 // ****************
 // Input and Output

@@ -28,7 +28,7 @@ int main(int argc, const char* argv[])
     }
     ifs >> Circuit;
 
-	char HPfname[] = "HP_unevolved/HPhanddesign.gn";
+	char HPfname[] = "1/bestindsfastsuper.dat";
     ifstream HPin;
     HPin.open(HPfname);
 	if (!HPin) {
@@ -36,7 +36,8 @@ int main(int argc, const char* argv[])
         exit(EXIT_FAILURE);
     }
 
-    Circuit.SetHPPhenotype(HPin,StepSize);
+    Circuit.SetHPPhenotypebestind(HPin,StepSize,false);
+    // cout << Circuit.l_boundary(1) << " " << Circuit.l_boundary(3) << endl;
 
 	// Initialize states and Run circuit for transient
 	Circuit.RandomizeCircuitOutput(0.5, 0.5);
@@ -47,8 +48,8 @@ int main(int argc, const char* argv[])
 	}
 	auto start = high_resolution_clock::now();
     double scaling_factor = 25;
-    cout << "Fitness: " << PyloricPerformance(Circuit) << endl ;
-    Circuit.PrintMaxMinAvgs();
+    cout << "Fitness: " << HPPerformance(Circuit,25) << endl ;
+    // Circuit.PrintMaxMinAvgs();
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
 	cout << "duration:" << duration.count() << endl;

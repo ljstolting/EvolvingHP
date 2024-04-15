@@ -9,7 +9,7 @@
 
 // Task params
 const double TransientDuration = 500; //Seconds with HP off
-const double PlasticDuration = 5000; //Seconds with HP running
+const double PlasticDuration = 10000; //Seconds with HP running
 const double StepSize = 0.01;
 
 // Plasticity parameters
@@ -56,7 +56,7 @@ int main(){
     // Set the proper HP parameters 
     ifstream HPifs;
     HPifs.open(HPfname);
-    Circuit.SetHPPhenotype(HPifs,StepSize);
+    Circuit.SetHPPhenotype(HPifs,StepSize,false);
 
     // cout << "Confirm B1: " << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityUB(1) << endl;
     // cout << "Confirm B3: " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(3) << endl;
