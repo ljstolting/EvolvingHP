@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+# Settings
+*.vscode
+*.json
+__pycache__
