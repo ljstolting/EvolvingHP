@@ -10,3 +10,5 @@ main.o: mainHPevol.cpp CTRNN.h TSearch.h
 	g++ -pthread -c -O3 main.cpp
 clean:
 	rm *.o main
+
+#I bet that we need to change the structure of this to account for the pyloric.h file and that's why the changes sometimes don't take

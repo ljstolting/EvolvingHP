@@ -8,32 +8,28 @@
 //#define PRINTOFILE
 
 // Task params
-const double TransientDuration = 500; //Seconds with HP off
-const double PlasticDuration = 10000; //Seconds with HP running
+const double TransientDuration = 50; //Seconds with HP off
+const double PlasticDuration = 100000; //Seconds with HP running
+const double CompareDuration = PlasticDuration;
 const double StepSize = 0.01;
 
-// Plasticity parameters
-const int WS = 0;		// Window Size of Plastic Rule (in steps size) (so 1 is no window)
-const double B = 0.25; 		// Plasticity Low Boundary (symmetric)
-const double BT = 20.0;		// Bias Time Constant
-const double WT = 40.0;		// Weight Time Constant
-const double WR = 100;      // Range that weights cannot exceed (make large to not matter)
-const double BR = 100;      // Range that biases cannot exceed (make large to not matter)
-
 //Filenames for parameter traces
-char outputsfname[] = "../Python/trackoutputs.dat";
-char detectedavgsfname[] = "../Python/trackaverages.dat";
-char biasesfname[] = "../Python/trackbiases.dat";
+char outputswHPfname[] = "../Python/trackoutputscomparewithHP.dat";
+char outputswoHPfname[] = "../Python/trackoutputscomparewithoutHP.dat";
+char detectedavgsfname[] = "../Python/trackaveragescompare.dat";
+char biasesfname[] = "../Python/trackbiasescompare.dat";
 // char maxmindebugfname[] = "../Python/maxmindebug.dat";
 
-char HPfname[] = "./HP_unevolved/HPhanddesign.gn";
+char HPfname[] = "./18/bestindsfastsuper.dat";
 
 // Will eventually need a function to map genotype of HP into phenotype of values
 
 int main(){
     // Create files to hold data
-	ofstream outputsfile;
-    outputsfile.open(outputsfname);
+	ofstream outputswHPfile;
+    outputswHPfile.open(outputswHPfname);
+    ofstream outputswoHPfile;
+    outputswoHPfile.open(outputswoHPfname);
     ofstream avgsfile;
     avgsfile.open(detectedavgsfname);
     ofstream biasesfile;
@@ -56,7 +52,7 @@ int main(){
     // Set the proper HP parameters 
     ifstream HPifs;
     HPifs.open(HPfname);
-    Circuit.SetHPPhenotype(HPifs,StepSize,false);
+    Circuit.SetHPPhenotypebestind(HPifs,StepSize,false);
 
     // cout << "Confirm B1: " << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityUB(1) << endl;
     // cout << "Confirm B3: " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(3) << endl;
@@ -64,28 +60,40 @@ int main(){
 
 
     // Run a point and record outputs, averages, and biases
-    double initialbias1 = UniformRandom(-16,16);
-    double initialbias3 = UniformRandom(-16,16);
+    double initialbias1 = 2.59647; //UniformRandom(-16,16);
+    double initialbias3 = -8.20154; //UniformRandom(-16,16);
     Circuit.SetNeuronBias(1,initialbias1);
     Circuit.SetNeuronBias(3,initialbias3);
     Circuit.RandomizeCircuitState(0,0);
     for(double t=0;t<TransientDuration;t+=StepSize){
-        outputsfile << Circuit.outputs << endl;
+        outputswHPfile << Circuit.outputs << endl;
         biasesfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         // maxmindebug << Circuit.minavg(1) << " " << Circuit.maxavg(1) << " " << Circuit.minavg(3) << " " << Circuit.maxavg(3) << endl;
-        avgsfile << Circuit.avgoutputs << endl;
+        avgsfile << Circuit.avgoutputs << endl; //"record" the averages here even though they are just defaults
         Circuit.EulerStep(StepSize,0,0);
     }
     // Circuit.PrintMaxMinAvgs();
     for(double t=0;t<PlasticDuration;t+=StepSize){
-        outputsfile << Circuit.outputs << endl;
+        outputswHPfile << Circuit.outputs << endl;
         biasesfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
         // maxmindebug << Circuit.minavg(1) << " " << Circuit.maxavg(1) << " " << Circuit.minavg(3) << " " << Circuit.maxavg(3) << endl;
         avgsfile << Circuit.avgoutputs << endl;
         Circuit.EulerStep(StepSize,1,0);
     }
-    // Circuit.PrintMaxMinAvgs();  
-    outputsfile.close();
+    // Reset and run for a long duration w/o HP for comparison
+    Circuit.SetNeuronBias(1,initialbias1);
+    Circuit.SetNeuronBias(3,initialbias3);
+    Circuit.RandomizeCircuitState(0,0);
+    for(double t=0;t<TransientDuration;t+=StepSize){
+        outputswoHPfile << Circuit.outputs << endl;
+        Circuit.EulerStep(StepSize,0,0);
+    }
+    for(double t=0;t<CompareDuration;t+=StepSize){
+        outputswoHPfile << Circuit.outputs << endl;
+        Circuit.EulerStep(StepSize,0,0);
+    }
+    outputswHPfile.close();
+    outputswoHPfile.close();
     biasesfile.close();
     avgsfile.close();
 

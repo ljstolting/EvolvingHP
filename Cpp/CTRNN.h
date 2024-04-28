@@ -145,6 +145,7 @@ class CTRNN {
         void RandomizeCircuitOutput(double lb, double ub, RandomState &rs);
         void RhoCalc(void);
         void EulerStep(double stepsize, bool adaptbiases, bool adaptweights);
+        void EulerStepAvgsnoHP(double stepsize);
         // void RK4Step(double stepsize);
 
         int size, stepnum;

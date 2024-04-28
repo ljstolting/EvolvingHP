@@ -13,12 +13,12 @@
 using namespace std;
 
 // Task params
-const double TransientDuration = 1000+137.6; //seconds without HP
+const double TransientDuration = 500; //seconds without HP
 const double PlasticDuration1 = 5000; //seconds allowing HP to act
 const double PlasticDuration2 = 5000; //number of seconds to wait before testing again, to make sure not relying on precise timing
-const double TestDuration = 150; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
+const double TestDuration = 100; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
 const bool HPtest = true;       //does HP remain on during test (shouldn't matter if platicity time constants are slow enough)
-const double StepSize = 0.025;
+const double StepSize = 0.01;
 const int TestSteps = TestDuration/StepSize; // in steps
 
 // Detection params

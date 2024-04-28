@@ -1,6 +1,7 @@
-// --------------------------------------------------------------
-//  Evaluate the "Realm of Acceptability" (where parameters are not changing) for a given HP mechanism
-// --------------------------------------------------------------
+// ---------------------------------------------------------
+// Evaluate the net parameter change that would be incurred 
+// over 50 seconds (= 5 * max SW) for 
+// ---------------------------------------------------------
 #include "TSearch.h"
 #include "CTRNN.h"
 #include "random.h"
@@ -8,27 +9,24 @@
 //#define PRINTOFILE
 
 // Task params
-const double TransientDuration = 50; //seconds without HP
-const double RunDuration = 50; //seconds to test whether HP activates
+const double TransientDuration = 250; //seconds without HP
+const double RunDuration = 500; //seconds to accumulate movement
 const double StepSize = 0.01;
 
 // Parameter space resolution
-const double par1min = 0.0;
-const double par1max = 10.0;
-const double par1step = .05;
-const double par2min = -15.;
-const double par2max = 0.0;
-const double par2step = .05;
-
-// Run mode
-const bool accelerated = false;  //stops evaluation if HP has activated for both neurons -- MESSES UP AVERAGE DETECTED
+const double par1min = -16.0;
+const double par1max = 16.0;
+const double par1step = .1;
+const double par2min = -16.0;
+const double par2max = 16.0;
+const double par2step = .1;
 
 // HP genome file
-char HPname[] = "./HP_unevolved/HPtest.gn"; 
+char HPfname[] = "./18/bestindsfastsuper.dat"; 
+char netchangefname[] = "Petenetchangelong.dat";
 
 // Nervous system params
 const int N = 3;
-
 
 // ------------------------------------
 // The main program
@@ -36,24 +34,10 @@ const int N = 3;
 int main (int argc, const char* argv[]) 
 {
 	// Create files to hold data
-	ofstream realmacceptabilityfile;
-	realmacceptabilityfile.open("realmacceptability.dat");
-	ofstream maxmindetectedfile;
-	maxmindetectedfile.open("maxmindetected.dat");
-
-	// Load the base CTRNN parameters (no HP)
-	TVector<int> nullwindowsize(1,N);
-    nullwindowsize.FillContents(1);
-    TVector<double> nulllb(1,N);
-    nulllb.FillContents(0);
-    TVector<double> nullub(1,N);
-    nullub.FillContents(1);
-    TVector<double> nullbt(1,N);
-    nullbt.FillContents(1);
-    TMatrix<double> nullwt(1,N,1,N);
-    nullwt.FillContents(1);
+	ofstream netchangefile;
+	netchangefile.open(netchangefname);
 	
-    CTRNN Circuit(3, nullwindowsize, nulllb, nullub, nullbt, nullwt, 16, 16);
+    CTRNN Circuit(N);
     char fname[] = "Pete.ns";
     ifstream ifs;
     ifs.open(fname);
@@ -63,51 +47,42 @@ int main (int argc, const char* argv[])
     }
     ifs >> Circuit; 
 	ifstream HPphen;
-	HPphen.open(HPname);
+	HPphen.open(HPfname);
 	if (!HPphen) {
-        cerr << "File not found: " << HPname << endl;
+        cerr << "File not found: " << HPfname << endl;
         exit(EXIT_FAILURE);
     }
-
-	Circuit.SetHPPhenotype(HPphen,StepSize);
+	bool range_encoding = false;
+	Circuit.SetHPPhenotypebestind(HPphen,StepSize,range_encoding);
 	
 	// For every pair of parameter values specified, (right now, par1=theta1, par2=theta3)
-	TVector<bool> acc(1,2); //vector to store a boolean of whether HP was activated for each parameter
+	TVector<double> acc(1,2); //vector to store the magnitude of change accumulated for each parameter during 
 	for (double par1=par1min; par1<=par1max; par1+=par1step){
+		Circuit.SetNeuronBias(1,par1);
+		cout << par1 << endl;
 		for (double par2=par2min; par2<=par2max; par2+=par2step){
-			acc.FillContents(0); //reset to all false
-			Circuit.SetMaxavg(1,0); //reset max and min detected
-			Circuit.SetMinavg(1,1);
-			Circuit.SetMaxavg(3,0);
-			Circuit.SetMinavg(3,1);
-			Circuit.SetNeuronBias(1,par1);
+			//don't have to reset neuron1 all the time because shouldn't actually be allowed to change...
 			Circuit.SetNeuronBias(3,par2);
-			Circuit.RandomizeCircuitState(0,0);
+			acc.FillContents(0); //reset to all zeros
+			Circuit.RandomizeCircuitState(0,0); //resets averaging and sliding window utilities
 			// run for a short transient
 			for (double t=StepSize;t<=TransientDuration;t+=StepSize){
 				Circuit.EulerStep(StepSize,0,0);
 			}
-			// then run to see whether HP would ever turn on
-			// -- NOT the same as running *with* HP, so it is still directly analagous to the static map
-			// -- OR IS IT? if HP does turn on, at any point after the tranisent, then it both becomes a different system and also is already flagged. OH well
+			// then run to keep track of the bias changes, but not actually apply them
 			for (double t=StepSize;t<=RunDuration;t+=StepSize){
-				if (acc(1)==1 && acc(2)==1 && accelerated){break;}
-				Circuit.EulerStep(StepSize,0,0);
-				Circuit.RhoCalc();
-				//Specific to theta1/theta3 changing
-				if (Circuit.NeuronRho(1)!=0){
-					acc(1)=1;
-				} 
-				if (Circuit.NeuronRho(3)!=0){
-					acc(2)=1;
-				}
+				Circuit.EulerStepAvgsnoHP(StepSize);
+				// EVENTUALLY WHEN ALL THREE BIASES
+				// for (int i = 1; i <= acc.UpperBound();i++){
+				// 	acc(i) += StepSize * Circuit.RtausBiases[i] * Circuit.rhos[i];
+				// }
+				acc(1) += StepSize * Circuit.RtausBiases[1] * Circuit.rhos[1];
+				acc(2) += StepSize * Circuit.RtausBiases[3] * Circuit.rhos[3];
 			}
-			realmacceptabilityfile << acc << endl; //store in the file
-			maxmindetectedfile << Circuit.maxavg << endl;
-			maxmindetectedfile << Circuit.minavg << endl << endl;
+			netchangefile << acc << endl;
 		}
-		realmacceptabilityfile << endl;
+		netchangefile << endl;
 	}	
-	realmacceptabilityfile.close();
+	netchangefile.close();
   return 0;
 }

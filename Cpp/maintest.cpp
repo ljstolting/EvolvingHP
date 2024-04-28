@@ -8,7 +8,7 @@ using namespace std::chrono;
 // Task params
 const double TransientDurationold = 500; //Seconds with HP off
 const double PlasticDuration = 2000; //Seconds with HP running
-const double RunDuration = 150; //How long to test for pyloricness
+const double RunDuration = 1000; //How long to test for pyloricness
 // const double StepSize = 0.025;
 const int RunSteps = RunDuration/StepSize;
 const int N = 3;
@@ -28,19 +28,24 @@ int main(int argc, const char* argv[])
     }
     ifs >> Circuit;
 
-	char HPfname[] = "1/bestindsfastsuper.dat";
+	char HPfname[] = "129/bestindsrangeencoding.dat";
     ifstream HPin;
     HPin.open(HPfname);
 	if (!HPin) {
         cerr << "File not found: " << HPfname << endl;
         exit(EXIT_FAILURE);
     }
+    bool range_encoding = true;
 
-    Circuit.SetHPPhenotypebestind(HPin,StepSize,false);
+    Circuit.SetHPPhenotypebestind(HPin,StepSize,range_encoding);
     // cout << Circuit.l_boundary(1) << " " << Circuit.l_boundary(3) << endl;
+    cout << Circuit.SlidingWindow(1) << " " << Circuit.SlidingWindow(3) << endl;
 
 	// Initialize states and Run circuit for transient
 	Circuit.RandomizeCircuitOutput(0.5, 0.5);
+
+    Circuit.SetNeuronBias(1,.4);
+    Circuit.SetNeuronBias(3,4.1);
 
 	// Run the circuit for an initial transient; HP is off and fitness is not evaluated
 	for (double t = StepSize; t <= TransientDuration; t += StepSize) {
@@ -48,8 +53,13 @@ int main(int argc, const char* argv[])
 	}
 	auto start = high_resolution_clock::now();
     double scaling_factor = 25;
-    cout << "Fitness: " << HPPerformance(Circuit,25) << endl ;
-    // Circuit.PrintMaxMinAvgs();
+    
+    // for (double t = StepSize; t <= PlasticDuration; t += StepSize) {
+	// 	Circuit.EulerStep(StepSize,true,false);
+	// }
+    cout << "Fitness: " << PyloricPerformance(Circuit) << endl ;
+    
+    Circuit.PrintMaxMinAvgs();
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
 	cout << "duration:" << duration.count() << endl;

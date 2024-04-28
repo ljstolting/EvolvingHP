@@ -147,10 +147,15 @@ void CTRNN::RandomizeCircuitState(double lb, double ub)
       SetNeuronState(i, UniformRandom(lb, ub));
       SetNeuronOutput(i, sigmoid(gains[i] * (states[i] + biases[i])));
   }
-  // Fill the window with the first value
-//  for (int i = 1; i <= size; i++)
-//    for (int k = 1; k <= windowsize; k++)
-//      outputhist[i][k] = NeuronOutput(i);
+  // reset averaging and sliding window utilities
+  minavg.FillContents(1);
+  maxavg.FillContents(0);
+  sumoutputs.FillContents(0);
+  outputhist.FillContents(0.0);
+  for(int i=1;i<=size;i++){
+    avgoutputs[i] = (l_boundary[i]+u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
+  }
+  stepnum = 0;
 }
 
 void CTRNN::RandomizeCircuitState(double lb, double ub, RandomState &rs)
@@ -159,10 +164,15 @@ void CTRNN::RandomizeCircuitState(double lb, double ub, RandomState &rs)
     SetNeuronState(i, rs.UniformRandom(lb, ub));
     SetNeuronOutput(i, sigmoid(gains[i] * (states[i] + biases[i])));
   }
-  // Fill the window with the first value
-//  for (int i = 1; i <= size; i++)
-//    for (int k = 1; k <= windowsize; k++)
-//      outputhist[i][k] = NeuronOutput(i);
+  // reset averaging and sliding window utilities
+  minavg.FillContents(1);
+  maxavg.FillContents(0);
+  sumoutputs.FillContents(0);
+  outputhist.FillContents(0.0);
+  for(int i=1;i<=size;i++){
+    avgoutputs[i] = (l_boundary[i]+u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
+  }
+  stepnum = 0;
 }
 
 void CTRNN::RandomizeCircuitOutput(double lb, double ub)
@@ -171,10 +181,15 @@ void CTRNN::RandomizeCircuitOutput(double lb, double ub)
       SetNeuronOutput(i, UniformRandom(lb, ub));
       SetNeuronState(i, (InverseSigmoid(outputs[i])/gains[i])-biases[i]);
   }
-  // Fill the window with the first value
-//  for (int i = 1; i <= size; i++)
-//    for (int k = 1; k <= windowsize; k++)
-//      outputhist[i][k] = NeuronOutput(i);
+  // reset averaging and sliding window utilities
+  minavg.FillContents(1);
+  maxavg.FillContents(0);
+  sumoutputs.FillContents(0);
+  outputhist.FillContents(0.0);
+  for(int i=1;i<=size;i++){
+    avgoutputs[i] = (l_boundary[i]+u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
+  }
+  stepnum = 0;
 }
 
 void CTRNN::RandomizeCircuitOutput(double lb, double ub, RandomState &rs)
@@ -183,6 +198,15 @@ void CTRNN::RandomizeCircuitOutput(double lb, double ub, RandomState &rs)
     SetNeuronOutput(i, rs.UniformRandom(lb, ub));
     SetNeuronState(i, (InverseSigmoid(outputs[i])/gains[i])-biases[i]);
   }
+  // reset averaging and sliding window utilities
+  minavg.FillContents(1);
+  maxavg.FillContents(0);
+  sumoutputs.FillContents(0);
+  outputhist.FillContents(0.0);
+  for(int i=1;i<=size;i++){
+    avgoutputs[i] = (l_boundary[i]+u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
+  }
+  stepnum = 0;
 }
 
 
@@ -227,6 +251,7 @@ void CTRNN::RhoCalc(void){
         avgoutputs(i) = sumoutputs(i)/windowsize(i);
         if(avgoutputs(i)<minavg(i)){minavg(i)=avgoutputs(i);}; //calc of max and min detected values
         if(avgoutputs(i)>maxavg(i)){maxavg(i)=avgoutputs(i);};
+        // if (i == 2) {cout << stepnum << " " << minavg(2) << " " << maxavg(2) << endl;}
       }
     }
 
@@ -266,16 +291,12 @@ void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
     for (int j = 1; j <= size; j++)
       input += weights[j][i] * outputs[j];
     states[i] += stepsize * Rtaus[i] * (input - states[i]);
+    outputs[i] = sigmoid(gains[i] * (states[i] + biases[i]));
   }
-  // Update the outputs of all neurons and record them in the outputhist
-  for (int i = 1; i <= size; i++)
-    {outputs[i] = sigmoid(gains[i] * (states[i] + biases[i]));
-    if (adaptbiases == true || adaptweights == true){
+  if (adaptbiases == true || adaptweights == true){
       RhoCalc();
       stepnum ++;
-    }
-    }
-  
+  }
     // NEW: Update Biases
   if(adaptbiases==true)
   { for (int i = 1; i <= size; i++){
@@ -313,13 +334,28 @@ void CTRNN::EulerStep(double stepsize, bool adaptbiases, bool adaptweights)
       }
     }
   }
-  // cout << "step" << stepnum << "complete"<< endl;
+}
+
+void CTRNN::EulerStepAvgsnoHP(double stepsize)
+// Keeps track of the maxmin averages detected, but does not actually change the circuit parameters
+{
+  // Update the state of all neurons.
+  for (int i = 1; i <= size; i++) {
+    double input = externalinputs[i];
+    for (int j = 1; j <= size; j++)
+      input += weights[j][i] * outputs[j];
+    states[i] += stepsize * Rtaus[i] * (input - states[i]);
+    outputs[i] = sigmoid(gains[i] * (states[i] + biases[i]));
+  }
+  RhoCalc();
+  stepnum ++;
 }
 
 void CTRNN::PrintMaxMinAvgs(void){
   cout << "Minimum detected:" << minavg << endl;
   cout << "Maximum detected:" << maxavg << endl;
 }
+
 
 
 // Set the biases of the CTRNN to their center-crossing values
