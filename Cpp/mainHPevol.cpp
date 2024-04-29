@@ -162,8 +162,8 @@ void EvolutionaryRunDisplay(TSearch &s)
 int main (int argc, const char* argv[]) 
 {
 	// Evolution condition
-	Evolfile.open("evolrangeencoding.dat");
-	BestIndividualsFile.open("bestindsrangeencoding.dat");
+	Evolfile.open("evol.dat");
+	BestIndividualsFile.open("bestind.dat");
 	for (int i=1;i<=trials;i++){
 		long randomseed = static_cast<long>(time(NULL));
 		if (argc == 2)
