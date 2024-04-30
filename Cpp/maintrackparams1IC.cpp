@@ -9,7 +9,7 @@
 
 // Task params
 const double TransientDuration = 50; //Seconds with HP off
-const double PlasticDuration = 100000; //Seconds with HP running
+const double PlasticDuration = 5000;//100000; //Seconds with HP running
 const double CompareDuration = PlasticDuration;
 const double StepSize = 0.01;
 
@@ -54,6 +54,7 @@ int main(){
     HPifs.open(HPfname);
     Circuit.SetHPPhenotypebestind(HPifs,StepSize,false);
 
+    // cout << "Confirm Tau_b's" << Circuit.tausBiases << endl;
     // cout << "Confirm B1: " << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityUB(1) << endl;
     // cout << "Confirm B3: " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(3) << endl;
     // cout << "Confirm SW: " << Circuit.SlidingWindow(3) << endl;
@@ -80,6 +81,7 @@ int main(){
         avgsfile << Circuit.avgoutputs << endl;
         Circuit.EulerStep(StepSize,1,0);
     }
+    cout << Circuit.biases << endl;
     // Reset and run for a long duration w/o HP for comparison
     Circuit.SetNeuronBias(1,initialbias1);
     Circuit.SetNeuronBias(3,initialbias3);

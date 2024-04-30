@@ -1,6 +1,6 @@
 // ---------------------------------------------------------
 // Evaluate the net parameter change that would be incurred 
-// over 50 seconds (= 5 * max SW) for 
+// over 500 seconds (= 50 * max SW) for 
 // ---------------------------------------------------------
 #include "TSearch.h"
 #include "CTRNN.h"
@@ -22,8 +22,8 @@ const double par2max = 16.0;
 const double par2step = .1;
 
 // HP genome file
-char HPfname[] = "./18/bestindsfastsuper.dat"; 
-char netchangefname[] = "Petenetchangelong.dat";
+char HPfname[] = "./33/bestind.dat"; 
+char netchangefname[] = "Ronnnetchangelong.dat";
 
 // Nervous system params
 const int N = 3;
@@ -38,7 +38,7 @@ int main (int argc, const char* argv[])
 	netchangefile.open(netchangefname);
 	
     CTRNN Circuit(N);
-    char fname[] = "Pete.ns";
+    char fname[] = "Ronn.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {

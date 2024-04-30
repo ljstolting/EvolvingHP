@@ -17,16 +17,6 @@ const int RunSteps = RunDuration/StepSize;
 
 // Nervous system params
 const int N = 3;
-const double TMIN = .1; 
-const double TMAX = 2; 
-
-// Plasticity parameters
-const int WS = 0;		// Window Size of Plastic Rule (in steps size) (so 1 is no window)
-const double B = 0.25; 		// Plasticity Low Boundary (symmetric)
-const double BT = 20.0;		// Bias Time Constant
-const double WT = 40.0;		// Weight Time Constant
-const double WR = 100;      // Range that weights cannot exceed (make large to not matter)
-const double BR = 100;      // Range that biases cannot exceed (make large to not matter)
 
 int	VectSize = N*N + 2*N;
 
@@ -42,12 +32,12 @@ const double par2max = 16;
 const int num_ICs = 1000;
 
 //Filenames
-char Nfname[] = "Pete.ns";
-char HPfname[] = "./129/bestindsrangeencoding.dat";
-char Fitnessesfname[] = "FinalFitnesses129.dat";
-char ICsfname[] = "PeteICs129.dat";
-char biastrackfname[] = "PeteBiasTrack129.dat";
-char statestrackfname[] = "PeteStatesTrack129.dat";
+char Nfname[] = "Ronn.ns";
+char HPfname[] = "./33/bestind.dat";
+char Fitnessesfname[] = "RonnFinalFitnesses33.dat";
+char ICsfname[] = "RonnICs33.dat";
+char biastrackfname[] = "RonnBiasTrack33.dat";
+char statestrackfname[] = "RonnStatesTrack33.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
@@ -55,6 +45,7 @@ const bool trackparams = true;
 const int trackparamsinterval = 20; //Track biases for every X trials
 
 int main(){
+    // cout << StepSize << endl;
     // Create files to hold data
 	ofstream fitnesses;
     fitnesses.open(Fitnessesfname);
