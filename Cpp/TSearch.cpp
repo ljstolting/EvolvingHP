@@ -308,10 +308,10 @@ void TSearch::SetCheckpointInterval(int NewInterval)
 
 // The top-level search loop
 
-void TSearch::DoSearch(int ResumeFlag)
+void TSearch::DoSearch(int ResumeFlag, bool CenterCrossing = false)
 {
 	// Initialize search if necessary
-	if (!SearchInitialized) InitializeSearch();
+	if (!SearchInitialized) InitializeSearch(CenterCrossing);
 	// Make sure we have an evaluation function
 	if (EvaluationFunction == NULL)
 	{
@@ -352,20 +352,22 @@ void TSearch::DoSearch(int ResumeFlag)
 
 // Execute a search
 
-void TSearch::ExecuteSearch(void)
+void TSearch::ExecuteSearch(bool CC = false)
 {
-	DoSearch(0);
+	DoSearch(0,CC);
 }
 
 
 // Initialize a new search
 
-void TSearch::InitializeSearch(void)
+void TSearch::InitializeSearch(bool CC, int N, double parmin, double parmax)
 {
 	// Reset the generation counter
 	Gen = 0;
 	// Set up the initial population
 	RandomizePopulation();
+	// If you specify center crossing, change the bias genes
+	if (CC) {CenterCrossingPopulation(N,parmin,parmax);}
 	// The search is now initialized
 	SearchInitialized = 1;
 }
@@ -379,6 +381,28 @@ void TSearch::RandomizeVector(TVector<double> &v)
 		v[i] = rs.UniformRandom(MinSearchValue,MaxSearchValue);
 }
 
+// Set a genotype vector to values which will correspond to a Center Crossing phenotype
+//			Assumes that genotype is a CTRNN and that it has ordering : time constants, biases, weights
+//			and that weights are ordered by output neuron first (i.e. 11, 12, 13, 21, 22, 23, 31, 32, 33)
+//			N is CTRNN size (hard to back calculate from vector size = N**2 + 2N)
+//			parmin and parmax are the search parameter boundaries (assume both the same for weights and biases)
+void TSearch::CenterCrossingVector(TVector<double> &v, int N, double parmin, double parmax)
+{
+	double InputWeightgenes, ThetaStargene;
+
+	double m = Mappingm(parmin,parmax);
+	double b = Mappingb(parmin,parmax);
+
+    for (int i = 0; i < N ; i++) {
+        // Sum the input weights to this neuron
+        InputWeightgenes = 0;
+        for (int j = 1; j <= N; j++)
+            InputWeightgenes += v(2*N+(N*i)+j);
+        // Compute the corresponding ThetaStar
+        ThetaStargene = (-InputWeightgenes/2) - (((N+2)*b)/(2*m)); //algebra checked, but still could be wrong
+        v(N+i+1) = ThetaStargene;
+    }
+}
 
 // Randomize the population
 
@@ -386,6 +410,12 @@ void TSearch::RandomizePopulation(void)
 {
 	for (int i = 1; i <= Population.Size(); i++)
 		RandomizeVector(Population[i]);
+}
+
+void TSearch::CenterCrossingPopulation(int N, double parmin, double parmax)
+{
+	for (int i = 1; i <= Population.Size(); i++)
+		CenterCrossingVector(Population[i],N,parmin,parmax);
 }
 
 

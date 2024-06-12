@@ -568,3 +568,53 @@ istream& operator>>(istream& is, CTRNN& c)
 	// Return the istream
 	return is;
 }
+
+TVector<double>& operator>>(TVector<double>& phen , CTRNN& c)
+{//NOT UPDATED TO READ IN HP PARAMETERS
+  int k = 1;
+	// Read the time constants
+	for (int i = 1; i <= c.size; i++) {
+		c.taus[i] = phen[k];
+		c.Rtaus[i] = 1/c.taus[i];
+    k ++;
+	}
+	// Read the biases
+	for (int i = 1; i <= c.size; i++){
+		c.biases[i] = phen[k];
+    k ++;
+  }
+	// Read the weights
+	for (int i = 1; i <= c.size; i++){
+		for (int j = 1; j <= c.size; j++){
+			c.weights[i][j] = phen[k];
+      k ++;
+    }
+  }
+	// Return the phenotype
+	return phen;
+}
+
+TVector<double>& operator<<(TVector<double>& phen, CTRNN& c)
+{//NOT UPDATED TO READ OUT HP PARAMETERS -- still CTRNN parameters
+  int k = 1;
+	// Write the time constants
+	for (int i = 1; i <= c.size; i++){
+		phen[k] = c.taus[i];
+    k++;
+  }
+	// Write the biases
+	for (int i = 1; i <= c.size; i++){
+		phen[k] = c.biases[i];
+    k ++;
+  }
+
+	// Write the weights
+	for (int i = 1; i <= c.size; i++) {
+		for (int j = 1; j <= c.size; j++){
+			phen[k] = c.weights[i][j];
+      k ++;
+    }
+	}
+	// Return the phenotype
+	return phen;
+}

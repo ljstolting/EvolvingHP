@@ -28,7 +28,11 @@ int main(int argc, const char* argv[])
     }
     ifs >> Circuit;
 
-	char HPfname[] = "129/bestindsrangeencoding.dat";
+    //incorrectly ordered one
+    Circuit.SetNeuronBias(1,10);
+    Circuit.SetNeuronBias(3,-5);
+
+	char HPfname[] = "33/bestind.dat";
     ifstream HPin;
     HPin.open(HPfname);
 	if (!HPin) {
@@ -39,13 +43,10 @@ int main(int argc, const char* argv[])
 
     Circuit.SetHPPhenotypebestind(HPin,StepSize,range_encoding);
     // cout << Circuit.l_boundary(1) << " " << Circuit.l_boundary(3) << endl;
-    cout << Circuit.SlidingWindow(1) << " " << Circuit.SlidingWindow(3) << endl;
+    // cout << Circuit.SlidingWindow(1) << " " << Circuit.SlidingWindow(3) << endl;
 
 	// Initialize states and Run circuit for transient
 	Circuit.RandomizeCircuitOutput(0.5, 0.5);
-
-    Circuit.SetNeuronBias(1,.4);
-    Circuit.SetNeuronBias(3,4.1);
 
 	// Run the circuit for an initial transient; HP is off and fitness is not evaluated
 	for (double t = StepSize; t <= TransientDuration; t += StepSize) {

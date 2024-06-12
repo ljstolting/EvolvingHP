@@ -136,7 +136,9 @@ class CTRNN {
 
         // Input and output
         friend ostream& operator<<(ostream& os, CTRNN& c);
+        friend TVector<double>& operator<<(TVector<double>& phen, CTRNN& c);
         friend istream& operator>>(istream& is, CTRNN& c);
+        friend TVector<double>& operator>>(TVector<double>& phen, CTRNN& c);
 
         // Control
         void RandomizeCircuitState(double lb, double ub);

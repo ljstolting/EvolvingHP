@@ -46,6 +46,16 @@ inline double MapSearchParameter(double x, double min, double max,
 	return clip(m * x + b,clipmin,clipmax);
 }
 
+inline double Mappingm(double min, double max){
+	double m = (max - min)/(MaxSearchValue - MinSearchValue);
+	return m;
+}
+
+inline double Mappingb(double min, double max){
+	double b = min - Mappingm(min,max) * MinSearchValue;
+	return b;
+}
+
 
 // A utility function for mapping from model parameters to search parameters
 
@@ -128,8 +138,8 @@ class TSearch {
 		double AvgPerformance (void) {return AvgPerf;};
 		double PerfVariance (void) {return PerfVar;};
 		// Control
-		void InitializeSearch(void);
-		void ExecuteSearch(void);
+		void InitializeSearch(bool CenterCrossing, int N=3, double parmin=-16, double parmax=16);
+		void ExecuteSearch(bool CC);
 		void ResumeSearch(void);
 		// Input and output
     void WriteCheckpointFile(void);
@@ -139,7 +149,7 @@ class TSearch {
 
 	private:
 		// Helper Methods
-		void DoSearch(int ResumeFlag);
+		void DoSearch(int ResumeFlag, bool CenterCrossing);
 		int EqualVector(TVector<double> &v1, TVector<double> &v2)
 		{
 			if (v1.Size() != v2.Size()) return 0;
@@ -150,7 +160,9 @@ class TSearch {
 			return 1;
 		};
 		void RandomizeVector(TVector<double> &Vector);
+		void CenterCrossingVector(TVector<double> &Vector, int CTRNNsize, double parmapmin, double parmapmax);
 		void RandomizePopulation(void);
+		void CenterCrossingPopulation(int CTRNNsize, double parmapmin, double parmapmax);
 		double EvaluateVector(TVector<double> &Vector, RandomState &rs);
     friend void *EvaluatePopulationRange(void *arg);
 		void EvaluatePopulation(int start = 1);

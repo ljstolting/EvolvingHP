@@ -10,121 +10,173 @@
 // --------------------------------------------------------------
 #include "TSearch.h"
 #include "CTRNN.h"
-#include "random.h"
 #include "pyloric.h"
+#include "random.h"
 
 //#define PRINTOFILE
 
-// Task params (using defined in the pyloric file)
-// const double TransientDuration = 250; //seconds without HP
-// const double PlasticDuration1 = 2500; //seconds allowing HP to act
-// const double PlasticDuration2 = 2500; //number of seconds to wait before testing again, to make sure not relying on precise timing
-// const double TestDuration = 250; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
-// const bool HPtest = true;       //does HP remain on during test (shouldn't matter if platicity time constants are slow enough)
-// const double StepSize = 0.25;
-// const int TestSteps = TestDuration/StepSize; // in steps
-
-// Detection params
-// const double burstthreshold = .5; //threshold that must be crossed for detecting bursts
-// const double tolerance = .1; //for detecting double periodicity
+// Task params
+// const double TransientDuration = 500; //in seconds
+const double RunDuration = 25; //in seconds
+// const double StepSize = 0.01;
+const int RunSteps = RunDuration/StepSize; // in steps
 
 // EA params
-const int POPSIZE = 50;
+const int POPSIZE = 100;
 const int GENS = 100;
 const int trials = 1;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
 const double EXPECTED = 1.1;
 const double ELITISM = 0.1;
-const double scaling_factor = 25; // boost to add to solutions that are fully pyloric
-
-// Parameter variability modality only
-//const int Repetitions = 10; 
-//const int AnalysisReps = 100;
+// const double ROC_weighting = 2000; // How heavily (relative to HPsatisfaction = 1) should maximizing the average |rate of change| be weighted?
 
 // Nervous system params
-// const int N = 3;
+const int N = 3;
+const double WR = 16.0; 
+const double BR = 16.0; //(WR*N)/2; //<-for allowing center crossing
+const double TMIN = .1; 
+const double TMAX = 2; 
 
-// Plasticity parameters
-const double SWR = 10;		// Max Window Size of Plastic Rule (in seconds now)
-const double LBMIN = 0;
-const double UBMIN = 0; 		// Plasticity Boundaries
-const double LBMAX = 1;
-const double UBMAX = 1; 		// Plasticity Boundaries 
-const double BTMIN = 100.0;		// Bias Time Constant
-const double BTMAX = 200.0;		// Bias Time Constant
-// const double WTMIN = 40.0;		// Weight Time Constant
-// const double WTMAX = 40.0;		// Weight Time Constant
+int	VectSize = N*N + 2*N;
 
-int num = 2; // Number of parameters being changed--temporary
-int	VectSize = num*4;
 // ------------------------------------
 // Genotype-Phenotype Mapping Functions
 // ------------------------------------
 void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 {
 	int k = 1;
-	// Bias Time-constants
-	for (int i = 1; i <= num; i++) {
-		phen(k) = MapSearchParameter(gen(k), BTMIN, BTMAX);
+	// Time-constants
+	for (int i = 1; i <= N; i++) {
+		phen(k) = MapSearchParameter(gen(k), TMIN, TMAX);
 		k++;
 	}
-	// Lower Bounds
-	for (int i = 1; i <= num; i++) {
-		phen(k) = MapSearchParameter(gen(k), LBMIN, LBMAX);
+	// Bias
+	for (int i = 1; i <= N; i++) {
+		phen(k) = MapSearchParameter(gen(k), -BR, BR);
 		k++;
 	}
-	// Upper Bounds -- must be greater than lower bound
-	for (int i = 1; i <= num; i++) {
-		phen(k) = MapSearchParameter(gen(k), UBMIN, UBMAX);
-		// if (phen(k) < phen(k-num)){phen(k)=phen(k-num);} //clipping now happens in the Set functions
-		k++;
-	}
-    // Sliding Window -- changed to be time-based (gets rounded to the nearest stepsize in the SetSlidingWindow function)
-    for (int i = 1; i <= num; i++) {
-		phen(k) = MapSearchParameter(gen(k), 0, SWR);
-		k++;
+	// Weights
+	for (int i = 1; i <= N; i++) {
+			for (int j = 1; j <= N; j++) {
+				phen(k) = MapSearchParameter(gen(k), -WR, WR);
+				k++;
+			}
 	}
 }
 
-// ------------------------------------
-// Recovery Fitness Function
-// ------------------------------------
-double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
-    
-    // Map genootype to phenotype
-	TVector<double> phenotype;
-	phenotype.SetBounds(1, VectSize);
-	GenPhenMapping(genotype, phenotype);
+// ----------------------
+//  Fitness Function
+// ------------------------
+
+double HPsatisfaction(TVector<double> &phenotype){
+	// HP mechanism
+	char HPfname[] = "./33/bestind.dat";
+	ifstream HPfile;
+	HPfile.open(HPfname);
+
+	CTRNN Circuit(N);
+	// cout << Circuit.size << endl;
+	phenotype >> Circuit; //just overwrote this operator to allow transfer from a phenotype vector
+	// cout << "phenotype mapped " << Circuit.biases << endl;
+	// cout << "phenotype mapped " << Circuit.biases << endl;
+	bool range_encoding = true;
+	Circuit.SetHPPhenotypebestind(HPfile,StepSize,range_encoding);
+	// cout << "HP mapped" << Circuit.windowsize << endl;
+	Circuit.RandomizeCircuitState(0,0);
+	// cout << "phenotype mapped " << Circuit.biases << endl;
+	TVector<double> acc(1,2);
+	acc.FillContents(0);
+
+	for(double t = StepSize; t <= TransientDuration; t += StepSize){
+		Circuit.EulerStep(StepSize,false,false);
+	}
+	// cout << Circuit.outputs << endl;
+	// cout << "Transient complete" << endl;
+	for (double t=StepSize;t<=RunDuration;t+=StepSize){
+		Circuit.EulerStepAvgsnoHP(StepSize);
+		acc(1) += StepSize * Circuit.RtausBiases[1] * Circuit.rhos[1];
+		acc(2) += StepSize * Circuit.RtausBiases[3] * Circuit.rhos[3];
+		// cout << "single step complete" << endl;
+		// cout << abs(acc(1)) << endl;
+	}
+	// cout << acc << " " << abs(acc(1))+abs(acc(2)) << endl;
+	return 	1/(abs(acc(1))+abs(acc(2))); //no motivation for it to be small necessarily, just balanced. Is this reasonable?
+}
+
+double RateofChange(TVector<double> &phenotype){
+	//returns the sum of the averages of the absolute values of the rates of change of the states for each neuron
+	CTRNN Circuit(N);
+	// cout << Circuit.size << endl;
+	phenotype >> Circuit; //just overwrote this operator to allow transfer from a phenotype vector
+	// cout << "phenotype mapped " << Circuit.biases << endl;
+	// cout << "phenotype mapped " << Circuit.biases << endl;
+	bool range_encoding = true;
+	// cout << "HP mapped" << Circuit.windowsize << endl;
+	Circuit.RandomizeCircuitState(0,0);
+	for(double t = StepSize; t <= TransientDuration; t += StepSize){
+		Circuit.EulerStep(StepSize,false,false);
+	}
+	// cout << Circuit.outputs << endl;
+	// cout << "Transient complete" << endl;
+	TVector<double> temp(1,N);
+	TVector<double> cumulative_ROC(1,N);
+	int step_counter = 0;
+	for (double t=StepSize;t<=RunDuration;t+=StepSize){
+		temp = Circuit.states;
+		Circuit.EulerStep(StepSize,false,false);
+		for (int i = 1; i <= N; i ++){
+			cumulative_ROC[i] += abs(temp[i] - Circuit.NeuronState(i));
+		}
+		step_counter++;
+	}
+double fit = 0;
+for (int i = 1; i <= N; i ++){
+	fit += cumulative_ROC[i]/step_counter;
+} 
+
+return fit;
+
+}
+
+double ComboFitness(TVector<double> &genotype, RandomState &rs){
+	//returns the weighted average of the avg absolute value of the rate of change and the HPsatisfaction function
+	TVector<double> phenotype(1,VectSize);
+	GenPhenMapping(genotype,phenotype);
+	// cout << phenotype << endl;
+
+	// double fitness = (HPsatisfaction(phenotype) + (ROC_weighting*RateofChange(phenotype)))/(1+ROC_weighting);
+	double fitness  = HPsatisfaction(phenotype) * RateofChange(phenotype); //must be oscillating to get any fitness from the HP satisfaction (could make more of a threshold)
+	return fitness;
+}
+
+double Pyloricfit(TVector<double> &phenotype){
+	CTRNN Circuit(N);
+	// cout << Circuit.size << endl;
+	phenotype >> Circuit; //just overwrote this operator to allow transfer from a phenotype vector
+	// cout << "phenotype mapped " << Circuit.biases << endl;
+	// cout << "phenotype mapped " << Circuit.biases << endl;
 	
-	// Create the agent
-	CTRNN Agent(3);
+	Circuit.RandomizeCircuitState(0,0);
 
-	// Instantiate the nervous system
-	char fname[] = "../Pete.ns";
-    ifstream ifs;
-    ifs.open(fname);
-    if (!ifs) {
-        cerr << "File not found: " << fname << endl;
-        exit(EXIT_FAILURE);
-    }
-    ifs >> Agent; 
-	ifs.close();
-
-	// Instantiate the HP mechanism
-	Agent.SetHPPhenotype(phenotype,StepSize,true); //range encoding active
-
-	double fitness = HPPerformance(Agent, scaling_factor);
-
-    return fitness; //fitness averaged across all times it is taken
+	return PyloricPerfwTransient(Circuit); //hopefully this also prints the start and end steps of each neuron to determine which ordering criteria is breeched
 }
+
 
 // ------------------------------------
 // Display functions
 // ------------------------------------
 ofstream Evolfile;
 ofstream BestIndividualsFile;
+ofstream trajfile;
+ofstream ord_criteria_file;
 
+void EvolutionaryRunDisplay(TSearch &s)
+{
+	
+	Evolfile << s.Generation() << " " << s.BestPerformance() << " " << s.AvgPerformance() << " " << s.PerfVariance() << endl;
+	// Evolfile << Generation << " " << BestPerf << " " << AvgPerf << " " << PerfVar << endl;
+}
 int trial = 1;
 void ResultsDisplay(TSearch &s)
 {
@@ -138,28 +190,11 @@ void ResultsDisplay(TSearch &s)
 
 	BestIndividualsFile << trial << endl;
 	BestIndividualsFile << bestVector << endl << phenotype << endl;
-	BestIndividualsFile << s.BestPerformance() << endl << endl;
+	BestIndividualsFile << s.BestPerformance() << " " << HPsatisfaction(phenotype) << " " << RateofChange(phenotype) << endl << endl;
 
 	cout << trial << "finished" << endl;
 
 	trial ++;
-}
-
-void EvolutionaryRunDisplay(TSearch &s)
-{
-	
-	//cout << Generation << " " << BestPerf << " " << AvgPerf << " " << PerfVar << endl;
-	Evolfile << s.Generation() << " " << s.BestPerformance() << " " << s.AvgPerformance() << " " << s.PerfVariance() << endl;
-
-	TVector<double> bestVector;
-	TVector<double> phenotype;
-	phenotype.SetBounds(1, VectSize);
-
-	// Save the genotype of the best individual
-	bestVector = s.BestIndividual();
-	GenPhenMapping(bestVector, phenotype);
-
-	Evolfile << phenotype << endl;
 }
 
 // ------------------------------------
@@ -167,18 +202,26 @@ void EvolutionaryRunDisplay(TSearch &s)
 // ------------------------------------
 int main (int argc, const char* argv[]) 
 {
-	// Evolution condition
-	Evolfile.open("evol.dat");
-	BestIndividualsFile.open("bestind.dat");
+
+	Evolfile.open("evolCTRNN.dat");
+	BestIndividualsFile.open("bestindsCTRNN.dat");
+
+	trajfile.open("evolvedcircuit.dat");
+
+	ord_criteria_file.open("orderingcriteria.dat");
+
 	for (int i=1;i<=trials;i++){
-		long randomseed = static_cast<long>(time(NULL));
-		if (argc == 2)
-			randomseed += atoi(argv[1]);
-		// long IDUM=-time(0);
+		long IDUM=-time(0);
 		TSearch s(VectSize);
 
+		#ifdef PRINTOFILE
+		ofstream file;
+		file.open("evol.dat");
+		cout.rdbuf(file.rdbuf());
+		#endif
+
 		// Configure the search
-		s.SetRandomSeed(randomseed);
+		s.SetRandomSeed(IDUM);
 		//cout << IDUM << endl;
 		s.SetSearchResultsDisplayFunction(ResultsDisplay);
 		s.SetPopulationStatisticsDisplayFunction(EvolutionaryRunDisplay);
@@ -194,21 +237,40 @@ int main (int argc, const char* argv[])
 		s.SetSearchConstraint(1);
 		s.SetReEvaluationFlag(0); //  Parameter Variability Modality Only
 
-		s.SetEvaluationFunction(HPFitnessFunction);
-		s.ExecuteSearch();
+		s.SetEvaluationFunction(ComboFitness);
+		s.ExecuteSearch(true);
 
-	// ifstream genefile("bestinds.dat");
-	// int gen;
-	// genefile >> gen;
-	// TVector<double> genotype(1, VectSize);
-	// genefile >> genotype;
-	// cout << genotype << endl;
-	// RandomState rs;
-	// cout << HPFitnessFunction(genotype,rs) << endl;
-		
+		// ifstream genefile("best.gen.dat");
+		// TVector<double> genotype(1, VectSize);
+		// genefile >> genotype;
+
+		//Gather trajectory of best evolved circuit
+		TVector<double> bestgenotype(1, VectSize);
+		TVector<double> bestphenotype(1, VectSize);
+		bestgenotype = s.BestIndividual();
+		GenPhenMapping(bestgenotype,bestphenotype);
+		CTRNN Circuit(N);
+		bestphenotype >> Circuit;
+		Circuit.RandomizeCircuitOutput(.5,.5);
+
+		for(double t = StepSize; t <= TransientDuration; t += StepSize){
+			Circuit.EulerStep(StepSize,false,false);
+			trajfile << Circuit.outputs << endl;
+		}
+
+		for (double t=StepSize;t<=RunDuration;t+=StepSize){
+			Circuit.EulerStep(StepSize,false,false);
+			// cout << "single step complete" << endl;
+			trajfile << Circuit.outputs << endl;
+		}
+		trajfile << endl;
+
+		//record the ordering criteria of the best evolved circuit
+		OrderingRecord(Circuit,ord_criteria_file);
 	}
 	Evolfile.close();
 	BestIndividualsFile.close();
-
+	trajfile.close();
+	ord_criteria_file.close();
   return 0;
 }

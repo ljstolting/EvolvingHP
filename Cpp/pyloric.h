@@ -154,7 +154,9 @@ double PyloricPerfwTransient(CTRNN &Agent)
 				}
 			}
 			else {cout << "PYstart not found during cycle" << endl;}
-
+			//-----------------
+			// cout << LPstart << " " << LPend << " " << PYstart << " " << PYend << " " << PDstarts[1] << " " << PDend << endl;
+			//-----------------
 
 			if (abs(OutputHistory[PDstarts[1]][1] - OutputHistory[PDstarts[2]][1])<tolerance){      //at the two points where PD crosses up,
 				if (abs(OutputHistory[PDstarts[1]][2] - OutputHistory[PDstarts[2]][2])<tolerance){  //are the other two neurons approximately in the same place?
@@ -206,11 +208,160 @@ double PyloricPerfwTransient(CTRNN &Agent)
 			}
 		}
 	}
+
 	return (fitness);
 
 }
 
-double PyloricCountUp(CTRNN Agent, bool HPtest)
+void OrderingRecord(CTRNN &Agent, ofstream &ord_criteria_file){
+	//partial copy of PyloricPerf (w/o transient), but prints the fulfilment of ordering criteria to a designated file
+	int N = Agent.CircuitSize();
+	TMatrix<double> OutputHistory;
+	OutputHistory.SetBounds(1,TestSteps,1,N);
+	OutputHistory.FillContents(0.0);
+	// TVector<double> CumRateChange(1,N);
+
+	TVector<double> maxoutput(1,N);
+	maxoutput.FillContents(0.0);
+	TVector<double> minoutput(1,N);
+	minoutput.FillContents(1.0);
+
+	// Run the circuit to calculate Pyloric fitness while HP is turned OFF.
+	int temp = 0;
+	for (double time = StepSize; time <= TestDuration; time += StepSize) {
+		temp += 1;
+		for (int i = 1; i <= N; i += 1) {
+			OutputHistory[temp][i] = Agent.NeuronOutput(i);
+			if (Agent.NeuronOutput(i) > maxoutput[i]) {maxoutput[i]=Agent.NeuronOutput(i);}
+			if (Agent.NeuronOutput(i) < minoutput[i]) {minoutput[i]=Agent.NeuronOutput(i);}
+		}
+		Agent.EulerStep(StepSize,false,false);
+	}
+	int criteriamet = 0;
+	for (int i = 1; i <= N; i += 1) {
+		// SHORT HAND FOR ALL NEURONS OSCILLATING APPRECIABLY
+		if (minoutput[i] <(burstthreshold-.05)) {
+			if (maxoutput[i]>burstthreshold) {
+				criteriamet += 1;
+			}
+		}
+	}
+	
+	if (criteriamet == 3){
+		int PDstartcount = 0;
+		TVector<int> PDstarts(1,3);
+		PDstarts.FillContents(0);
+		//LOCATE SECOND TO LAST FULL CYCLE of PD
+		for (int step = TestSteps; step >= 2; step --) {
+			if (PDstartcount < 3){
+				if (OutputHistory[step][3] > burstthreshold){
+					if (OutputHistory[step-1][3] < burstthreshold){
+						PDstarts[3-PDstartcount] = step;
+						PDstartcount += 1;
+						//cout << "PDstarts";
+					}
+				}
+			}
+			else{
+				break;
+			}
+		}
+		if (PDstartcount < 3){
+			cout << "unable to find two full cycles; may want to increase transient, lengthen runtime, or speed up slowest timescale" << endl;
+		}
+		else{
+			int PDend = 0;
+			int PDendcount = 0;
+			int LPstart = 0;
+			int LPstartcount = 0;
+			int LPend = 0;
+			int PYstart = 0;
+			int PYstartcount = 0;
+			int PYend = 0;
+			for (int step=PDstarts(1); step<=PDstarts(2); step ++){
+				if (PDendcount == 0){
+					if (OutputHistory[step][3]>burstthreshold){
+						if (OutputHistory[step+1][3]<burstthreshold){
+							PDend = step;
+							PDendcount ++;
+							//cout << "PDend";
+						}
+					}
+				}
+				if (LPstartcount == 0){
+					if (OutputHistory[step][1]<burstthreshold){
+						if (OutputHistory[step+1][1]>burstthreshold){
+							LPstart = step;
+							LPstartcount ++;
+							//cout << "LPstart";
+						}
+					}
+				}
+				if (PYstartcount == 0){
+					if (OutputHistory[step][2]<burstthreshold){
+						if (OutputHistory[step+1][2]>burstthreshold){
+							PYstart = step;
+							PYstartcount ++;
+							//cout << "PYstart";
+						}
+					}
+				}
+			}
+			if (LPstartcount == 1){
+				for (int step=LPstart;step<=PDstarts(3);step++){
+					if (OutputHistory[step][1]>burstthreshold){
+						if (OutputHistory[step+1][1]<burstthreshold){
+							LPend = step;
+							//cout << "LPend";
+							break;
+						}
+					}
+				}
+			}
+			else{cout << "LPstart not found during cycle" << endl;}
+
+			if (PYstartcount == 1){
+				for (int step=PYstart;step<=PDstarts(3);step++){
+					if (OutputHistory[step][2]>burstthreshold){
+						if (OutputHistory[step+1][2]<burstthreshold){
+							PYend = step;
+							//cout << "PYend" << endl;
+							break;
+						}
+					}
+				}
+			}
+			else {cout << "PYstart not found during cycle" << endl;}
+			if (abs(OutputHistory[PDstarts[1]][1] - OutputHistory[PDstarts[2]][1])<tolerance){      //at the two points where PD crosses up,
+				if (abs(OutputHistory[PDstarts[1]][2] - OutputHistory[PDstarts[2]][2])<tolerance){  //are the other two neurons approximately in the same place?
+					// 	ORDERING CRITERIA
+					if (LPstart <= PYstart){
+						//cout << "order1" << endl;
+						criteriamet += 1;
+						ord_criteria_file << 1 << " ";
+					}
+					else{ord_criteria_file << 0 << " ";}
+					if (LPend <= PYend){
+						//cout << "order2" << endl;
+						criteriamet += 1;
+						ord_criteria_file << 1 << " ";
+					}
+					else{ord_criteria_file << 0 << " ";}
+					if (PDend <= LPstart){
+						//cout << "order3" << endl;
+						criteriamet += 1;
+						ord_criteria_file << 1 << endl;
+					}
+					else{ord_criteria_file << 0 << endl;}
+				}
+			}
+		}
+	}
+	// absence of elements printed to file indicates that (1) not all neurons oscillate, (2) not all neurons crossed threshold, or (3) there was "double-periodicity"
+	return;
+}
+
+double PyloricCountUp(CTRNN &Agent, bool HPtest)
 {
 	TMatrix<double> OutputHistory;
 	OutputHistory.SetBounds(1,TestSteps,1,Agent.size);
@@ -386,7 +537,6 @@ double PyloricCountUp(CTRNN Agent, bool HPtest)
 
 }
 
-
 double PyloricPerformance(CTRNN &Agent)
 //Main difference is that it does not include transient -- assumes circuit is already equilibrated.
 //Also only runs until three PDstarts are detected to save time
@@ -524,6 +674,8 @@ double PyloricPerformance(CTRNN &Agent)
 				//cout << "order3" << endl;
 				fitness += 0.05;
 			}
+			// cout << LPstart << " " << LPend << " " << PYstart << " " << PYend << " " << PDstarts[1] << " " << PDend << endl;
+				
 			if (fitness == 0.3){
 				int period = PDstarts[2] - PDstarts[1];
 				double LPfoo = LPend - LPstart; 
@@ -542,7 +694,6 @@ double PyloricPerformance(CTRNN &Agent)
 				double PYstartphase = PYbar/period; //delay/period
 				double PYstartphasezscore = abs(PYstartphase - .758)/.060;
 				// cout << "Period:" << period << endl;
-				// cout << LPstart << " " << LPend << " " << PYstart << " " << PYend << " " << PDstarts[1] << " " << PDend << endl;
 				// cout << LPdutycyclezscore<< ", "<<PYdutycyclezscore<<", "<<PDdutycyclezscore<<", "<<LPstartphasezscore<<", "<<PYstartphasezscore<<endl;
 				double average = (LPdutycyclezscore+PYdutycyclezscore+PDdutycyclezscore+LPstartphasezscore+PYstartphasezscore)/5;
 				fitness += 1/(average);

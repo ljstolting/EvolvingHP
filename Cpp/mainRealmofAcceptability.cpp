@@ -22,8 +22,8 @@ const double par2max = 16.0;
 const double par2step = .1;
 
 // HP genome file
-char HPfname[] = "./33/bestind.dat"; 
-char netchangefname[] = "Ronnnetchangelong.dat";
+char HPfname[] = "./37/bestind.dat"; 
+char netchangefname[] = "Ronnnetchange37.dat";
 
 // Nervous system params
 const int N = 3;
