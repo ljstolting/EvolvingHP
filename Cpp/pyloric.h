@@ -268,6 +268,7 @@ void OrderingRecord(CTRNN &Agent, ofstream &ord_criteria_file){
 		}
 		if (PDstartcount < 3){
 			cout << "unable to find two full cycles; may want to increase transient, lengthen runtime, or speed up slowest timescale" << endl;
+			ord_criteria_file << "2 2 2" << endl;
 		}
 		else{
 			int PDend = 0;
@@ -357,6 +358,7 @@ void OrderingRecord(CTRNN &Agent, ofstream &ord_criteria_file){
 			}
 		}
 	}
+	else{ord_criteria_file << "2 2 2" << endl;}
 	// absence of elements printed to file indicates that (1) not all neurons oscillate, (2) not all neurons crossed threshold, or (3) there was "double-periodicity"
 	return;
 }

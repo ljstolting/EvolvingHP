@@ -24,7 +24,7 @@ const int RunSteps = RunDuration/StepSize; // in steps
 // EA params
 const int POPSIZE = 100;
 const int GENS = 100;
-const int trials = 1;    // number of times to run the EA from random starting pop
+const int trials = 100;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
 const double EXPECTED = 1.1;
@@ -135,6 +135,8 @@ for (int i = 1; i <= N; i ++){
 	fit += cumulative_ROC[i]/step_counter;
 } 
 
+if (fit <= .01) {fit = 0;} //some cutoff to define oscillation
+
 return fit;
 
 }
@@ -147,6 +149,26 @@ double ComboFitness(TVector<double> &genotype, RandomState &rs){
 
 	// double fitness = (HPsatisfaction(phenotype) + (ROC_weighting*RateofChange(phenotype)))/(1+ROC_weighting);
 	double fitness  = HPsatisfaction(phenotype) * RateofChange(phenotype); //must be oscillating to get any fitness from the HP satisfaction (could make more of a threshold)
+	return fitness;
+}
+
+double ROCFitonly(TVector<double> &genotype, RandomState &rs){
+	//returns the weighted average of the avg absolute value of the rate of change and the HPsatisfaction function
+	TVector<double> phenotype(1,VectSize);
+	GenPhenMapping(genotype,phenotype);
+	// cout << phenotype << endl;
+
+	double fitness = RateofChange(phenotype);
+	return fitness;
+}
+
+double HPFitonly(TVector<double> &genotype, RandomState &rs){
+	//returns the weighted average of the avg absolute value of the rate of change and the HPsatisfaction function
+	TVector<double> phenotype(1,VectSize);
+	GenPhenMapping(genotype,phenotype);
+	// cout << phenotype << endl;
+
+	double fitness = HPsatisfaction(phenotype);
 	return fitness;
 }
 
@@ -203,12 +225,12 @@ void ResultsDisplay(TSearch &s)
 int main (int argc, const char* argv[]) 
 {
 
-	Evolfile.open("evolCTRNN.dat");
-	BestIndividualsFile.open("bestindsCTRNN.dat");
+	Evolfile.open("evolCTRNNfastcombo.dat");
+	BestIndividualsFile.open("bestindsCTRNNfastcombo.dat");
 
-	trajfile.open("evolvedcircuit.dat");
+	// trajfile.open("evolvedcircuit.dat");
 
-	ord_criteria_file.open("orderingcriteria.dat");
+	ord_criteria_file.open("orderingcriteriafastcombo.dat");
 
 	for (int i=1;i<=trials;i++){
 		long IDUM=-time(0);
@@ -253,24 +275,24 @@ int main (int argc, const char* argv[])
 		bestphenotype >> Circuit;
 		Circuit.RandomizeCircuitOutput(.5,.5);
 
-		for(double t = StepSize; t <= TransientDuration; t += StepSize){
-			Circuit.EulerStep(StepSize,false,false);
-			trajfile << Circuit.outputs << endl;
-		}
+		// for(double t = StepSize; t <= TransientDuration; t += StepSize){
+		// 	Circuit.EulerStep(StepSize,false,false);
+		// 	trajfile << Circuit.outputs << endl;
+		// }
 
-		for (double t=StepSize;t<=RunDuration;t+=StepSize){
-			Circuit.EulerStep(StepSize,false,false);
-			// cout << "single step complete" << endl;
-			trajfile << Circuit.outputs << endl;
-		}
-		trajfile << endl;
+		// for (double t=StepSize;t<=RunDuration;t+=StepSize){
+		// 	Circuit.EulerStep(StepSize,false,false);
+		// 	// cout << "single step complete" << endl;
+		// 	trajfile << Circuit.outputs << endl;
+		// }
+		// trajfile << endl;
 
 		//record the ordering criteria of the best evolved circuit
 		OrderingRecord(Circuit,ord_criteria_file);
 	}
 	Evolfile.close();
 	BestIndividualsFile.close();
-	trajfile.close();
+	// trajfile.close();
 	ord_criteria_file.close();
   return 0;
 }
