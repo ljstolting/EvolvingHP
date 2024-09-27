@@ -22,8 +22,8 @@ const double par2max = 16.0;
 const double par2step = .1;
 
 // HP genome file
-char HPfname[] = "./37/bestind.dat"; 
-char netchangefname[] = "Ronnnetchange37.dat";
+char HPfname[] = "./33/bestind.dat"; 
+char netchangefname[] = "Svennetchange33.dat";
 
 // Nervous system params
 const int N = 3;
@@ -38,7 +38,7 @@ int main (int argc, const char* argv[])
 	netchangefile.open(netchangefname);
 	
     CTRNN Circuit(N);
-    char fname[] = "Ronn.ns";
+    char fname[] = "Sven.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {

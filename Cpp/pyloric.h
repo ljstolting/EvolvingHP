@@ -712,23 +712,22 @@ double PyloricPerformance(CTRNN &Agent)
 }
 
 double HPPerformance(CTRNN &Agent, double scaling_factor){
+	//Starting parameters
+	int resolution = 3; //number of points per dimenison
+	TMatrix<double> par_ICs(1,num,1,resolution);
+
+	par_ICs.InitializeContents(-8,0,8,-8,0,8,-8,0,8);
+
 	// Agent should already have HP mechanism instantiated
-
-    //Starting parameters
-    TVector<double> par1s(1,3);
-    par1s[1] = -8;
-    par1s[2] = 0;
-    par1s[3] = 8;
-    TVector<double> par2s(1,3);
-    par2s[1] = -8;
-    par2s[2] = -0;
-	par2s[3] = 8;
-
+	TVector<int> par_idxs(1,num);
+	par_idxs.FillContents(1);
     double fitness = 0;
-    for (int i=1;i<=par1s.UpperBound();i++){
-        for (int j=1;j<=par2s.UpperBound();j++){
-			Agent.SetNeuronBias(1,par1s[i]);
-            Agent.SetNeuronBias(3,par2s[j]);
+    for (int i=1;i<=num;i++){
+        for (int j=1;j<=resolution;j++){
+			par_idxs[i] ++;
+			for (int b=1;b<=num;b++){
+				Agent.SetNeuronBias(b,par_ICs(b,par_idxs[b]));
+			}
 			// cout << "parameters " << Agent.NeuronBias(1) << " " << Agent.NeuronBias(2) << " " << Agent.NeuronBias(3) << " " << Agent.ConnectionWeight(1,1) << endl;
             // Initialize the outputs at 0.5 for all neurons in the circuit
             for (int n=1;n<=Agent.CircuitSize();n++){Agent.SetNeuronState(n,0);}
@@ -769,5 +768,5 @@ double HPPerformance(CTRNN &Agent, double scaling_factor){
 			fitness += fit;
         }
     }
-    return fitness/(par1s.UpperBound()*par2s.UpperBound()*2);
+    return fitness/(num*resolution);
 }

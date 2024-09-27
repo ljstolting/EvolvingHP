@@ -17,6 +17,10 @@
 
 #pragma once
 
+const int num = 3;
+// when evolving HP
+// const int VectSize = num * 4;
+
 
 // The sigmoid function
 
@@ -153,7 +157,7 @@ class CTRNN {
         int size, stepnum;
         TVector<int> windowsize; // NEW for AVERAGING
         double wr, br; // NEWER for CAPPING
-        int max_windowsize;
+        int max_windowsize, num_pars_changed;
         TVector<double> states, outputs, biases, gains, taus, Rtaus, externalinputs;
         TVector<double> rhos, tausBiases, RtausBiases, l_boundary, u_boundary, minavg, maxavg; // NEW
         TVector<double> avgoutputs, sumoutputs; // NEW for AVERAGING

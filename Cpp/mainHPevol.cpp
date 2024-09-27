@@ -50,8 +50,8 @@ const double BTMAX = 200.0;		// Bias Time Constant
 // const double WTMIN = 40.0;		// Weight Time Constant
 // const double WTMAX = 40.0;		// Weight Time Constant
 
-int num = 2; // Number of parameters being changed--temporary
-int	VectSize = num*4;
+int num = 3; // Number of parameters being changed (defined in CTRNN.cpp)
+int	VectSize = num*4; //every parameter has a time constant, lower bound, range, and sliding window
 // ------------------------------------
 // Genotype-Phenotype Mapping Functions
 // ------------------------------------
@@ -68,7 +68,7 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 		phen(k) = MapSearchParameter(gen(k), LBMIN, LBMAX);
 		k++;
 	}
-	// Upper Bounds -- must be greater than lower bound
+	// Upper Bounds OR Range
 	for (int i = 1; i <= num; i++) {
 		phen(k) = MapSearchParameter(gen(k), UBMIN, UBMAX);
 		// if (phen(k) < phen(k-num)){phen(k)=phen(k-num);} //clipping now happens in the Set functions
@@ -86,7 +86,7 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 // ------------------------------------
 double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
     
-    // Map genootype to phenotype
+    // Map genotype to phenotype
 	TVector<double> phenotype;
 	phenotype.SetBounds(1, VectSize);
 	GenPhenMapping(genotype, phenotype);
@@ -95,7 +95,7 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 	CTRNN Agent(3);
 
 	// Instantiate the nervous system
-	char fname[] = "../Pete.ns";
+	char fname[] = "./Pete.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -189,7 +189,7 @@ int main (int argc, const char* argv[])
 		s.SetReEvaluationFlag(0); //  Parameter Variability Modality Only
 
 		s.SetEvaluationFunction(HPFitnessFunction);
-		s.ExecuteSearch();
+		s.ExecuteSearch(false);
 
 	// ifstream genefile("bestinds.dat");
 	// int gen;
