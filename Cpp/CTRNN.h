@@ -17,10 +17,6 @@
 
 #pragma once
 
-const int num = 3;
-// when evolving HP
-// const int VectSize = num * 4;
-
 
 // The sigmoid function
 
@@ -150,14 +146,15 @@ class CTRNN {
         void RandomizeCircuitOutput(double lb, double ub);
         void RandomizeCircuitOutput(double lb, double ub, RandomState &rs);
         void RhoCalc(void);
-        void EulerStep(double stepsize, bool adaptbiases, bool adaptweights);
+        void EulerStep(double stepsize, bool adaptpars);
         void EulerStepAvgsnoHP(double stepsize);
         // void RK4Step(double stepsize);
 
         int size, stepnum;
-        TVector<int> windowsize; // NEW for AVERAGING
+        TVector<int> windowsize, plasticitypars, plasticneurons; // NEW for AVERAGING
         double wr, br; // NEWER for CAPPING
         int max_windowsize, num_pars_changed;
+        bool adaptbiases, adaptweights;
         TVector<double> states, outputs, biases, gains, taus, Rtaus, externalinputs;
         TVector<double> rhos, tausBiases, RtausBiases, l_boundary, u_boundary, minavg, maxavg; // NEW
         TVector<double> avgoutputs, sumoutputs; // NEW for AVERAGING

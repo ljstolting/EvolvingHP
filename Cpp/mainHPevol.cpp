@@ -6,6 +6,7 @@
 #include "CTRNN.h"
 #include "random.h"
 #include "pyloric.h"
+#include "VectorMatrix.h"
 
 //#define PRINTOFILE
 
@@ -23,8 +24,8 @@
 // const double tolerance = .1; //for detecting double periodicity
 
 // EA params
-const int POPSIZE = 50;
-const int GENS = 100;
+const int POPSIZE = 1;
+const int GENS = 0;
 const int trials = 1;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
@@ -37,9 +38,9 @@ const double scaling_factor = 25; // boost to add to solutions that are fully py
 //const int AnalysisReps = 100;
 
 // Nervous system params
-// const int N = 3;
+const int N = 3;
 
-// Plasticity parameters
+// Plasticity parameter ranges
 const double SWR = 10;		// Max Window Size of Plastic Rule (in seconds now)
 const double LBMIN = 0;
 const double UBMIN = 0; 		// Plasticity Boundaries
@@ -50,13 +51,12 @@ const double BTMAX = 200.0;		// Bias Time Constant
 // const double WTMIN = 40.0;		// Weight Time Constant
 // const double WTMAX = 40.0;		// Weight Time Constant
 
-int num = 3; // Number of parameters being changed (defined in CTRNN.cpp)
-int	VectSize = num*4; //every parameter has a time constant, lower bound, range, and sliding window
 // ------------------------------------
 // Genotype-Phenotype Mapping Functions
 // ------------------------------------
 void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 {
+
 	int k = 1;
 	// Bias Time-constants
 	for (int i = 1; i <= num; i++) {
@@ -106,7 +106,9 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 	ifs.close();
 
 	// Instantiate the HP mechanism
+	cout << "initial:" << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
 	Agent.SetHPPhenotype(phenotype,StepSize,true); //range encoding active
+	cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
 
 	double fitness = HPPerformance(Agent, scaling_factor);
 
@@ -130,7 +132,16 @@ void ResultsDisplay(TSearch &s)
 	bestVector = s.BestIndividual();
 	GenPhenMapping(bestVector, phenotype);
 
-	BestIndividualsFile << trial << endl;
+	// Reproduce which pars the HP mechanism has access to
+	char plasticparsfname[] = "./plasticpars.dat";
+  	ifstream plasticparsfile;
+  	TVector<int> plasticitypars(1,N+(N*N));
+  	plasticparsfile.open(plasticparsfname);
+  	for (int i = 1; i <= plasticitypars.UpperBound(); i ++){
+    	plasticparsfile >> plasticitypars[i];
+  	}
+	// BestIndividualsFile << trial << endl;
+	BestIndividualsFile << plasticitypars << endl;
 	BestIndividualsFile << bestVector << endl << phenotype << endl;
 	BestIndividualsFile << s.BestPerformance() << endl << endl;
 
@@ -161,6 +172,7 @@ void EvolutionaryRunDisplay(TSearch &s)
 // ------------------------------------
 int main (int argc, const char* argv[]) 
 {
+
 	// Evolution condition
 	Evolfile.open("evol.dat");
 	BestIndividualsFile.open("bestind.dat");
