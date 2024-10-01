@@ -106,12 +106,13 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 	ifs.close();
 
 	// Instantiate the HP mechanism
-	cout << "initial:" << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
+	
+	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
 	Agent.SetHPPhenotype(phenotype,StepSize,true); //range encoding active
-	cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
+	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
 
 	double fitness = HPPerformance(Agent, scaling_factor);
-
+	// cout << fitness << endl;
     return fitness; //fitness averaged across all times it is taken
 }
 

@@ -23,9 +23,10 @@ const double StepSize = 0.01;
 const int TestSteps = TestDuration/StepSize; // in steps
 
 // Plasticity params 
-
-int num = 3;
-int VectSize = num *4;
+// MUST MANUALLY CHANGE BECAUSE I CANNOT WORK OUT THE FILE DEPENDENCIES
+int num = 2;
+int neuronschanging = 2;
+int VectSize =  num + (neuronschanging * 3);
 
 // Detection params
 const double burstthreshold = .5; //threshold that must be crossed for detecting bursts
@@ -717,8 +718,9 @@ double PyloricPerformance(CTRNN &Agent)
 
 }
 
-void converttobase(int N,int resolution,int dimension,TVector<int> &converted){
+void converttobase(int N,int resolution,TVector<int> &converted){
 	//recursive function to convert to base of choice
+	int dimension = converted.UpperBound();
 	while(N>0){
 		int r = N % resolution;
 		N = (N-r) / resolution;
@@ -733,9 +735,9 @@ void PointCombos(TMatrix<int> &answer,int resolution){
 	int num_points = answer.RowUpperBound();
 	int dimension = answer.ColumnUpperBound();
 	for (int i = 1; i <= num_points; i ++){
-		TVector<int> row(1,resolution);
-		converttobase(i-1,resolution,dimension,row);
-		for(int j = 1; j <= resolution; j++){
+		TVector<int> row(1,dimension);
+		converttobase(i-1,resolution,row);
+		for(int j = 1; j <= dimension; j++){
 			answer(i,j) += row[j]; //allows for 1 indexing if matrix initialized with ones
 		}
 	}
@@ -750,7 +752,8 @@ double HPPerformance(CTRNN &Agent, double scaling_factor){
 	double medres = 0;
 	double highres = 8;
 	TMatrix<double> par_ICs(1,num,1,resolution);
-	par_ICs.InitializeContents(lowerres,medres,highres,lowerres,medres,highres,lowerres,medres,highres);
+	// MUST BE CHANGED MANUALLY
+	par_ICs.InitializeContents(lowerres,medres,highres,lowerres,medres,highres);
 	// cout << par_ICs << endl;
 
 	// Agent should already have HP mechanism instantiated
