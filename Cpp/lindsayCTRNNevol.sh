@@ -10,9 +10,5 @@
 #SBATCH --mem=16G
 #SBATCH -A r00213
 
-mkdir $JB;
-cd $JB;
-echo "ND" $JB
-time ../main $JB
-cd ../;
+time ./main 
 
