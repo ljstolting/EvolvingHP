@@ -46,6 +46,7 @@ public:
 	void BinaryWriteVector(ofstream& bofs);
 	void BinaryReadVector(ifstream& binfs);
 	EltType Max(void);
+	EltType Sum(void);
 	// Overloaded operators
 	EltType &operator[](int index)
 	{
@@ -153,6 +154,17 @@ EltType TVector<EltType>::Max(void){
 		}
 	}
 	return f;
+}
+
+// Return the sum of a vector
+// Added by Lindsay Stolting, don't know if it works or not
+template<class EltType>
+EltType TVector<EltType>::Sum(void)
+{
+	EltType sum = 0;
+	for (int i = lb; i <= ub; i++)
+		sum += Vector[i];
+	return sum;
 }
 
 // Push an element to the front
@@ -413,6 +425,7 @@ void TMatrix<EltType>::FillContents(EltType x)
 
 
 // Initialize a TMatrix with given contents
+// MAY BE MALFUNCTIONING?
 
 template<class EltType>
 void TMatrix<EltType>::InitializeContents(EltType v1,...)

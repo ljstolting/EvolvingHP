@@ -6,6 +6,7 @@
 #include "CTRNN.h"
 #include "random.h"
 #include "pyloric.h"
+#include "VectorMatrix.h"
 
 //#define PRINTOFILE
 
@@ -23,8 +24,8 @@
 // const double tolerance = .1; //for detecting double periodicity
 
 // EA params
-const int POPSIZE = 50;
-const int GENS = 100;
+const int POPSIZE = 1;
+const int GENS = 0;
 const int trials = 1;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
@@ -37,9 +38,9 @@ const double scaling_factor = 25; // boost to add to solutions that are fully py
 //const int AnalysisReps = 100;
 
 // Nervous system params
-// const int N = 3;
+const int N = 3;
 
-// Plasticity parameters
+// Plasticity parameter ranges
 const double SWR = 10;		// Max Window Size of Plastic Rule (in seconds now)
 const double LBMIN = 0;
 const double UBMIN = 0; 		// Plasticity Boundaries
@@ -50,13 +51,12 @@ const double BTMAX = 200.0;		// Bias Time Constant
 // const double WTMIN = 40.0;		// Weight Time Constant
 // const double WTMAX = 40.0;		// Weight Time Constant
 
-int num = 2; // Number of parameters being changed--temporary
-int	VectSize = num*4;
 // ------------------------------------
 // Genotype-Phenotype Mapping Functions
 // ------------------------------------
 void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 {
+
 	int k = 1;
 	// Bias Time-constants
 	for (int i = 1; i <= num; i++) {
@@ -68,7 +68,7 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 		phen(k) = MapSearchParameter(gen(k), LBMIN, LBMAX);
 		k++;
 	}
-	// Upper Bounds -- must be greater than lower bound
+	// Upper Bounds OR Range
 	for (int i = 1; i <= num; i++) {
 		phen(k) = MapSearchParameter(gen(k), UBMIN, UBMAX);
 		// if (phen(k) < phen(k-num)){phen(k)=phen(k-num);} //clipping now happens in the Set functions
@@ -86,7 +86,7 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 // ------------------------------------
 double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
     
-    // Map genootype to phenotype
+    // Map genotype to phenotype
 	TVector<double> phenotype;
 	phenotype.SetBounds(1, VectSize);
 	GenPhenMapping(genotype, phenotype);
@@ -95,7 +95,7 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 	CTRNN Agent(3);
 
 	// Instantiate the nervous system
-	char fname[] = "../Pete.ns";
+	char fname[] = "./Pete.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -106,10 +106,13 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 	ifs.close();
 
 	// Instantiate the HP mechanism
+	
+	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
 	Agent.SetHPPhenotype(phenotype,StepSize,true); //range encoding active
+	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
 
 	double fitness = HPPerformance(Agent, scaling_factor);
-
+	// cout << fitness << endl;
     return fitness; //fitness averaged across all times it is taken
 }
 
@@ -130,7 +133,16 @@ void ResultsDisplay(TSearch &s)
 	bestVector = s.BestIndividual();
 	GenPhenMapping(bestVector, phenotype);
 
-	BestIndividualsFile << trial << endl;
+	// Reproduce which pars the HP mechanism has access to
+	char plasticparsfname[] = "./plasticpars.dat";
+  	ifstream plasticparsfile;
+  	TVector<int> plasticitypars(1,N+(N*N));
+  	plasticparsfile.open(plasticparsfname);
+  	for (int i = 1; i <= plasticitypars.UpperBound(); i ++){
+    	plasticparsfile >> plasticitypars[i];
+  	}
+	// BestIndividualsFile << trial << endl;
+	BestIndividualsFile << plasticitypars << endl;
 	BestIndividualsFile << bestVector << endl << phenotype << endl;
 	BestIndividualsFile << s.BestPerformance() << endl << endl;
 
@@ -161,6 +173,7 @@ void EvolutionaryRunDisplay(TSearch &s)
 // ------------------------------------
 int main (int argc, const char* argv[]) 
 {
+
 	// Evolution condition
 	Evolfile.open("evol.dat");
 	BestIndividualsFile.open("bestind.dat");
@@ -189,7 +202,7 @@ int main (int argc, const char* argv[])
 		s.SetReEvaluationFlag(0); //  Parameter Variability Modality Only
 
 		s.SetEvaluationFunction(HPFitnessFunction);
-		s.ExecuteSearch();
+		s.ExecuteSearch(false);
 
 	// ifstream genefile("bestinds.dat");
 	// int gen;

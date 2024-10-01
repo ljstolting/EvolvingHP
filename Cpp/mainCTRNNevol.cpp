@@ -38,7 +38,7 @@ const double BR = 16.0; //(WR*N)/2; //<-for allowing center crossing
 const double TMIN = .1; 
 const double TMAX = 2; 
 
-int	VectSize = N*N + 2*N;
+const int VectSize = N*N + 2*N;
 
 // ------------------------------------
 // Genotype-Phenotype Mapping Functions
@@ -71,7 +71,7 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 
 double HPsatisfaction(TVector<double> &phenotype){
 	// HP mechanism
-	char HPfname[] = "./33/bestind.dat";
+	char HPfname[] = "./HPbestindtrial.dat";
 	ifstream HPfile;
 	HPfile.open(HPfname);
 
@@ -85,7 +85,7 @@ double HPsatisfaction(TVector<double> &phenotype){
 	// cout << "HP mapped" << Circuit.windowsize << endl;
 	Circuit.RandomizeCircuitState(0,0);
 	// cout << "phenotype mapped " << Circuit.biases << endl;
-	TVector<double> acc(1,2);
+	TVector<double> acc(1,Circuit.num_pars_changed);
 	acc.FillContents(0);
 
 	for(double t = StepSize; t <= TransientDuration; t += StepSize){
@@ -95,13 +95,19 @@ double HPsatisfaction(TVector<double> &phenotype){
 	// cout << "Transient complete" << endl;
 	for (double t=StepSize;t<=RunDuration;t+=StepSize){
 		Circuit.EulerStepAvgsnoHP(StepSize);
-		acc(1) += StepSize * Circuit.RtausBiases[1] * Circuit.rhos[1];
-		acc(2) += StepSize * Circuit.RtausBiases[3] * Circuit.rhos[3];
+		for (int i=1;i<=Circuit.num_pars_changed;i++){
+			acc(i) += StepSize * Circuit.RtausBiases[i] * Circuit.rhos[i];
+		}
 		// cout << "single step complete" << endl;
 		// cout << abs(acc(1)) << endl;
 	}
-	// cout << acc << " " << abs(acc(1))+abs(acc(2)) << endl;
-	return 	1/(abs(acc(1))+abs(acc(2))); //no motivation for it to be small necessarily, just balanced. Is this reasonable?
+	// cout << acc << " " << abs(acc(1))+abs(acc(2))+abs(acc(3)) << endl;
+
+	double acc_abs_sum = 0;
+	for (int i=1;i<=Circuit.num_pars_changed;i++){
+		acc_abs_sum = acc_abs_sum + abs(acc(i));
+	}
+	return 	(.5-(acc_abs_sum))*200; //no motivation for it to be small necessarily, just balanced. Is this reasonable?
 }
 
 double RateofChange(TVector<double> &phenotype){
@@ -225,12 +231,9 @@ void ResultsDisplay(TSearch &s)
 int main (int argc, const char* argv[]) 
 {
 
-	Evolfile.open("evolCTRNNfastcombo.dat");
-	BestIndividualsFile.open("bestindsCTRNNfastcombo.dat");
-
-	// trajfile.open("evolvedcircuit.dat");
-
-	ord_criteria_file.open("orderingcriteriafastcombo.dat");
+	Evolfile.open("evolCTRNNcombo.dat");
+	BestIndividualsFile.open("bestindsCTRNNcombo.dat");
+	ord_criteria_file.open("orderingcriteriacombo.dat");
 
 	for (int i=1;i<=trials;i++){
 		long IDUM=-time(0);
@@ -257,14 +260,10 @@ int main (int argc, const char* argv[])
 		s.SetMaxExpectedOffspring(EXPECTED);
 		s.SetElitistFraction(ELITISM);
 		s.SetSearchConstraint(1);
-		s.SetReEvaluationFlag(0); //  Parameter Variability Modality Only
+		s.SetReEvaluationFlag(0);
 
 		s.SetEvaluationFunction(ComboFitness);
-		s.ExecuteSearch(true);
-
-		// ifstream genefile("best.gen.dat");
-		// TVector<double> genotype(1, VectSize);
-		// genefile >> genotype;
+		s.ExecuteSearch(true); //Center crossing
 
 		//Gather trajectory of best evolved circuit
 		TVector<double> bestgenotype(1, VectSize);
@@ -275,24 +274,24 @@ int main (int argc, const char* argv[])
 		bestphenotype >> Circuit;
 		Circuit.RandomizeCircuitOutput(.5,.5);
 
-		// for(double t = StepSize; t <= TransientDuration; t += StepSize){
-		// 	Circuit.EulerStep(StepSize,false,false);
-		// 	trajfile << Circuit.outputs << endl;
-		// }
-
-		// for (double t=StepSize;t<=RunDuration;t+=StepSize){
-		// 	Circuit.EulerStep(StepSize,false,false);
-		// 	// cout << "single step complete" << endl;
-		// 	trajfile << Circuit.outputs << endl;
-		// }
-		// trajfile << endl;
-
 		//record the ordering criteria of the best evolved circuit
 		OrderingRecord(Circuit,ord_criteria_file);
 	}
 	Evolfile.close();
 	BestIndividualsFile.close();
-	// trajfile.close();
 	ord_criteria_file.close();
+
+	//TESTING CONDITION
+	// ifstream phenfile;
+	// phenfile.open("./bestindstest.dat");
+
+	// CTRNN Circuit(3);
+	// phenfile >> Circuit;
+
+	// TVector<double> bestphenotype(1, VectSize);
+	// bestphenotype << Circuit;
+
+	// cout << HPsatisfaction(bestphenotype);
+	
   return 0;
 }
