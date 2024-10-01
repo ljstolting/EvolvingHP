@@ -24,8 +24,8 @@ const int TestSteps = TestDuration/StepSize; // in steps
 
 // Plasticity params 
 // MUST MANUALLY CHANGE BECAUSE I CANNOT WORK OUT THE FILE DEPENDENCIES
-int num = 2;
-int neuronschanging = 2;
+int num = 3;
+int neuronschanging = 3;
 int VectSize =  num + (neuronschanging * 3);
 
 // Detection params
@@ -736,9 +736,11 @@ void PointCombos(TMatrix<int> &answer,int resolution){
 	int dimension = answer.ColumnUpperBound();
 	for (int i = 1; i <= num_points; i ++){
 		TVector<int> row(1,dimension);
+		row.FillContents(0);
 		converttobase(i-1,resolution,row);
+		// cout << row << endl;
 		for(int j = 1; j <= dimension; j++){
-			answer(i,j) += row[j]; //allows for 1 indexing if matrix initialized with ones
+			answer(i,j) += row(j); //allows for 1 indexing if matrix initialized with ones
 		}
 	}
 	return;
@@ -753,7 +755,7 @@ double HPPerformance(CTRNN &Agent, double scaling_factor){
 	double highres = 8;
 	TMatrix<double> par_ICs(1,num,1,resolution);
 	// MUST BE CHANGED MANUALLY
-	par_ICs.InitializeContents(lowerres,medres,highres,lowerres,medres,highres);
+	par_ICs.InitializeContents(lowerres,medres,highres,lowerres,medres,highres,lowerres,medres,highres);
 	// cout << par_ICs << endl;
 
 	// Agent should already have HP mechanism instantiated
@@ -770,7 +772,7 @@ double HPPerformance(CTRNN &Agent, double scaling_factor){
 		for (int b=1;b<=num;b++){
 			// cout << par_idxs[b] << endl;
 			// cout << par_ICs(b,par_idxs(i,b)) << endl;
-			Agent.SetNeuronBias(b,par_ICs(b,par_idxs(i,b)));
+			Agent.SetNeuronBias(b,par_ICs(b,par_idxs(i,b))); //WILL NEED TO BE GENERALIZED
 		}
 		// cout << "init" << Agent.biases << endl;
 		// cout << "parameters " << Agent.NeuronBias(1) << " " << Agent.NeuronBias(2) << " " << Agent.NeuronBias(3) << " " << Agent.ConnectionWeight(1,1) << endl;
@@ -814,5 +816,5 @@ double HPPerformance(CTRNN &Agent, double scaling_factor){
 		// cout << "final" << Agent.biases << endl;
 	
 	}
-    return fitness/(num*resolution);
+    return fitness/(num_points*2);
 }

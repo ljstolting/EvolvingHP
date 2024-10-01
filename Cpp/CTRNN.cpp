@@ -131,8 +131,12 @@ void CTRNN::SetCircuitSize(int newsize)
   br = 16;
 
   // new for subset of params
-  char plasticparsfname[] = "./plasticpars.dat";
+  char plasticparsfname[] = "../plasticpars.dat";
   ifstream plasticparsfile;
+  if (!plasticparsfile) {
+        cerr << "File not found: " << plasticparsfname << endl;
+        exit(EXIT_FAILURE);
+    }
   plasticitypars.SetBounds(1,size+(size*size)); //which parameters are under HP's control
   plasticneurons.SetBounds(1,size); //and therefore, which neurons do we need to define a range for 
                                     //*note that the range and sliding window is shared for bias and 
