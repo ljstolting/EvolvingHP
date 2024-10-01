@@ -24,8 +24,8 @@
 // const double tolerance = .1; //for detecting double periodicity
 
 // EA params
-const int POPSIZE = 20;
-const int GENS = 50;
+const int POPSIZE = 1;
+const int GENS = 0;
 const int trials = 1;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
@@ -93,9 +93,10 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 	
 	// Create the agent
 	CTRNN Agent(3);
+	cout << Agent.adaptbiases << endl;
 
 	// Instantiate the nervous system
-	char fname[] = "../Pete.ns";
+	char fname[] = "./Pete.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -134,7 +135,7 @@ void ResultsDisplay(TSearch &s)
 	GenPhenMapping(bestVector, phenotype);
 
 	// Reproduce which pars the HP mechanism has access to
-	char plasticparsfname[] = "../plasticpars.dat";
+	char plasticparsfname[] = "./plasticpars.dat";
   	ifstream plasticparsfile;
   	TVector<int> plasticitypars(1,N+(N*N));
   	plasticparsfile.open(plasticparsfname);

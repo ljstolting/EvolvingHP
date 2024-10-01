@@ -131,7 +131,7 @@ void CTRNN::SetCircuitSize(int newsize)
   br = 16;
 
   // new for subset of params
-  char plasticparsfname[] = "../plasticpars.dat";
+  char plasticparsfname[] = "./plasticpars.dat";
   ifstream plasticparsfile;
   if (!plasticparsfile) {
         cerr << "File not found: " << plasticparsfname << endl;
@@ -172,13 +172,15 @@ void CTRNN::SetCircuitSize(int newsize)
   adaptbiases = false;
   adaptweights = false;
   for (int i=1;i<=size;i++){
-    if (plasticitypars[k] == 1) {adaptbiases = true; break;}
+    if (plasticitypars[k] == 1) {adaptbiases = true;}
     k ++;
   }
+
   for (int i=1;i<=(size*size);i++){
-    if (plasticitypars[k] == 1) {adaptweights = true; break;}
+    if (plasticitypars[k] == 1) {adaptweights = true;}
     k ++;
   }
+  // cout << adaptbiases << " " << adaptweights << endl; 
 
 }
 
@@ -348,8 +350,9 @@ void CTRNN::EulerStep(double stepsize, bool adaptpars)
       stepnum ++;
     
       // NEW: Update Biases
-    if(adaptbiases==true)
-    { for (int i = 1; i <= size; i++){
+    if(adaptbiases==true){
+    //  cout << "biaschangeflag" << endl;
+      for (int i = 1; i <= size; i++){
         biases[i] += stepsize * RtausBiases[i] * rhos[i];
         if (biases[i] > br){
             biases[i] = br;
@@ -364,6 +367,7 @@ void CTRNN::EulerStep(double stepsize, bool adaptpars)
     // NEW: Update Weights
     if(adaptweights==true)
     { 
+      cout << "weightchangeflag" << endl;
       for (int i = 1; i <= size; i++) 
       {
         for (int j = 1; j <= size; j++)
@@ -426,88 +430,9 @@ void CTRNN::SetCenterCrossing(void)
     }
 }
 
-// Define the HP mechanism based on an input file
-
-void CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding){
-  int k = 1;
-  // Read the bias time constants
-  double btau;
-  for(int i = 1; i <= size; i++){
-    if(plasticitypars[k] == 1){
-      is >> btau;
-      SetNeuronBiasTimeConstant(i,btau);
-    } 
-    k ++;
-  }
-
-  // Read the weight time constants
-  double wtau;
-  for(int i = 1; i <= size; i++){
-    for(int j = 1; j <= size; j++){
-      if(plasticitypars[k] == 1){
-        is >> wtau;
-        SetConnectionWeightTimeConstant(i,j,wtau);
-      }
-      k ++;
-    }
-  }
-
-  int num_neurons_changed = plasticneurons.Sum();
-  // Read the lower bounds
-  TVector<double> lbs(1,num_neurons_changed);
-  for(int i = 1; i<= size; i++){
-    if (plasticneurons[i] == 1){
-      is >> lbs[i];
-      SetPlasticityLB(i,lbs[i]);
-    }
-  }
-
-  if(range_encoding){
-    // Read the ranges and derive the upper bounds
-    double range;
-    for(int i = 1; i<= size; i++){
-      if (plasticneurons[i] == 1){
-        is >> range;
-        double ub = lbs[i] + range;
-        SetPlasticityUB(i,ub); //clipping is built into the set function
-      }
-    }
-  }
-
-  else
-  {  // Read the upper bounds
-    double ub;
-    for(int i = 1; i<= size; i++){
-      if (plasticneurons[i] == 1){
-        is >> ub;
-        SetPlasticityUB(i,ub);
-      }
-    }
-  }
-
-  // Read the sliding windows
-  double sw;
-  for(int i = 1; i<= size; i++){
-    if (plasticneurons[i] == 1){
-      is >> sw;
-      SetSlidingWindow(i,sw,dt);
-    }
-  }
-
-  // IT IS CRUCIAL TO FIX THE SLIDING WINDOW AVERAGING BEFORE EVALUATION
-  // Just in case there is not a transient long enough to fill up the history before HP needs to activate
-  max_windowsize = windowsize.Max();
-  avgoutputs.SetBounds(1,size);
-  for(int i=1;i<=size;i++){
-    avgoutputs[i] = (l_boundary[i]+u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
-  }
-  outputhist.SetBounds(1,size,1,max_windowsize);
-  outputhist.FillContents(0.0);  // fill with zeros 
-  // cout << outputhist << endl;
-	return;
-}
-
+// Define HP parameters from a phenotype vector
 void CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding){
+  // cout << "using phenotype vector" << endl;
   int k = 1;
   // Read the bias time constants
   for(int i = 1; i <= size; i++){
@@ -577,6 +502,138 @@ void CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_enc
 	outputhist.FillContents(0.0);  //some number that would never be taken on by the neurons
 }
 
+// Define the HP mechanism based on an input file (bestind file from evolution)
+
+void CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding){
+  // cout << "using bestindfile" << endl;
+  // Read in the parameter vector (specifying which parameters HP is changing)
+  for(int i = 1; i <= size + (size*size); i++){
+    is >> plasticitypars[i];
+  }
+  //determine which neurons need to have ranges and windows
+  for(int i=1;i<=size;i++){
+    //check biases
+    plasticneurons[i] = plasticitypars[i];
+  }
+
+  // Determine if only weights or biases are changing - speeds up the code
+  int k = 1;
+  adaptbiases = false;
+  adaptweights = false;
+  for (int i=1;i<=size;i++){
+    if (plasticitypars[k] == 1) {adaptbiases = true;}
+    k ++;
+  }
+
+  for (int i=1;i<=(size*size);i++){
+    if (plasticitypars[k] == 1) {adaptweights = true;}
+    k ++;
+  }
+
+  for(int i=1;i<=size;i++){
+    //check incoming weights if not already flagged
+    if (plasticitypars[i] == 0){
+      for (int j=0;j<=(plasticitypars.UpperBound()-size);j+=size){
+        if (plasticitypars[size+j] == 1){
+          plasticneurons[i] = 1;
+          break;
+        }
+      }
+    }
+  }
+
+   // pass by the genotype until you get to the first value of the phenotype, which will be a time constant >= 100
+  double testvar = 0;
+  while (testvar < 100){
+    is >> testvar;
+    // cout << testvar << " ";
+  }
+  // cout << endl;
+  bool use_flag = 0;
+  k = 1;
+  // Read the bias time constants
+  double btau;
+  for(int i = 1; i <= size; i++){
+    if(plasticitypars[k] == 1){
+      if (!use_flag){
+        SetNeuronBiasTimeConstant(i,testvar);
+        use_flag = 1;
+      }
+      else{
+        is >> btau;
+        SetNeuronBiasTimeConstant(i,btau);
+      }
+    } 
+    k ++;
+  }
+
+  // Read the weight time constants
+  double wtau;
+  for(int i = 1; i <= size; i++){
+    for(int j = 1; j <= size; j++){
+      if(plasticitypars[k] == 1){
+        is >> wtau;
+        SetConnectionWeightTimeConstant(i,j,wtau);
+      }
+      k ++;
+    }
+  }
+  // cout << plasticneurons << endl;
+  int num_neurons_changed = plasticneurons.Sum();
+  // Read the lower bounds
+  TVector<double> lbs(1,num_neurons_changed);
+  for(int i = 1; i<= size; i++){
+    if (plasticneurons[i] == 1){
+      is >> lbs[i];
+      SetPlasticityLB(i,lbs[i]);
+    }
+  }
+
+  if(range_encoding){
+    // Read the ranges and derive the upper bounds
+    double range;
+    for(int i = 1; i<= size; i++){
+      if (plasticneurons[i] == 1){
+        is >> range;
+        double ub = lbs[i] + range;
+        SetPlasticityUB(i,ub); //clipping is built into the set function
+      }
+    }
+  }
+
+  else
+  {  // Read the upper bounds
+    double ub;
+    for(int i = 1; i<= size; i++){
+      if (plasticneurons[i] == 1){
+        is >> ub;
+        SetPlasticityUB(i,ub);
+      }
+    }
+  }
+
+  // Read the sliding windows
+  double sw;
+  for(int i = 1; i<= size; i++){
+    if (plasticneurons[i] == 1){
+      is >> sw;
+      SetSlidingWindow(i,sw,dt);
+    }
+  }
+
+  // IT IS CRUCIAL TO FIX THE SLIDING WINDOW AVERAGING BEFORE EVALUATION
+  // Just in case there is not a transient long enough to fill up the history before HP needs to activate
+  max_windowsize = windowsize.Max();
+  avgoutputs.SetBounds(1,size);
+  for(int i=1;i<=size;i++){
+    avgoutputs[i] = (l_boundary[i]+u_boundary[i])/2; //average of the upper and lower boundaries ensures that initial value keeps HP off
+  }
+  outputhist.SetBounds(1,size,1,max_windowsize);
+  outputhist.FillContents(0.0);  // fill with zeros 
+  // cout << outputhist << endl;
+	return;
+}
+
 void CTRNN::WriteHPGenome(ostream& os){
 
   // os << setprecision(32);
@@ -606,20 +663,21 @@ void CTRNN::WriteHPGenome(ostream& os){
 	return;
 }
 
-void CTRNN::SetHPPhenotypebestind(istream &is, double dt, bool range_encoding){
-  // int trial;
-  // is >> trial;
-  TVector<double> gen(1,num_pars_changed*4); 
-  TVector<double> phen(1,gen.UpperBound());
-  // for (int i=1;i<=gen.UpperBound();i++){ 
-  //   is >> gen[i];
-  // }
-  for (int i=1;i<=phen.UpperBound();i++){ 
-    is >> phen[i];
-  }
-  // cout << trial << endl<< gen << endl << phen << endl;
-  SetHPPhenotype(phen,dt,range_encoding);
-}
+// depracated
+// void CTRNN::SetHPPhenotypebestind(istream &is, double dt, bool range_encoding){
+//   // int trial;
+//   // is >> trial;
+//   TVector<double> gen(1,num_pars_changed*4); 
+//   TVector<double> phen(1,gen.UpperBound());
+//   // for (int i=1;i<=gen.UpperBound();i++){ 
+//   //   is >> gen[i];
+//   // }
+//   for (int i=1;i<=phen.UpperBound();i++){ 
+//     is >> phen[i];
+//   }
+//   // cout << trial << endl<< gen << endl << phen << endl;
+//   SetHPPhenotype(phen,dt,range_encoding);
+// }
 
 
 // ****************
