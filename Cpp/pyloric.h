@@ -23,8 +23,8 @@ const double StepSize = 0.01;
 const int TestSteps = TestDuration/StepSize; // in steps
 
 // Plasticity params 
-// MUST MANUALLY CHANGE BECAUSE I CANNOT WORK OUT THE FILE DEPENDENCIES
-int num = 3;
+// MUST MANUALLY CHANGE to reflect plasticpars file BECAUSE I CANNOT WORK OUT THE FILE DEPENDENCIES
+int num = 4;
 int neuronschanging = 3;
 int VectSize =  num + (neuronschanging * 3);
 
@@ -748,14 +748,14 @@ void PointCombos(TMatrix<int> &answer,int resolution){
 
 double HPPerformance(CTRNN &Agent, double scaling_factor){
 	//Starting parameters
-	int resolution = 3; //number of points per dimenison
+	int resolution = 2; //number of points per dimenison
 
 	double lowerres = -8;
-	double medres = 0;
+	// double medres = 0;
 	double highres = 8;
 	TMatrix<double> par_ICs(1,num,1,resolution);
 	// MUST BE CHANGED MANUALLY
-	par_ICs.InitializeContents(lowerres,medres,highres,lowerres,medres,highres,lowerres,medres,highres);
+	par_ICs.InitializeContents(lowerres,highres,lowerres,highres,lowerres,highres,lowerres,highres);
 	// cout << par_ICs << endl;
 
 	// Agent should already have HP mechanism instantiated
@@ -772,7 +772,7 @@ double HPPerformance(CTRNN &Agent, double scaling_factor){
 		for (int b=1;b<=num;b++){
 			// cout << par_idxs[b] << endl;
 			// cout << par_ICs(b,par_idxs(i,b)) << endl;
-			Agent.SetNeuronBias(b,par_ICs(b,par_idxs(i,b))); //WILL NEED TO BE GENERALIZED
+			Agent.SetArbDParam(b,par_ICs(b,par_idxs(i,b))); //WILL NEED TO BE GENERALIZED
 		}
 		// cout << "init" << Agent.biases << endl;
 		// cout << "parameters " << Agent.NeuronBias(1) << " " << Agent.NeuronBias(2) << " " << Agent.NeuronBias(3) << " " << Agent.ConnectionWeight(1,1) << endl;

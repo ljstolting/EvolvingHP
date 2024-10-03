@@ -81,6 +81,51 @@ class CTRNN {
         void SetNeuronExternalInput(int i, double value) {externalinputs[i] = value;};
         double ConnectionWeight(int from, int to) {return weights[from][to];};
         void SetConnectionWeight(int from, int to, double value) {weights[from][to] = value;};
+        // --NEW FOR GENERAL HP MECHANISM: the arbitrary dimension parameters which are subject
+        //                                 to change are indexed from 1 through num in the order
+        //                                 to which they are referred in the plasticpars vector
+        //                                 (biases then weights in from-to order)
+        void SetArbDParam(int i, double value) {
+          int par_index = 0;
+          int k = 0;
+          while (k < i){
+            par_index++;
+            if (plasticitypars[par_index] == 1){
+              k++;
+            }
+          }
+          if (par_index <= size){
+            SetNeuronBias(par_index,value);
+          }
+          else{
+            par_index --; //treat as if were zero indexing
+            int from = floor(par_index/size); //comes out in one indexing because of the biases
+            int to = par_index % size;
+            to ++; //change to one indexing
+            SetConnectionWeight(from,to,value);
+          }
+        }
+        double ArbDParam(int i) {
+          int par_index = 0;
+          int k = 0;
+          while (k < i){
+            par_index++;
+            if (plasticitypars[par_index] == 1){
+              k++;
+            }
+          }
+          if (par_index <= size){
+            return NeuronBias(par_index);
+          }
+          else{
+            par_index --; //treat as if were zero indexing
+            int from = floor(par_index/size); //comes out in one indexing because of the biases
+            int to = par_index % size;
+            to ++; //change to one indexing
+            return ConnectionWeight(from,to);
+          }
+        }
+      
         // -- NEW
         double NeuronRho(int i) {return rhos[i];};
         void SetNeuronRho(int i, double value) {rhos[i] = value;};

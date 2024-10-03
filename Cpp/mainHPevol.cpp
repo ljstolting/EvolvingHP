@@ -24,8 +24,8 @@
 // const double tolerance = .1; //for detecting double periodicity
 
 // EA params
-const int POPSIZE = 50;
-const int GENS = 100;
+const int POPSIZE = 5;
+const int GENS = 10;
 const int trials = 1;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
@@ -46,8 +46,8 @@ const double LBMIN = 0;
 const double UBMIN = 0; 		// Plasticity Boundaries
 const double LBMAX = 1;
 const double UBMAX = 1; 		// Plasticity Boundaries 
-const double BTMIN = 100.0;		// Bias Time Constant
-const double BTMAX = 200.0;		// Bias Time Constant
+const double BTMIN = 100.0;		// parameter Time Constant
+const double BTMAX = 200.0;		// parameter Time Constant
 // const double WTMIN = 40.0;		// Weight Time Constant
 // const double WTMAX = 40.0;		// Weight Time Constant
 
@@ -64,18 +64,18 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 		k++;
 	}
 	// Lower Bounds
-	for (int i = 1; i <= num; i++) {
+	for (int i = 1; i <= neuronschanging; i++) {
 		phen(k) = MapSearchParameter(gen(k), LBMIN, LBMAX);
 		k++;
 	}
 	// Upper Bounds OR Range
-	for (int i = 1; i <= num; i++) {
+	for (int i = 1; i <= neuronschanging; i++) {
 		phen(k) = MapSearchParameter(gen(k), UBMIN, UBMAX);
 		// if (phen(k) < phen(k-num)){phen(k)=phen(k-num);} //clipping now happens in the Set functions
 		k++;
 	}
     // Sliding Window -- changed to be time-based (gets rounded to the nearest stepsize in the SetSlidingWindow function)
-    for (int i = 1; i <= num; i++) {
+    for (int i = 1; i <= neuronschanging; i++) {
 		phen(k) = MapSearchParameter(gen(k), 0, SWR);
 		k++;
 	}
@@ -85,18 +85,18 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 // Recovery Fitness Function
 // ------------------------------------
 double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
-    
     // Map genotype to phenotype
 	TVector<double> phenotype;
 	phenotype.SetBounds(1, VectSize);
 	GenPhenMapping(genotype, phenotype);
+	// cout << "mapped";
 	
 	// Create the agent
 	CTRNN Agent(3);
 	// cout << Agent.adaptbiases << endl;
 
 	// Instantiate the nervous system
-	char fname[] = "../Pete.ns";
+	char fname[] = "./Pete.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -135,7 +135,7 @@ void ResultsDisplay(TSearch &s)
 	GenPhenMapping(bestVector, phenotype);
 
 	// Reproduce which pars the HP mechanism has access to
-	char plasticparsfname[] = "../plasticpars.dat";
+	char plasticparsfname[] = "./plasticpars.dat";
   	ifstream plasticparsfile;
   	TVector<int> plasticitypars(1,N+(N*N));
   	plasticparsfile.open(plasticparsfname);

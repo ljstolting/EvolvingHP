@@ -131,7 +131,7 @@ void CTRNN::SetCircuitSize(int newsize)
   br = 16;
 
   // new for subset of params
-  char plasticparsfname[] = "../plasticpars.dat";
+  char plasticparsfname[] = "./plasticpars.dat";
   ifstream plasticparsfile;
   if (!plasticparsfile) {
         cerr << "File not found: " << plasticparsfname << endl;
@@ -367,7 +367,7 @@ void CTRNN::EulerStep(double stepsize, bool adaptpars)
     // NEW: Update Weights
     if(adaptweights==true)
     { 
-      cout << "weightchangeflag" << endl;
+      // cout << "weightchangeflag" << endl;
       for (int i = 1; i <= size; i++) 
       {
         for (int j = 1; j <= size; j++)
@@ -433,6 +433,7 @@ void CTRNN::SetCenterCrossing(void)
 // Define HP parameters from a phenotype vector
 void CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding){
   // cout << "using phenotype vector" << endl;
+
   int k = 1;
   // Read the bias time constants
   for(int i = 1; i <= size; i++){
