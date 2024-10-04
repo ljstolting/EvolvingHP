@@ -39,12 +39,12 @@ const double WR = 16;
 const int num_ICs = 100;
 
 //Filenames
-char Nfname[] = "Ronn.ns";
-char HPfname[] = "./43/bestind.dat";
-char Fitnessesfname[] = "RonnFinalFitness3D_43.dat";
-char ICsfname[] = "RonnICs3D_43.dat";
-char biastrackfname[] = "RonnBiasTrack3D_43.dat";
-char statestrackfname[] = "RonnStatesTrack3D_43.dat";
+char Nfname[] = "Pete.ns";
+char HPfname[] = "./bestind.dat";
+char Fitnessesfname[] = "testFinalFitness3D_test.dat";
+char ICsfname[] = "testICs3D_test.dat";
+char biastrackfname[] = "testBiasTrack3D_test.dat";
+char statestrackfname[] = "testStatesTrack3D_test.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
