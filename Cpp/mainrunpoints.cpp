@@ -36,15 +36,15 @@ const double TMIN = .1;
 const double TMAX = 2;
 const double BR = 16;
 const double WR = 16;
-const int num_ICs = 100;
+const int num_ICs = 5000;
 
 //Filenames
 char Nfname[] = "Pete.ns";
 char HPfname[] = "./bestind.dat";
-char Fitnessesfname[] = "testFinalFitness3D_test.dat";
-char ICsfname[] = "testICs3D_test.dat";
-char biastrackfname[] = "testBiasTrack3D_test.dat";
-char statestrackfname[] = "testStatesTrack3D_test.dat";
+char Fitnessesfname[] = "testFinalFitness12D_test.dat";
+char ICsfname[] = "testICs12D_test.dat";
+char biastrackfname[] = "testBiasTrack12D_test.dat";
+char statestrackfname[] = "testStatesTrack12D_test.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials

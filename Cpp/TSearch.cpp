@@ -47,7 +47,7 @@ void OutOfMemoryHandler(void)
 
 // The constructor
 
-TSearch::TSearch(int VSize, double (*EvalFn)(TVector<double> &, RandomState &))
+TSearch::TSearch(int VSize, double (*EvalFn)(TVector<double> &, TMatrix<double> &, RandomState &))
 {
 	// Install a default new handler if none is currently installed
 	new_handler OldHandler;
@@ -522,13 +522,13 @@ int TSearch::SearchTerminated(void)
 
 double TSearch::EvaluateVector(TVector<double> &v, RandomState &rs)
 {
-	double perf = (*EvaluationFunction)(v, rs);
+	double perf = (*EvaluationFunction)(v, Initialpts, rs);
 
 	return (perf<0)?0:perf;
 }
 
 
-// Evaluate a population range
+// Evaluate a population range 
 
 void *EvaluatePopulationRange(void *arg)
 {

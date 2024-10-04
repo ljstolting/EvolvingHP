@@ -24,7 +24,7 @@ const int TestSteps = TestDuration/StepSize; // in steps
 
 // Plasticity params 
 // MUST MANUALLY CHANGE to reflect plasticpars file BECAUSE I CANNOT WORK OUT THE FILE DEPENDENCIES
-int num = 4;
+int num = 12;
 int neuronschanging = 3;
 int VectSize =  num + (neuronschanging * 3);
 
@@ -746,75 +746,31 @@ void PointCombos(TMatrix<int> &answer,int resolution){
 	return;
 }
 
-double HPPerformance(CTRNN &Agent, double scaling_factor){
-	//Starting parameters
-	int resolution = 2; //number of points per dimenison
+void PointGrid(TMatrix<double> &points, TVector<double> &parVals){
+	
+	//calculate initial conditions on a predefined grid -- gets too unruly when many parameter dimensions are considered
+	int resolution = parVals.Size(); //number of points per dimenison
 
-	double lowerres = -8;
-	// double medres = 0;
-	double highres = 8;
 	TMatrix<double> par_ICs(1,num,1,resolution);
-	// MUST BE CHANGED MANUALLY
-	par_ICs.InitializeContents(lowerres,highres,lowerres,highres,lowerres,highres,lowerres,highres);
-	// cout << par_ICs << endl;
+	for (int i = 1; i <= num; i++){
+		for (int j = 1; j <= resolution; j++){
+			par_ICs(i,j) = parVals(j); // assumes that all dimensions have the same resolution of points spaced in the same way
+		}
+	}
 
-	// Agent should already have HP mechanism instantiated
-    double fitness = 0;
-
-	int num_points = pow(resolution,num);
-	TMatrix<int> par_idxs(1,num_points,1,num);
+	TMatrix<int>par_idxs(1,points.RowUpperBound(),1,points.ColumnUpperBound());
 	par_idxs.FillContents(1);
 	
-    PointCombos(par_idxs,resolution);
-	// cout << par_idxs;
+	PointCombos(par_idxs,resolution);
+	
 
-	for (int i = 1; i <= num_points; i ++){
+	for (int i = 1; i <= points.RowUpperBound(); i ++){
 		for (int b=1;b<=num;b++){
 			// cout << par_idxs[b] << endl;
 			// cout << par_ICs(b,par_idxs(i,b)) << endl;
-			Agent.SetArbDParam(b,par_ICs(b,par_idxs(i,b))); //WILL NEED TO BE GENERALIZED
+			points(i,b) = par_ICs(b,par_idxs(i,b));
 		}
-		// cout << "init" << Agent.biases << endl;
-		// cout << "parameters " << Agent.NeuronBias(1) << " " << Agent.NeuronBias(2) << " " << Agent.NeuronBias(3) << " " << Agent.ConnectionWeight(1,1) << endl;
-		// Initialize the outputs at 0.5 for all neurons in the circuit
-		for (int n=1;n<=Agent.CircuitSize();n++){Agent.SetNeuronState(n,0);}
-
-		// Run the circuit for an initial transient; HP is off and fitness is not evaluated
-		for (double t = StepSize; t <= TransientDuration; t += StepSize) {
-			Agent.EulerStep(StepSize,false);
-		}
-
-		// Run the circuit for a period of time with HP so the paramters can change
-		for (double t = StepSize; t<= PlasticDuration1; t+= StepSize){
-			Agent.EulerStep(StepSize,true);  //set to only adapt biases, not weights
-		}
-
-		// Calculate the Pyloric Fitness
-		// cout << Agent.NeuronBias(1) << " " << Agent.NeuronBias(3) << ":";
-		double fit = PyloricPerformance(Agent);
-
-		// Transform it so Pyloricness at all is worth a lot
-		if (fit >= .3){fit = fit+scaling_factor;}
-
-		// cout << fit << endl;
-		fitness += fit;
-
-		// repeat process after another duration of time to ensure solution is stable
-		for (double t = StepSize; t<= PlasticDuration2; t+= StepSize){
-			Agent.EulerStep(StepSize,true);
-		}
-
-		// Calculate the Pyloric Fitness
-		// cout << Agent.NeuronBias(1) << " " << Agent.NeuronBias(3) << ":";
-		fit = PyloricPerformance(Agent);
-
-		// Transform it so Pyloricness at all is worth a lot
-		if (fit >= .3){fit = fit+scaling_factor;}
-
-		// cout << fit << endl;
-		fitness += fit;
-		// cout << "final" << Agent.biases << endl;
-	
 	}
-    return fitness/(num_points*2);
+	return;	
 }
+

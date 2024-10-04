@@ -79,7 +79,7 @@ enum TCrossoverMode {UNIFORM, TWO_POINT};                  // Supported crossove
 class TSearch {
 	public:
 		// The constructor
-		TSearch(int vectorSize = 0,double (*EvalFn)(TVector<double> &, RandomState &) = NULL);
+		TSearch(int vectorSize = 0,double (*EvalFn)(TVector<double> &,TMatrix<double> &, RandomState &) = NULL);
 		// The destructor
 		~TSearch();
 		// Basic Accessors
@@ -118,8 +118,9 @@ class TSearch {
 		double CheckpointInterval(void) {return CheckpointInt;};
 		void SetCheckpointInterval(int NewFreq);
 		// Function Pointer Accessors
-		void SetEvaluationFunction(double (*EvalFn)(TVector<double> &v, RandomState &rs))
+		void SetEvaluationFunction(double (*EvalFn)(TVector<double> &v, TMatrix<double> &ptlist, RandomState &rs))
 			{EvaluationFunction = EvalFn;};
+		void SetInitialPtsforEval(TMatrix<double> &ptlist){Initialpts = ptlist;}
 		void SetBestActionFunction(void (*BestFn)(int Generation,TVector<double> &v))
 			{BestActionFunction = BestFn;};
 		void SetPopulationStatisticsDisplayFunction(void (*DisplayFn)(TSearch &s))
@@ -208,8 +209,10 @@ class TSearch {
 		TVector<int> ConstraintVector;
 		int ReEvalFlag;
 		int CheckpointInt;
+		// Initial Points for consistent evaluation
+		TMatrix<double> Initialpts;
 		// Function Pointers
-		double (*EvaluationFunction)(TVector<double> &v, RandomState &rs);
+		double (*EvaluationFunction)(TVector<double> &v, TMatrix<double> &ptlist, RandomState &rs);
 		void (*BestActionFunction)(int Generation,TVector<double> &v);
 		void (*PopulationStatisticsDisplayFunction)(TSearch &s);
 		int (*SearchTerminationFunction)(int Generation,double BestPerf,double AvgPerf,double PerfVar);

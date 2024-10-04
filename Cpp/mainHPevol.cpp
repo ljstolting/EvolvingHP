@@ -24,8 +24,8 @@
 // const double tolerance = .1; //for detecting double periodicity
 
 // EA params
-const int POPSIZE = 50;
-const int GENS = 100;
+const int POPSIZE = 5;
+const int GENS = 10;
 const int trials = 1;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
@@ -81,10 +81,62 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 	}
 }
 
+double HPPerformance(CTRNN &Agent, TMatrix<double> &ptlist, double scaling_factor){
+	double fitness = 0;
+	int num_points = ptlist.RowUpperBound();
+
+	for (int i = 1; i <= num_points; i ++){
+		for (int b=1;b<=num;b++){
+			Agent.SetArbDParam(b,ptlist(i,b)); 
+		}
+		// cout << "init" << Agent.biases << endl;
+		// cout << "parameters " << Agent.NeuronBias(1) << " " << Agent.NeuronBias(2) << " " << Agent.NeuronBias(3) << " " << Agent.ConnectionWeight(1,1) << endl;
+		// Initialize the outputs at 0.5 for all neurons in the circuit
+		for (int n=1;n<=Agent.CircuitSize();n++){Agent.SetNeuronState(n,0);}
+
+		// Run the circuit for an initial transient; HP is off and fitness is not evaluated
+		for (double t = StepSize; t <= TransientDuration; t += StepSize) {
+			Agent.EulerStep(StepSize,false);
+		}
+
+		// Run the circuit for a period of time with HP so the paramters can change
+		for (double t = StepSize; t<= PlasticDuration1; t+= StepSize){
+			Agent.EulerStep(StepSize,true);  //set to only adapt biases, not weights
+		}
+
+		// Calculate the Pyloric Fitness
+		// cout << Agent.NeuronBias(1) << " " << Agent.NeuronBias(3) << ":";
+		double fit = PyloricPerformance(Agent);
+
+		// Transform it so Pyloricness at all is worth a lot
+		if (fit >= .3){fit = fit+scaling_factor;}
+
+		// cout << fit << endl;
+		fitness += fit;
+
+		// repeat process after another duration of time to ensure solution is stable
+		for (double t = StepSize; t<= PlasticDuration2; t+= StepSize){
+			Agent.EulerStep(StepSize,true);
+		}
+
+		// Calculate the Pyloric Fitness
+		// cout << Agent.NeuronBias(1) << " " << Agent.NeuronBias(3) << ":";
+		fit = PyloricPerformance(Agent);
+
+		// Transform it so Pyloricness at all is worth a lot
+		if (fit >= .3){fit = fit+scaling_factor;}
+
+		// cout << fit << endl;
+		fitness += fit;
+		// cout << "final" << Agent.biases << endl;
+	}
+    return fitness/(num_points*2);
+}
+
 // ------------------------------------
 // Recovery Fitness Function
 // ------------------------------------
-double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
+double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, RandomState &rs){
     // Map genotype to phenotype
 	TVector<double> phenotype;
 	phenotype.SetBounds(1, VectSize);
@@ -96,7 +148,7 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 	// cout << Agent.adaptbiases << endl;
 
 	// Instantiate the nervous system
-	char fname[] = "../Pete.ns";
+	char fname[] = "./Pete.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -112,10 +164,12 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 	Agent.SetHPPhenotype(phenotype,StepSize,true); //range encoding active
 	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
 
-	double fitness = HPPerformance(Agent, scaling_factor);
+	double fitness = HPPerformance(Agent, ptlist, scaling_factor);
 	// cout << fitness << endl;
     return fitness; //fitness averaged across all times it is taken
 }
+
+
 
 // ------------------------------------
 // Display functions
@@ -135,7 +189,7 @@ void ResultsDisplay(TSearch &s)
 	GenPhenMapping(bestVector, phenotype);
 
 	// Reproduce which pars the HP mechanism has access to
-	char plasticparsfname[] = "../plasticpars.dat";
+	char plasticparsfname[] = "./plasticpars.dat";
   	ifstream plasticparsfile;
   	TVector<int> plasticitypars(1,N+(N*N));
   	plasticparsfile.open(plasticparsfname);
@@ -206,6 +260,27 @@ int main (int argc, const char* argv[])
 		s.SetSearchConstraint(1);
 		s.SetReEvaluationFlag(0); //  Parameter Variability Modality Only
 
+		// GRID MODE
+		// int resolution = 2;
+		// TVector<double> par_vals(1,resolution);
+		// par_vals[1] = -8;
+		// par_vals[2] = 8;
+
+		// int num_pts = pow(resolution,num);
+		// TMatrix<double> ptlist(1,num_pts,1,num);
+		// PointGrid(ptlist,par_vals);
+
+		// RANDOM MODE
+		int num_pts = 50;
+		
+		TMatrix<double> ptlist(1,num_pts,1,num);
+		for (int row = 1; row <= num_pts; row++){
+			for (int col = 1; col <= num; col++){
+				ptlist(row,col) = UniformRandom(-16,16);
+			}
+		}
+
+		s.SetInitialPtsforEval(ptlist);
 		s.SetEvaluationFunction(HPFitnessFunction);
 		s.ExecuteSearch(false);
 

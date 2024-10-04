@@ -131,7 +131,7 @@ void CTRNN::SetCircuitSize(int newsize)
   br = 16;
 
   // new for subset of params
-  char plasticparsfname[] = "../plasticpars.dat";
+  char plasticparsfname[] = "./plasticpars.dat";
   ifstream plasticparsfile;
   if (!plasticparsfile) {
         cerr << "File not found: " << plasticparsfname << endl;
