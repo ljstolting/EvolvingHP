@@ -353,37 +353,43 @@ void CTRNN::EulerStep(double stepsize, bool adaptpars)
     if(adaptbiases==true){
     //  cout << "biaschangeflag" << endl;
       for (int i = 1; i <= size; i++){
-        biases[i] += stepsize * RtausBiases[i] * rhos[i];
-        if (biases[i] > br){
-            biases[i] = br;
-        }
-        else{
-            if (biases[i] < -br){
-                biases[i] = -br;
-            }
+        if (plasticitypars[i]==1){
+          biases[i] += stepsize * RtausBiases[i] * rhos[i];
+          if (biases[i] > br){
+              biases[i] = br;
+          }
+          else{
+              if (biases[i] < -br){
+                  biases[i] = -br;
+              }
+          }
         }
       } 
     }
     // NEW: Update Weights
     if(adaptweights==true)
     { 
+      int k = size;
       // cout << "weightchangeflag" << endl;
       for (int i = 1; i <= size; i++) 
       {
         for (int j = 1; j <= size; j++)
         {
-          weights[i][j] += stepsize * RtausWeights[i][j] * rhos[j] * fabs(weights[i][j]);
+          k ++;
+          if(plasticitypars[k] == 1){
+            weights[i][j] += stepsize * RtausWeights[i][j] * rhos[j] * fabs(weights[i][j]);
 
-          if (weights[i][j] > wr)
-          {
-              weights[i][j] = wr;
-          }
-          else
-          {
-              if (weights[i][j] < -wr)
-              {
-                  weights[i][j] = -wr;
-              }
+            if (weights[i][j] > wr)
+            {
+                weights[i][j] = wr;
+            }
+            else
+            {
+                if (weights[i][j] < -wr)
+                {
+                    weights[i][j] = -wr;
+                }
+            }
           }
         }
       }
