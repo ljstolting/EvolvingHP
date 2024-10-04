@@ -36,3 +36,7 @@
 *.json
 __pycache__
 *.DS_Store
+
+#supercomputer output files
+*.txt
+*.err
