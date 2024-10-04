@@ -96,7 +96,7 @@ double HPFitnessFunction(TVector<double> &genotype, RandomState &rs){
 	// cout << Agent.adaptbiases << endl;
 
 	// Instantiate the nervous system
-	char fname[] = "./Pete.ns";
+	char fname[] = "../Pete.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -135,7 +135,7 @@ void ResultsDisplay(TSearch &s)
 	GenPhenMapping(bestVector, phenotype);
 
 	// Reproduce which pars the HP mechanism has access to
-	char plasticparsfname[] = "./plasticpars.dat";
+	char plasticparsfname[] = "../plasticpars.dat";
   	ifstream plasticparsfile;
   	TVector<int> plasticitypars(1,N+(N*N));
   	plasticparsfile.open(plasticparsfname);
