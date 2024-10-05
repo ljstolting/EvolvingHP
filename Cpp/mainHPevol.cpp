@@ -273,12 +273,12 @@ int main (int argc, const char* argv[])
 		// RANDOM MODE
 		// int num_pts = 50;
 		
-		TMatrix<double> ptlist(1,num_pts,1,num);
-		for (int row = 1; row <= num_pts; row++){
-			for (int col = 1; col <= num; col++){
-				ptlist(row,col) = UniformRandom(-16,16);
-			}
-		}
+		// TMatrix<double> ptlist(1,num_pts,1,num);
+		// for (int row = 1; row <= num_pts; row++){
+		// 	for (int col = 1; col <= num; col++){
+		// 		ptlist(row,col) = UniformRandom(-16,16);
+		// 	}
+		// }
 
 		s.SetInitialPtsforEval(ptlist);
 		s.SetEvaluationFunction(HPFitnessFunction);
