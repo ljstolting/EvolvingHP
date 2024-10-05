@@ -38,12 +38,12 @@ const double WR = 16;
 const int num_ICs = 1000;
 
 //Filenames
-char Nfname[] = "../Sven.ns";
-char HPfname[] = "../33/bestind.dat";
-char Fitnessesfname[] = "SvenFinalFitness33.dat";
-char ICsfname[] = "SvenICs33.dat";
-char biastrackfname[] = "SvenBiasTrack33.dat";
-char statestrackfname[] = "SvenStatesTrack33.dat";
+char Nfname[] = "./TestBestonDifferentSolutions/Pete/Pete.ns";
+char HPfname[] = "./2DHPmechanisms/33/bestind.dat";
+char Fitnessesfname[] = "./TestonRandomSolutions/FinalFitness33.dat";
+char ICsfname[] = "./TestonRandomSolutions/ICs33.dat";
+char biastrackfname[] = "./TestonRandomSolutions/BiasTrack33.dat";
+char statestrackfname[] = "./TestonRandomSolutions/StatesTrack33.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
@@ -90,17 +90,17 @@ int main(){
     // cout << Circuit.br;
 
     // Set circuit parameters SLICE MODE
-    ifstream ifs;
-    ifs.open(Nfname);
-    if (!ifs) {
-        cerr << "File not found: " << Nfname << endl;
-        exit(EXIT_FAILURE);
-    }
-    ifs >> Circuit; 
+    // ifstream ifs;
+    // ifs.open(Nfname);
+    // if (!ifs) {
+    //     cerr << "File not found: " << Nfname << endl;
+    //     exit(EXIT_FAILURE);
+    // }
+    // ifs >> Circuit; 
 
     // RANDOM MODE
-    // TVector<double> genotype(1,VectSize);
-    // TVector<double> phenotype(1,VectSize);
+    TVector<double> genotype(1,VectSize);
+    TVector<double> phenotype(1,VectSize);
 
     // Set the proper HP parameters 
     ifstream HPifs;
@@ -113,39 +113,39 @@ int main(){
 
     for (int i = 1;i<=num_ICs;i++){
         // RANDOM MODE  
-        // RandomState rs(pow(i,2));
-        // for (int i = 1; i <= genotype.Size(); i++)
-        //     {genotype[i] = rs.UniformRandom(-1,1);}
+        RandomState rs(pow(i,2));
+        for (int i = 1; i <= genotype.Size(); i++)
+            {genotype[i] = rs.UniformRandom(-1,1);}
         
-        // GenPhenMapping(genotype,phenotype);
-        // phenotype >> Circuit;
+        GenPhenMapping(genotype,phenotype);
+        phenotype >> Circuit;
 
         // SLICE MODE
-        double theta1 = UniformRandom(par1min,par1max);
-        double theta3 = UniformRandom(par2min,par2max);
+        // double theta1 = UniformRandom(par1min,par1max);
+        // double theta3 = UniformRandom(par2min,par2max);
         
-        Circuit.SetNeuronBias(1,theta1);
-        Circuit.SetNeuronBias(3,theta3);
+        // Circuit.SetNeuronBias(1,theta1);
+        // Circuit.SetNeuronBias(3,theta3);
 
-        Circuit.RandomizeCircuitState(0,0);
+        // Circuit.RandomizeCircuitState(0,0);
 
         // Run for transient without HP
         for(double t=0;t<TransientDuration;t+=StepSize){
             Circuit.EulerStep(StepSize,0,0);
         }
         // SLICE MODE
-        ICsfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
+        // ICsfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
 
         // RANDOM MODE
-        // ICsfile << Circuit.taus << " " << Circuit.biases;
-        // for(int j = 1; j <= N; j ++)
-        // {
-        //     for(int k=1;k<=N;k++)
-        //     {
-        //         ICsfile << Circuit.ConnectionWeight(j,k) << " ";
-        //     }
-        // }
-        // ICsfile << endl;
+        ICsfile << Circuit.taus << " " << Circuit.biases;
+        for(int j = 1; j <= N; j ++)
+        {
+            for(int k=1;k<=N;k++)
+            {
+                ICsfile << Circuit.ConnectionWeight(j,k) << " ";
+            }
+        }
+        ICsfile << endl;
 
         // Run with HP for a time
         for(double t=0;t<PlasticDuration;t+=StepSize){
@@ -157,16 +157,16 @@ int main(){
         if (trackparams && (i%trackparamsinterval==0)) {biastrack << endl;}
 		if (trackstates && (i%trackstatesinterval==0)) {statestrack << endl;}
         // SLICE MODE
-        ICsfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl << endl;
+        // ICsfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl << endl;
 
         // RANDOM MODE
-        // ICsfile << Circuit.taus << " " << Circuit.biases;
-        // for(int j = 1; j <= N; j ++){
-        //     for(int k=1;k<=N;k++){
-        //         ICsfile << Circuit.ConnectionWeight(j,k) << " ";
-        //     }
-        // } 
-        // ICsfile << endl << endl;
+        ICsfile << Circuit.taus << " " << Circuit.biases;
+        for(int j = 1; j <= N; j ++){
+            for(int k=1;k<=N;k++){
+                ICsfile << Circuit.ConnectionWeight(j,k) << " ";
+            }
+        } 
+        ICsfile << endl << endl;
 
         // Test for Pyloricness with HP
         double fit = PyloricPerformance(Circuit);

@@ -26,25 +26,22 @@ int	CTRNNVectSize = N*N + 2*N;
 
 // Sampling Parameters
 
-    //SLICE MODE
-// const double par1min = -16;
-// const double par1max = 16;
-// const double par2min = -16;
-// const double par2max = 16;
-
 const double TMIN = .1;
 const double TMAX = 2;
 const double BR = 16;
 const double WR = 16;
-const int num_ICs = 5000;
+const int num_ICs = 1000;
+
+// Mode
+const bool random_mode = true;
 
 //Filenames
-char Nfname[] = "Pete.ns";
-char HPfname[] = "./bestind.dat";
-char Fitnessesfname[] = "testFinalFitness12D_test.dat";
-char ICsfname[] = "testICs12D_test.dat";
-char biastrackfname[] = "testBiasTrack12D_test.dat";
-char statestrackfname[] = "testStatesTrack12D_test.dat";
+char Nfname[] = "./Pete.ns";
+char HPfname[] = "./48/bestind.dat";
+char Fitnessesfname[] = "./Test3DHPonRandomSolutions/FinalFitness3D_48_tausset.dat";
+char ICsfname[] = "./Test3DHPonRandomSolutions/ICs3D_48_tausset.dat";
+char biastrackfname[] = "./Test3DHPonRandomSolutions/BiasTrack3D.dat";
+char statestrackfname[] = "./Test3DHPonRandomSolutions/StatesTrack3D.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
@@ -66,10 +63,10 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 	}
 	// Weights
 	for (int i = 1; i <= N; i++) {
-			for (int j = 1; j <= N; j++) {
-				phen(k) = MapSearchParameter(gen(k), -WR, WR);
-				k++;
-			}
+        for (int j = 1; j <= N; j++) {
+            phen(k) = MapSearchParameter(gen(k), -WR, WR);
+            k++;
+        }
 	}
 }
 
@@ -89,7 +86,7 @@ int main(){
     // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
     // cout << Circuit.br;
 
-    // Set circuit parameters (for the slice)
+    // Set circuit parameters (start with the given pyloric solution)
     ifstream ifs;
     ifs.open(Nfname);
     if (!ifs) {
@@ -98,7 +95,7 @@ int main(){
     }
     ifs >> Circuit; 
 
-    // Set circuit parameters (random mode)
+    // Set of random circuit parameters to pull from
     TVector<double> genotype(1,CTRNNVectSize);
     TVector<double> phenotype(1,CTRNNVectSize);
 
@@ -114,50 +111,56 @@ int main(){
     // cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << endl;
 
     for (int i = 0;i<num_ICs;i++){
-        // FULLY RANDOM MODE  
-        // RandomState rs(pow(i,2));
-        // for (int j = 1; j <= genotype.Size(); j++)
-        //     {genotype[j] = rs.UniformRandom(-1,1);}
-        
-        // GenPhenMapping(genotype,phenotype);
-        // phenotype >> Circuit;
 
-        // RANDOM IN HP DIMENSIONS MODE
         long randomseed = static_cast<long>(time(NULL));
         RandomState rs(randomseed+pow(i,2));
         for (int j = 1; j <= genotype.Size(); j++)
             {genotype[j] = rs.UniformRandom(-1,1);}
         
-        //Generate random genotype to pull from later
         GenPhenMapping(genotype,phenotype);
-        // cout << Circuit.plasticitypars << endl;
 
-        int k = 1; 
-        for(int j=1; j<=N; j++){
-            //check for biases
-            if (Circuit.plasticitypars[k]==1){
-                Circuit.SetNeuronBias(j,phenotype(k+N)); //start after time constants
+        // FULLY RANDOM MODE (well everything but the time constants)
+        if(random_mode){
+            int k = N; //start after time constants
+            for(int j=1; j<=N; j++){
+                Circuit.SetNeuronBias(j,phenotype(k));
                 // cout << "set a bias" << endl;
+                k++;
             }
-            k++;
+
+            for (int j=1; j<=N; j++){
+                for (int l=1; l<=N; l++){
+                    Circuit.SetConnectionWeight(j,l,phenotype(k));
+                    // cout << "set a weight" << endl; 
+                    k ++;   
+                }
+            }
         }
 
-        //check for weights
-        for (int j=1; j<=N; j++){
-            for (int l=1; l<=N; l++){
+        // RANDOM IN HP DIMENSIONS MODE (SLICE MODE)
+        else{
+            int k = 1; 
+            for(int j=1; j<=N; j++){
+                //check for biases
                 if (Circuit.plasticitypars[k]==1){
-                    Circuit.SetConnectionWeight(j,l,phenotype(k));
-                    // cout << "set a weight" << endl;
+                    Circuit.SetNeuronBias(j,phenotype(k+N)); //start after time constants
+                    // cout << "set a bias" << endl;
                 }
                 k++;
             }
+
+            //check for weights
+            for (int j=1; j<=N; j++){
+                for (int l=1; l<=N; l++){
+                    if (Circuit.plasticitypars[k]==1){
+                        Circuit.SetConnectionWeight(j,l,phenotype(k+N)); //started after time constants
+                        // cout << "set a weight" << endl;
+                    }
+                    k++;
+                }
+            }
         }
 
-        // // SLICE MODE
-        // double theta1 = UniformRandom(par1min,par1max);
-        // double theta3 = UniformRandom(par2min,par2max);
-        // Circuit.SetNeuronBias(1,theta1);
-        // Circuit.SetNeuronBias(3,theta3);
 
         Circuit.RandomizeCircuitState(0,0);
 
@@ -165,10 +168,8 @@ int main(){
         for(double t=0;t<TransientDuration;t+=StepSize){
             Circuit.EulerStep(StepSize,0);
         }
-        // SLICE MODE
-        // ICsfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
 
-        // RANDOM MODE
+        // Record all parameters
         ICsfile << Circuit.taus << " " << Circuit.biases << " ";
         for(int j = 1; j <= N; j ++)
         {
@@ -181,7 +182,6 @@ int main(){
 
         // Run with HP for a time
         for(double t=0;t<PlasticDuration;t+=StepSize){
-            // if (trackparams && (i%trackparamsinterval==0)){biastrack << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;}
             if (trackparams && (i%trackparamsinterval==0)){
                 biastrack << Circuit.biases;
                 for(int j = 1; j <= N; j ++){
@@ -196,10 +196,8 @@ int main(){
         }
         if (trackparams && (i%trackparamsinterval==0)) {biastrack << endl;}
 		if (trackstates && (i%trackstatesinterval==0)) {statestrack << endl;}
-        // SLICE MODE
-        // ICsfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl << endl;
 
-        // RANDOM MODE
+        // Record again, after HP
         ICsfile << Circuit.taus << " " << Circuit.biases << " ";
         for(int j = 1; j <= N; j ++){
             for(int k=1;k<=N;k++){

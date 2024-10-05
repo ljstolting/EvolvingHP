@@ -24,7 +24,7 @@ const int TestSteps = TestDuration/StepSize; // in steps
 
 // Plasticity params 
 // MUST MANUALLY CHANGE to reflect plasticpars file BECAUSE I CANNOT WORK OUT THE FILE DEPENDENCIES
-int num = 5;
+int num = 4;
 int neuronschanging = 3;
 int VectSize =  num + (neuronschanging * 3);
 
