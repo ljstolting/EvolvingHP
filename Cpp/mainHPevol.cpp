@@ -24,8 +24,8 @@
 // const double tolerance = .1; //for detecting double periodicity
 
 // EA params
-const int POPSIZE = 5;
-const int GENS = 10;
+const int POPSIZE = 50;
+const int GENS = 100;
 const int trials = 1;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
@@ -148,7 +148,7 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	// cout << Agent.adaptbiases << endl;
 
 	// Instantiate the nervous system
-	char fname[] = "./Pete.ns";
+	char fname[] = "../Pete.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -189,7 +189,7 @@ void ResultsDisplay(TSearch &s)
 	GenPhenMapping(bestVector, phenotype);
 
 	// Reproduce which pars the HP mechanism has access to
-	char plasticparsfname[] = "./plasticpars.dat";
+	char plasticparsfname[] = "../plasticpars.dat";
   	ifstream plasticparsfile;
   	TVector<int> plasticitypars(1,N+(N*N));
   	plasticparsfile.open(plasticparsfname);
@@ -261,17 +261,17 @@ int main (int argc, const char* argv[])
 		s.SetReEvaluationFlag(0); //  Parameter Variability Modality Only
 
 		// GRID MODE
-		// int resolution = 2;
-		// TVector<double> par_vals(1,resolution);
-		// par_vals[1] = -8;
-		// par_vals[2] = 8;
+		int resolution = 2;
+		TVector<double> par_vals(1,resolution);
+		par_vals[1] = -8;
+		par_vals[2] = 8;
 
-		// int num_pts = pow(resolution,num);
-		// TMatrix<double> ptlist(1,num_pts,1,num);
-		// PointGrid(ptlist,par_vals);
+		int num_pts = pow(resolution,num);
+		TMatrix<double> ptlist(1,num_pts,1,num);
+		PointGrid(ptlist,par_vals);
 
 		// RANDOM MODE
-		int num_pts = 50;
+		// int num_pts = 50;
 		
 		TMatrix<double> ptlist(1,num_pts,1,num);
 		for (int row = 1; row <= num_pts; row++){

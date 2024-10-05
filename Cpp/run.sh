@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for ((i = 108; i < 109; i += 1));
+for ((i = 205; i < 206; i += 1));
 do
   sbatch --export=JB=$i lindsayevols.sh
   sleep 3 
