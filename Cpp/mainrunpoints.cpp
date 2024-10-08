@@ -34,14 +34,15 @@ const int num_ICs = 1000;
 
 // Mode
 const bool random_mode = true;
+const bool taus_set = false;
 
 //Filenames
 char Nfname[] = "./Pete.ns";
-char HPfname[] = "./48/bestind.dat";
-char Fitnessesfname[] = "./Test3DHPonRandomSolutions/FinalFitness3D_48_tausset.dat";
-char ICsfname[] = "./Test3DHPonRandomSolutions/ICs3D_48_tausset.dat";
-char biastrackfname[] = "./Test3DHPonRandomSolutions/BiasTrack3D.dat";
-char statestrackfname[] = "./Test3DHPonRandomSolutions/StatesTrack3D.dat";
+char HPfname[] = "./206/bestind.dat";
+char Fitnessesfname[] = "./Test5DHPonRandomSolutions/FinalFitness5D_206.dat";
+char ICsfname[] = "./Test5DHPonRandomSolutions/ICs5D_206.dat";
+char biastrackfname[] = "./Test5DHPonRandomSolutions/BiasTrack5D.dat";
+char statestrackfname[] = "./Test5DHPonRandomSolutions/StatesTrack5D.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
@@ -121,7 +122,14 @@ int main(){
 
         // FULLY RANDOM MODE (well everything but the time constants)
         if(random_mode){
-            int k = N; //start after time constants
+            int k = 1;
+            if(!taus_set){
+                for(int j=1;j<=N;j++){
+                    Circuit.SetNeuronTimeConstant(j,phenotype(k));
+                    k++;
+                }
+            }
+            k = N+1; //start after time constants
             for(int j=1; j<=N; j++){
                 Circuit.SetNeuronBias(j,phenotype(k));
                 // cout << "set a bias" << endl;
