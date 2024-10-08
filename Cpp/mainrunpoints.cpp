@@ -38,9 +38,9 @@ const bool taus_set = false;
 
 //Filenames
 char Nfname[] = "./Pete.ns";
-char HPfname[] = "./206/bestind.dat";
-char Fitnessesfname[] = "./Test5DHPonRandomSolutions/FinalFitness5D_206.dat";
-char ICsfname[] = "./Test5DHPonRandomSolutions/ICs5D_206.dat";
+char HPfname[] = "./302/bestind.dat";
+char Fitnessesfname[] = "./Test5DHPonRandomSolutions/FinalFitness5D_302.dat";
+char ICsfname[] = "./Test5DHPonRandomSolutions/ICs5D_302.dat";
 char biastrackfname[] = "./Test5DHPonRandomSolutions/BiasTrack5D.dat";
 char statestrackfname[] = "./Test5DHPonRandomSolutions/StatesTrack5D.dat";
 
@@ -109,7 +109,7 @@ int main(){
     }
     Circuit.SetHPPhenotype(HPifs,StepSize,true);
 
-    // cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << endl;
+    cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << endl;
 
     for (int i = 0;i<num_ICs;i++){
 
