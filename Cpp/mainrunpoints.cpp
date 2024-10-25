@@ -33,16 +33,16 @@ const double WR = 16;
 const int num_ICs = 1000;
 
 // Mode
-const bool random_mode = true;
+const bool random_mode = false;
 const bool taus_set = false;
 
 //Filenames
-char Nfname[] = "./Pete.ns";
-char HPfname[] = "./302/bestind.dat";
-char Fitnessesfname[] = "./Test5DHPonRandomSolutions/FinalFitness5D_302.dat";
-char ICsfname[] = "./Test5DHPonRandomSolutions/ICs5D_302.dat";
-char biastrackfname[] = "./Test5DHPonRandomSolutions/BiasTrack5D.dat";
-char statestrackfname[] = "./Test5DHPonRandomSolutions/StatesTrack5D.dat";
+char Nfname[] = "./Quinn.ns";
+char HPfname[] = "./206/bestind.dat";
+char Fitnessesfname[] = "./Test5DHPonPyloricSolutions/QuinnFinalFitness5D_206.dat";
+char ICsfname[] = "./Test5DHPonPyloricSolutions/QuinnICs5D_206.dat";
+char biastrackfname[] = "./Test5DHPonPyloricSolutions/BiasTrack5D.dat";
+char statestrackfname[] = "./Test5DHPonPyloricSolutions/StatesTrack5D.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials

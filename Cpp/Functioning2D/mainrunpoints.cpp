@@ -10,7 +10,7 @@
 
 // Task params
 // const double TransientDuration = 1000; //Seconds with HP off
-const double PlasticDuration = 5000; //Seconds with HP running
+const double PlasticDuration = 10000; //Seconds with HP running
 const double RunDuration = 150; //How long to test for pyloricness
 // const double StepSize = 0.025;
 const int RunSteps = RunDuration/StepSize;
@@ -39,9 +39,12 @@ const int num_ICs = 1000;
 
 //Filenames
 char Nfname[] = "./TestBestonDifferentSolutions/Pete/Pete.ns";
-char HPfname[] = "./2DHPmechanisms/33/bestind.dat";
-char Fitnessesfname[] = "./TestBestonDifferentSolutions/Pete/FinalFitness33.dat";
-char ICsfname[] = "./TestBestonDifferentSolutions/Pete/ICs33.dat";
+char HPfname[] = "./2DHPmechanisms/HP_unevolved/HPWilliams.gn";
+// char Fitnessesfname[] = "./TestBestonDifferentSolutions/Pete/FinalFitness33.dat";
+char Fitnessesfname[] = "./2DHPmechanisms/HP_unevolved/PeteWilliamsFitnesses33.dat";
+// char ICsfname[] = "./TestBestonDifferentSolutions/Pete/ICs33.dat";
+char ICsfname[] = "./2DHPmechanisms/HP_unevolved/WilliamsICs.dat";
+// char biastrackfname[] = "./TestBestonDifferentSolutions/Pete/BiasTrack33.dat";
 char biastrackfname[] = "./TestBestonDifferentSolutions/Pete/BiasTrack33.dat";
 char statestrackfname[] = "./TestBestonDifferentSolutions/Pete/StatesTrack33.dat";
 
