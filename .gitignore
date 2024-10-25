@@ -40,3 +40,5 @@ __pycache__
 #supercomputer output files
 *.txt
 *.err
+Cpp/main
+Cpp/Functioning2D/main
