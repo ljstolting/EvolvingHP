@@ -24,8 +24,8 @@ const int TestSteps = TestDuration/StepSize; // in steps
 
 // Plasticity params 
 // MUST MANUALLY CHANGE to reflect plasticpars file BECAUSE I CANNOT WORK OUT THE FILE DEPENDENCIES
-int num = 5;
-int neuronschanging = 3;
+int num = 2;
+int neuronschanging = 2;
 int VectSize =  num + (neuronschanging * 3);
 
 // Detection params
@@ -569,9 +569,10 @@ double PyloricPerformance(CTRNN &Agent)
 	int PDstartcount = 0;
 	TVector<int> PDstarts(1,3);
 	PDstarts.FillContents(0);
+
 	while (tstep <= TestSteps && PDstartcount < 3) {
 		for (int i = 1; i <= N; i += 1) {
-			OutputHistory(tstep,i) = Agent.NeuronOutput(i);
+			OutputHistory[tstep][i] = Agent.NeuronOutput(i);
 			if (Agent.NeuronOutput(i) > maxoutput(i)) {maxoutput(i)=Agent.NeuronOutput(i);}
 			if (Agent.NeuronOutput(i) < minoutput(i)) {minoutput(i)=Agent.NeuronOutput(i);}
 		}
@@ -586,6 +587,7 @@ double PyloricPerformance(CTRNN &Agent)
 		tstep += 1;
 		t += StepSize;
 	}
+
 	for (int i = 1; i <= N; i += 1) {
 		// SHORT HAND FOR ALL NEURONS OSCILLATING APPRECIABLY
 		if (minoutput[i] <(burstthreshold-.05)) {
@@ -594,7 +596,10 @@ double PyloricPerformance(CTRNN &Agent)
 			}
 		}
 	}
+	// cout << minoutput << maxoutput << endl;
 	if (fitness < 0.15){
+		// cout << "not oscillatory";
+		// cout << "fitness" << fitness;
 		return fitness;
 	}
 
@@ -714,6 +719,7 @@ double PyloricPerformance(CTRNN &Agent)
 			// NO ORDERING POINTS FOR MULTIPERIODIC
 		}
 	}
+	// cout << "fitness" << fitness;
 	return fitness;
 
 }

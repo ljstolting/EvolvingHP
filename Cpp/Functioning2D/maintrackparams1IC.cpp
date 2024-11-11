@@ -9,8 +9,7 @@
 
 // Task params
 const double TransientDuration = 50; //Seconds with HP off
-const double PlasticDuration = 5000;//100000; //Seconds with HP running
-const double CompareDuration = PlasticDuration;
+const double PlasticDuration = 5000; //Seconds with HP running
 const double StepSize = 0.01;
 
 //Filenames for parameter traces
@@ -82,18 +81,7 @@ int main(){
         Circuit.EulerStep(StepSize,1,0);
     }
     cout << Circuit.biases << endl;
-    // Reset and run for a long duration w/o HP for comparison
-    Circuit.SetNeuronBias(1,initialbias1);
-    Circuit.SetNeuronBias(3,initialbias3);
-    Circuit.RandomizeCircuitState(0,0);
-    for(double t=0;t<TransientDuration;t+=StepSize){
-        outputswoHPfile << Circuit.outputs << endl;
-        Circuit.EulerStep(StepSize,0,0);
-    }
-    for(double t=0;t<CompareDuration;t+=StepSize){
-        outputswoHPfile << Circuit.outputs << endl;
-        Circuit.EulerStep(StepSize,0,0);
-    }
+
     outputswHPfile.close();
     outputswoHPfile.close();
     biasesfile.close();

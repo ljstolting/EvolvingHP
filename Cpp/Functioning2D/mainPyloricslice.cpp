@@ -30,12 +30,12 @@ int main (int argc, const char* argv[])
 {
 	// Create file to hold data
 	ofstream slicefile;
-	slicefile.open("../Functioning2D/TestBestonDifferentSolutions/Sven/Sven_slice.dat");
+	slicefile.open("../Functioning2D/TestBestonDifferentSolutions/Terrence/Terrence_slice.dat");
 	// slicefile.open("Pete_maxmindetected_HP129.dat");
 
 	// Load the base CTRNN parameters
     CTRNN Circuit(3);
-    char fname[] = "../Functioning2D/TestBestonDifferentSolutions/Sven/Sven.ns";
+    char fname[] = "../Functioning2D/TestBestonDifferentSolutions/Terrence/Terrence.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {

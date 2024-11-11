@@ -186,6 +186,7 @@ class CTRNN {
         friend TVector<double>& operator>>(TVector<double>& phen, CTRNN& c);
 
         // Control
+        void WindowReset(void);
         void RandomizeCircuitState(double lb, double ub);
         void RandomizeCircuitState(double lb, double ub, RandomState &rs);
         void RandomizeCircuitOutput(double lb, double ub);

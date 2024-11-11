@@ -37,12 +37,12 @@ const bool random_mode = false;
 const bool taus_set = false;
 
 //Filenames
-char Nfname[] = "./Quinn.ns";
-char HPfname[] = "./206/bestind.dat";
-char Fitnessesfname[] = "./Test5DHPonPyloricSolutions/QuinnFinalFitness5D_206.dat";
-char ICsfname[] = "./Test5DHPonPyloricSolutions/QuinnICs5D_206.dat";
-char biastrackfname[] = "./Test5DHPonPyloricSolutions/BiasTrack5D.dat";
-char statestrackfname[] = "./Test5DHPonPyloricSolutions/StatesTrack5D.dat";
+char Nfname[] = "./Pete.ns";
+char HPfname[] = "./converted33.dat";
+char Fitnessesfname[] = "./testfitness.dat";
+char ICsfname[] = "./testICs.dat";
+char biastrackfname[] = "./testbiastrack.dat";
+char statestrackfname[] = "./teststatestrack.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials

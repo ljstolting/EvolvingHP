@@ -318,9 +318,11 @@ void TSearch::DoSearch(int ResumeFlag, bool CenterCrossing = false)
 		cerr << "Error: NULL evaluation function\n";
 		exit(0);
 	}
+	// cout << "Search Initialized" << endl;
 	// Unless we're resuming a checkpointed search, evalute the initial population and reset best
 	if (!ResumeFlag) {
 		EvaluatePopulation();
+		// cout << "Population Initially Evaluated" << endl;
 		BestPerf = -1;
 		UpdateBestFlag = 0;
 	}
@@ -336,6 +338,7 @@ void TSearch::DoSearch(int ResumeFlag, bool CenterCrossing = false)
 		Gen++;
 		UpdateBestFlag = 0;
 		ReproducePopulation();
+		// cout << "Reproduction" << endl;
 		UpdatePopulationStatistics();
 		DisplayPopulationStatistics();
 		// If the best changed and there is a BestActionFunction, invoke it

@@ -232,6 +232,7 @@ void CTRNN::RhoCalc(void){
       // cout << stepnum << " " << windowsize[i] << endl;
       if(stepnum < windowsize[i]){
         outputhist[i][stepnum+1] = NeuronOutput(i);
+        // cout << outputhist << endl;
       }
       if(stepnum == windowsize[i]){ //do initial add-up
       // cout << outputhist(i,1) << endl;
@@ -242,20 +243,21 @@ void CTRNN::RhoCalc(void){
         avgoutputs[i] = sumoutputs[i]/windowsize[i];
         if(avgoutputs(i)<minavg(i)){minavg(i)=avgoutputs(i);}; //calc of max and min detected values
         if(avgoutputs(i)>maxavg(i)){maxavg(i)=avgoutputs(i);};
+        // cout << "avg" << avgoutputs << endl;
       }
       if(stepnum > windowsize[i]){ //do truncated add-up
-        sumoutputs(i) -= outputhist(i,(stepnum%windowsize(i))+1);
-        sumoutputs(i) += NeuronOutput(i);
+        // cout << sumoutputs << endl;
+        sumoutputs[i] -= outputhist[i][(stepnum%windowsize[i])+1];
+        // cout << sumoutputs << endl;
+        sumoutputs[i] += NeuronOutput(i);
+        // cout << sumoutputs << endl;
         // replace oldest value
-        outputhist(i,(stepnum%windowsize(i))+1) = NeuronOutput(i);
-        avgoutputs(i) = sumoutputs(i)/windowsize(i);
+        outputhist[i][(stepnum%windowsize(i))+1] = NeuronOutput(i);
+        avgoutputs[i] = sumoutputs(i)/windowsize(i);
         if(avgoutputs(i)<minavg(i)){minavg(i)=avgoutputs(i);}; //calc of max and min detected values
         if(avgoutputs(i)>maxavg(i)){maxavg(i)=avgoutputs(i);};
-        // if (i == 2) {cout << stepnum << " " << minavg(2) << " " << maxavg(2) << endl;}
       }
     }
-
-
     // NEW: Update rho for each neuron.
     for (int i = 1; i <= size; i++) {
       // cout << l_boundary[i] << " " << u_boundary[i] << endl;

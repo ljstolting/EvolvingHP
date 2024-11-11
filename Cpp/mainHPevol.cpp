@@ -24,7 +24,7 @@
 // const double tolerance = .1; //for detecting double periodicity
 
 // EA params
-const int POPSIZE = 50;
+const int POPSIZE = 20;
 const int GENS = 100;
 const int trials = 1;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
@@ -32,6 +32,8 @@ const double CROSSPROB = 0.0;
 const double EXPECTED = 1.1;
 const double ELITISM = 0.1;
 const double scaling_factor = 25; // boost to add to solutions that are fully pyloric
+
+const int num_optimization_genomes = 10; //number of circuits to test a generalist mechanism on (number listed in the file)
 
 // Parameter variability modality only
 //const int Repetitions = 10; 
@@ -84,12 +86,14 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 double HPPerformance(CTRNN &Agent, TMatrix<double> &ptlist, double scaling_factor){
 	double fitness = 0;
 	int num_points = ptlist.RowUpperBound();
+	// cout << "plane" << Agent.biases << endl;
 
 	for (int i = 1; i <= num_points; i ++){
 		for (int b=1;b<=num;b++){
 			Agent.SetArbDParam(b,ptlist(i,b)); 
 		}
-		// cout << "init" << Agent.biases << endl;
+		Agent.WindowReset();
+		// cout << "init " << Agent.biases << endl;
 		// cout << "parameters " << Agent.NeuronBias(1) << " " << Agent.NeuronBias(2) << " " << Agent.NeuronBias(3) << " " << Agent.ConnectionWeight(1,1) << endl;
 		// Initialize the outputs at 0.5 for all neurons in the circuit
 		for (int n=1;n<=Agent.CircuitSize();n++){Agent.SetNeuronState(n,0);}
@@ -107,9 +111,12 @@ double HPPerformance(CTRNN &Agent, TMatrix<double> &ptlist, double scaling_facto
 		// Calculate the Pyloric Fitness
 		// cout << Agent.NeuronBias(1) << " " << Agent.NeuronBias(3) << ":";
 		double fit = PyloricPerformance(Agent);
+		// cout << "fitness" << fit;
 
 		// Transform it so Pyloricness at all is worth a lot
 		if (fit >= .3){fit = fit+scaling_factor;}
+
+		// cout << "scaledfit" << fit;
 
 		// cout << fit << endl;
 		fitness += fit;
@@ -126,10 +133,12 @@ double HPPerformance(CTRNN &Agent, TMatrix<double> &ptlist, double scaling_facto
 		// Transform it so Pyloricness at all is worth a lot
 		if (fit >= .3){fit = fit+scaling_factor;}
 
-		// cout << fit << endl;
+		// cout << "fitness " << i << " " << fit << endl;
 		fitness += fit;
-		// cout << "final" << Agent.biases << endl;
+		// cout << "final " << Agent.biases << endl;
+		// cout << fit << endl << endl;
 	}
+	// cout << Agent.biases << endl;
     return fitness/(num_points*2);
 }
 
@@ -148,7 +157,7 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	// cout << Agent.adaptbiases << endl;
 
 	// Instantiate the nervous system
-	char fname[] = "../Pete.ns";
+	char fname[] = "./Functioning2D/TestBestonDifferentSolutions/Pete/Pete.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -163,10 +172,75 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
 	Agent.SetHPPhenotype(phenotype,StepSize,true); //range encoding active
 	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
-
 	double fitness = HPPerformance(Agent, ptlist, scaling_factor);
-	// cout << fitness << endl;
     return fitness; //fitness averaged across all times it is taken
+}
+
+double HPGeneralistPerformance(CTRNN &Agent, ifstream &optimizationgenomesfile, TMatrix<double> &ptlist){
+	//Here, Agent is already loaded with HP mechanism
+
+	TVector<double> CTRNNphenotype;
+	CTRNNphenotype.SetBounds(1,(2*N)+(N*N));
+
+	TVector <double> performances(1,num_optimization_genomes);
+	TVector <double> pyloric_fitnesses(1,num_optimization_genomes);
+
+	for(int i=1;i<=num_optimization_genomes;i++){
+		optimizationgenomesfile >> CTRNNphenotype;
+		// cout << CTRNNphenotype << endl;
+		optimizationgenomesfile >> pyloric_fitnesses[i]; //load in the fitness at the peak, so we can scale HP's performance
+
+		CTRNNphenotype >> Agent;
+		Agent.RandomizeCircuitOutput(.5,.5);
+		//test the HP mechanism in each of the subspaces given by the evolved pyloric solutions
+		
+		performances[i] = HPPerformance(Agent, ptlist,scaling_factor);
+		// cout << performances[i] << endl << endl;
+	}
+
+	double max_pyloric_fitness = pyloric_fitnesses.Max();
+	// cout << endl << max_pyloric_fitness << endl;
+	double fitness = 0;
+	//scale each performance by the peak (best possible performance relative to other solutiouns) 
+	//and take the average
+	for(int i=1;i<=num_optimization_genomes;i++){
+		fitness += performances[i]/(pyloric_fitnesses[i]/max_pyloric_fitness);
+	}
+	// ifs.close();
+	return fitness/num_optimization_genomes;
+}
+
+double HPGeneralistFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, RandomState &rs){
+	// Map genotype to phenotype
+	TVector<double> phenotype;
+	phenotype.SetBounds(1, VectSize);
+	GenPhenMapping(genotype, phenotype);
+	// cout << "mapped";
+	
+	// Create the agent
+	CTRNN Agent(3);
+	// cout << Agent.plasticneurons << endl;
+	// cout << Agent.adaptweights << endl;
+	// cout << "checkpoint 1" << endl;
+
+	//Set HP parameters
+	// cout << phenotype << endl;
+	Agent.SetHPPhenotype(phenotype,StepSize,true); //using a phenotype vector, with range encoding
+	// cout << Agent.l_boundary << " " << Agent.u_boundary << endl;
+	// cout << "checkpoint 2" << endl;
+
+	// Load in list of genomes in the optimization set
+	char fname[] = "../Pyloric CTRNN Genomes/optimizationset.dat";
+	ifstream ifs;
+    ifs.open(fname);
+    if (!ifs) {
+        cerr << "File not found: " << fname << endl;
+        exit(EXIT_FAILURE);
+    }
+	// cout << "checkpoint 3" << endl;
+
+	double fit = HPGeneralistPerformance(Agent,ifs,ptlist);
+	return fit;
 }
 
 
@@ -189,7 +263,7 @@ void ResultsDisplay(TSearch &s)
 	GenPhenMapping(bestVector, phenotype);
 
 	// Reproduce which pars the HP mechanism has access to
-	char plasticparsfname[] = "../plasticpars.dat";
+	char plasticparsfname[] = "./plasticpars.dat";
   	ifstream plasticparsfile;
   	TVector<int> plasticitypars(1,N+(N*N));
   	plasticparsfile.open(plasticparsfname);
@@ -200,6 +274,7 @@ void ResultsDisplay(TSearch &s)
   	for (int i = 1; i <= plasticitypars.UpperBound(); i ++){
     	plasticparsfile >> plasticitypars[i];
   	}
+	cout << plasticitypars << endl;
 	// BestIndividualsFile << trial << endl;
 	BestIndividualsFile << plasticitypars << endl;
 	BestIndividualsFile << bestVector << endl << phenotype << endl;
@@ -232,10 +307,9 @@ void EvolutionaryRunDisplay(TSearch &s)
 // ------------------------------------
 int main (int argc, const char* argv[]) 
 {
-
 	// Evolution condition
-	Evolfile.open("evol.dat");
-	BestIndividualsFile.open("bestind.dat");
+	Evolfile.open("HPgeneralizationtestevol.dat");
+	BestIndividualsFile.open("HPgeneralizationtestbestind.dat");
 	for (int i=1;i<=trials;i++){
 		long randomseed = static_cast<long>(time(NULL));
 		if (argc == 2)
@@ -261,10 +335,11 @@ int main (int argc, const char* argv[])
 		s.SetReEvaluationFlag(0); //  Parameter Variability Modality Only
 
 		// GRID MODE
-		int resolution = 2;
+		int resolution = 3;
 		TVector<double> par_vals(1,resolution);
-		par_vals[1] = -8;
-		par_vals[2] = 8;
+		par_vals[1] = -10;
+		par_vals[2] = 0;
+		par_vals[3] = 10;
 
 		int num_pts = pow(resolution,num);
 		TMatrix<double> ptlist(1,num_pts,1,num);
@@ -281,21 +356,29 @@ int main (int argc, const char* argv[])
 		// }
 
 		s.SetInitialPtsforEval(ptlist);
-		s.SetEvaluationFunction(HPFitnessFunction);
+		s.SetEvaluationFunction(HPGeneralistFitnessFunction);
 		s.ExecuteSearch(false);
 
-	// ifstream genefile("bestinds.dat");
-	// int gen;
-	// genefile >> gen;
-	// TVector<double> genotype(1, VectSize);
-	// genefile >> genotype;
-	// cout << genotype << endl;
-	// RandomState rs;
-	// cout << HPFitnessFunction(genotype,rs) << endl;
 		
 	}
 	Evolfile.close();
 	BestIndividualsFile.close();
+
+	// ifstream HPfile;
+	// // ifstream Circuitfile;
+	// HPfile.open("./converted33.dat");
+	// // Circuitfile.open("./TestBestonDifferentSolutions/Pete/Pete.ns");
+
+	// CTRNN Agent(3);
+	// // Circuitfile >> Agent;
+	// Agent.SetHPPhenotype(HPfile,StepSize,true);
+	// // cout << Agent.l_boundary << " " << Agent.u_boundary << endl;
+
+	// double fit = HPGeneralistPerformance(Agent,ptlist);
+	// cout << fit;
+
+	// HPfile.close();
+	// Circuitfile.close();
 
   return 0;
 }
