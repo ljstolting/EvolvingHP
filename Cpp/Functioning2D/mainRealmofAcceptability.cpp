@@ -22,8 +22,8 @@ const double par2max = 16.0;
 const double par2step = .1;
 
 // HP genome file
-char HPfname[] = "../33/bestind.dat"; 
-char netchangefname[] = "Svennetchange33.dat";
+char HPfname[] = "./HP_unevolved/HPpoint1.gn"; 
+char netchangefname[] = "./TestBestonDifferentSolutions/Pete/Petenetchangepoint1.dat";
 
 // Nervous system params
 const int N = 3;
@@ -38,7 +38,7 @@ int main (int argc, const char* argv[])
 	netchangefile.open(netchangefname);
 	
     CTRNN Circuit(N);
-    char fname[] = "../Sven.ns";
+    char fname[] = "./TestBestonDifferentSolutions/Pete/Pete.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -53,7 +53,7 @@ int main (int argc, const char* argv[])
         exit(EXIT_FAILURE);
     }
 	bool range_encoding = false;
-	Circuit.SetHPPhenotypebestind(HPphen,StepSize,range_encoding);
+	Circuit.SetHPPhenotype(HPphen,StepSize,range_encoding);
 	
 	// For every pair of parameter values specified, (right now, par1=theta1, par2=theta3)
 	TVector<double> acc(1,2); //vector to store the magnitude of change accumulated for each parameter during 

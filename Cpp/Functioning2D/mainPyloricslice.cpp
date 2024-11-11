@@ -1,9 +1,9 @@
 // --------------------------------------------------------------
 //  Evaluate Pyloric fitness at many parameter values on a grid 
 // --------------------------------------------------------------
-#include "TSearch.h"
+#include "../TSearch.h"
 #include "CTRNN.h"
-#include "random.h"
+#include "../random.h"
 #include "pyloric.h"
 
 //#define PRINTOFILE
@@ -30,12 +30,12 @@ int main (int argc, const char* argv[])
 {
 	// Create file to hold data
 	ofstream slicefile;
-	// slicefile.open("Sven_slice.dat");
-	slicefile.open("Pete_maxmindetected_HP129.dat");
+	slicefile.open("../Functioning2D/TestBestonDifferentSolutions/Terrence/Terrence_slice.dat");
+	// slicefile.open("Pete_maxmindetected_HP129.dat");
 
 	// Load the base CTRNN parameters
     CTRNN Circuit(3);
-    char fname[] = "Pete.ns";
+    char fname[] = "../Functioning2D/TestBestonDifferentSolutions/Terrence/Terrence.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -46,7 +46,7 @@ int main (int argc, const char* argv[])
 
 	// Load in the HP mechanism for the purpose of specifying the sliding windows
 	ifstream HPfile;
-	char HPfname[] = "./129/bestindsrangeencoding.dat";
+	char HPfname[] = ".2DHPmechanisms/129/bestindsrangeencoding.dat";
 	HPfile.open(HPfname);
 	bool range_encoding = true;
 
@@ -60,13 +60,14 @@ int main (int argc, const char* argv[])
 			Circuit.SetNeuronBias(3,par2);
 			Circuit.RandomizeCircuitState(0,0); // resets sliding window calculation utilities, as well
 			// cout << Circuit.windowsize << endl << Circuit.minavg << endl << Circuit.maxavg << endl << endl;
-			for (double t = StepSize; t<= TransientDuration; t+=StepSize){
-				Circuit.EulerStep(StepSize,false,false);
-			}
-			for (double t = StepSize; t<= TestDuration; t+=StepSize){
-				Circuit.EulerStepAvgsnoHP(StepSize);
-			}
-			slicefile << Circuit.minavg << endl << Circuit.maxavg << endl << endl;
+			// for (double t = StepSize; t<= TransientDuration; t+=StepSize){
+			// 	Circuit.EulerStep(StepSize,false,false);
+			// }
+			// for (double t = StepSize; t<= TestDuration; t+=StepSize){
+			// 	Circuit.EulerStepAvgsnoHP(StepSize);
+			// }
+			// slicefile << Circuit.minavg << endl << Circuit.maxavg << endl << endl;
+			slicefile << PyloricPerfwTransient(Circuit)<<endl;
 		}
 	}	
 	slicefile.close();

@@ -33,15 +33,16 @@ const double WR = 16;
 const int num_ICs = 1000;
 
 // Mode
-const bool random_mode = true;
+const bool random_mode = false;
+const bool taus_set = false;
 
 //Filenames
 char Nfname[] = "./Pete.ns";
-char HPfname[] = "./48/bestind.dat";
-char Fitnessesfname[] = "./Test3DHPonRandomSolutions/FinalFitness3D_48_tausset.dat";
-char ICsfname[] = "./Test3DHPonRandomSolutions/ICs3D_48_tausset.dat";
-char biastrackfname[] = "./Test3DHPonRandomSolutions/BiasTrack3D.dat";
-char statestrackfname[] = "./Test3DHPonRandomSolutions/StatesTrack3D.dat";
+char HPfname[] = "./converted33.dat";
+char Fitnessesfname[] = "./testfitness.dat";
+char ICsfname[] = "./testICs.dat";
+char biastrackfname[] = "./testbiastrack.dat";
+char statestrackfname[] = "./teststatestrack.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
@@ -108,7 +109,7 @@ int main(){
     }
     Circuit.SetHPPhenotype(HPifs,StepSize,true);
 
-    // cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << endl;
+    cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << endl;
 
     for (int i = 0;i<num_ICs;i++){
 
@@ -121,7 +122,14 @@ int main(){
 
         // FULLY RANDOM MODE (well everything but the time constants)
         if(random_mode){
-            int k = N; //start after time constants
+            int k = 1;
+            if(!taus_set){
+                for(int j=1;j<=N;j++){
+                    Circuit.SetNeuronTimeConstant(j,phenotype(k));
+                    k++;
+                }
+            }
+            k = N+1; //start after time constants
             for(int j=1; j<=N; j++){
                 Circuit.SetNeuronBias(j,phenotype(k));
                 // cout << "set a bias" << endl;
