@@ -261,10 +261,13 @@ int main (int argc, const char* argv[])
 		s.SetReEvaluationFlag(0); //  Parameter Variability Modality Only
 
 		// GRID MODE
-		int resolution = 2;
+		int resolution = 5;
 		TVector<double> par_vals(1,resolution);
-		par_vals[1] = -8;
-		par_vals[2] = 8;
+		par_vals[1] = -16;
+		par_vals[2] = -8;
+		par_vals[3] = 0;
+		par_vals[4] = 8;
+		par_vals[5] = 16;
 
 		int num_pts = pow(resolution,num);
 		TMatrix<double> ptlist(1,num_pts,1,num);

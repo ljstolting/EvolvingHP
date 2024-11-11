@@ -40,3 +40,4 @@ __pycache__
 #supercomputer output files
 *.txt
 *.err
+Cpp/main
