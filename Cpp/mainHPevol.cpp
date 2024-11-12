@@ -230,7 +230,7 @@ double HPGeneralistFitnessFunction(TVector<double> &genotype, TMatrix<double> &p
 	// cout << "checkpoint 2" << endl;
 
 	// Load in list of genomes in the optimization set
-	char fname[] = "../Pyloric CTRNN Genomes/optimizationset.dat";
+	char fname[] = "../../../Pyloric CTRNN Genomes/optimizationset.dat";
 	ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -263,7 +263,7 @@ void ResultsDisplay(TSearch &s)
 	GenPhenMapping(bestVector, phenotype);
 
 	// Reproduce which pars the HP mechanism has access to
-	char plasticparsfname[] = "./plasticpars.dat";
+	char plasticparsfname[] = "../../plasticpars.dat";
   	ifstream plasticparsfile;
   	TVector<int> plasticitypars(1,N+(N*N));
   	plasticparsfile.open(plasticparsfname);
@@ -308,8 +308,8 @@ void EvolutionaryRunDisplay(TSearch &s)
 int main (int argc, const char* argv[]) 
 {
 	// Evolution condition
-	Evolfile.open("HPgeneralizationtestevol.dat");
-	BestIndividualsFile.open("HPgeneralizationtestbestind.dat");
+	Evolfile.open("evol.dat");
+	BestIndividualsFile.open("bestind.dat");
 	for (int i=1;i<=trials;i++){
 		long randomseed = static_cast<long>(time(NULL));
 		if (argc == 2)
