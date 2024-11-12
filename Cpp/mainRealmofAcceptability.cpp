@@ -22,8 +22,8 @@ const double par2max = 16.0;
 const double par2step = .1;
 
 // HP genome file
-char HPfname[] = "./33/bestind.dat"; 
-char netchangefname[] = "Svennetchange33.dat";
+char HPfname[] = "./converted33.dat"; 
+char netchangefname[] = "Victornetchange33.dat";
 
 // Nervous system params
 const int N = 3;
@@ -38,7 +38,7 @@ int main (int argc, const char* argv[])
 	netchangefile.open(netchangefname);
 	
     CTRNN Circuit(N);
-    char fname[] = "Sven.ns";
+    char fname[] = "../Pyloric CTRNN Genomes/Victor.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -53,7 +53,7 @@ int main (int argc, const char* argv[])
         exit(EXIT_FAILURE);
     }
 	bool range_encoding = false;
-	Circuit.SetHPPhenotypebestind(HPphen,StepSize,range_encoding);
+	Circuit.SetHPPhenotype(HPphen,StepSize,range_encoding);
 	
 	// For every pair of parameter values specified, (right now, par1=theta1, par2=theta3)
 	TVector<double> acc(1,2); //vector to store the magnitude of change accumulated for each parameter during 
@@ -67,7 +67,7 @@ int main (int argc, const char* argv[])
 			Circuit.RandomizeCircuitState(0,0); //resets averaging and sliding window utilities
 			// run for a short transient
 			for (double t=StepSize;t<=TransientDuration;t+=StepSize){
-				Circuit.EulerStep(StepSize,0,0);
+				Circuit.EulerStep(StepSize,0);
 			}
 			// then run to keep track of the bias changes, but not actually apply them
 			for (double t=StepSize;t<=RunDuration;t+=StepSize){

@@ -33,20 +33,20 @@ const double WR = 16;
 const int num_ICs = 1000;
 
 // Mode
-const bool random_mode = false;
+const bool random_mode = false; //randomize in other dimensions besides HP dimensions 
 const bool taus_set = false;
 
 //Filenames
-char Nfname[] = "./Pete.ns";
-char HPfname[] = "./converted33.dat";
-char Fitnessesfname[] = "./testfitness.dat";
-char ICsfname[] = "./testICs.dat";
-char biastrackfname[] = "./testbiastrack.dat";
-char statestrackfname[] = "./teststatestrack.dat";
+char Nfname[] = "../Pyloric CTRNN Genomes/Victor.ns";
+char HPfname[] = "./Generalist HP Mechanisms/25/bestind.dat";
+char Fitnessesfname[] = "./Victorgeneralist25fitness.dat";
+char ICsfname[] = "./Victorgeneralist25ICs.dat";
+char biastrackfname[] = "./Victorgeneralist25biastrack.dat";
+char statestrackfname[] = "./Victorgeneralist25statestrack.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
-const bool trackparams = false;
+const bool trackparams = true;
 const int trackparamsinterval = 100; //Track biases for every X trials
 
 void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
@@ -191,12 +191,9 @@ int main(){
         // Run with HP for a time
         for(double t=0;t<PlasticDuration;t+=StepSize){
             if (trackparams && (i%trackparamsinterval==0)){
-                biastrack << Circuit.biases;
-                for(int j = 1; j <= N; j ++){
-                    for(int k=1;k<=N;k++){
-                        biastrack << Circuit.ConnectionWeight(j,k) << " ";
-                    }
-                } 
+                for(int j = 1; j<= num; j++){
+                    biastrack << Circuit.ArbDParam(j) << " "; //record only the parameters that are changing throughout the run
+                }
                 biastrack << endl;
             }
 			if (trackstates && (i%trackstatesinterval==0)){statestrack << Circuit.NeuronOutput(1) << " " << Circuit.NeuronOutput(2) << " " << Circuit.NeuronOutput(3) << endl;}

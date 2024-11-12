@@ -18,11 +18,11 @@ const int num_indivs = 90; //how many genomes in the file
 int main(int argc, const char* argv[])
 {
     ofstream testfile;
-    testfile.open("allpyloricXgeneralist_test.dat");
+    testfile.open("allpyloricXpoint25.dat");
 
 	CTRNN Circuit(3);
     //FILE CONTAINING THE GENOME OF 2-D HP#33, BUT IN THE FORMAT THAT THE CODE READS NOW
-    char HPfname[] = "HPgeneralizationtestbestind.dat";
+    char HPfname[] = "./Functioning2D/HP_unevolved/HPpoint25bestind.gn";
     ifstream HPin;
     HPin.open(HPfname);
     if (!HPin) {
