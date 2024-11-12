@@ -230,7 +230,7 @@ double HPGeneralistFitnessFunction(TVector<double> &genotype, TMatrix<double> &p
 	// cout << "checkpoint 2" << endl;
 
 	// Load in list of genomes in the optimization set
-	char fname[] = "../../../Pyloric CTRNN Genomes/optimizationset.dat";
+	char fname[] = "../../../Pyloric CTRNN Genomes/optimizationset3.dat";
 	ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
