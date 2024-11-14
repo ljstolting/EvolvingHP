@@ -22,8 +22,8 @@ const double par2max = 16.0;
 const double par2step = .1;
 
 // HP genome file
-char HPfname[] = "./converted33.dat"; 
-char netchangefname[] = "Victornetchange33.dat";
+char HPfname[] = "./Generalist HP Mechanisms/25/bestind.dat"; 
+char netchangefname[] = "Wandanetchangegeneralist25.dat";
 
 // Nervous system params
 const int N = 3;
@@ -38,7 +38,7 @@ int main (int argc, const char* argv[])
 	netchangefile.open(netchangefname);
 	
     CTRNN Circuit(N);
-    char fname[] = "../Pyloric CTRNN Genomes/Victor.ns";
+    char fname[] = "../Pyloric CTRNN Genomes/Wanda.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {

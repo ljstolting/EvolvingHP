@@ -37,12 +37,12 @@ const bool random_mode = false; //randomize in other dimensions besides HP dimen
 const bool taus_set = false;
 
 //Filenames
-char Nfname[] = "../Pyloric CTRNN Genomes/Victor.ns";
+char Nfname[] = "../Pyloric CTRNN Genomes/Wanda.ns";
 char HPfname[] = "./Generalist HP Mechanisms/25/bestind.dat";
-char Fitnessesfname[] = "./Victorgeneralist25fitness.dat";
-char ICsfname[] = "./Victorgeneralist25ICs.dat";
-char biastrackfname[] = "./Victorgeneralist25biastrack.dat";
-char statestrackfname[] = "./Victorgeneralist25statestrack.dat";
+char Fitnessesfname[] = "./Wandageneralist25fitness.dat";
+char ICsfname[] = "./Wandageneralist25ICs.dat";
+char biastrackfname[] = "./Wandageneralist25biastrack.dat";
+char statestrackfname[] = "./Wandageneralist25statestrack.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
