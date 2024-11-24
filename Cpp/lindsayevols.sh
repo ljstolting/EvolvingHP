@@ -13,6 +13,13 @@
 # mkdir ./Generalist\ HP\ Mechanisms/$JB;
 cd ./Specifically\ Evolved\ HP\ mechanisms/Every\ Circuit/$JB;
 # echo "ND" $JB
-time ../../../main $JB
-cd ../../;
+for ((n = 1; n < 5; n += 1));
+do
+    mkdir ./$n;
+    cd ./$n;
+    echo "ND" $JB;
+    time ../../../../main $JB;
+    cd ../;
+done
+cd ../../../../;
 

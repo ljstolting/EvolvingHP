@@ -145,6 +145,7 @@ double HPPerformance(CTRNN &Agent, TMatrix<double> &ptlist, double scaling_facto
 // ------------------------------------
 // Recovery Fitness Function
 // ------------------------------------
+//question for future lindsay: is this normalized by the fitness? probably not, so should we in order to compare solutions to different circuits?
 double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, RandomState &rs){
     // Map genotype to phenotype
 	TVector<double> phenotype;
@@ -157,7 +158,7 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	// cout << Agent.adaptbiases << endl;
 
 	// Instantiate the nervous system
-	char fname[] = "./pyloriccircuit.ns";
+	char fname[] = "../pyloriccircuit.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -263,7 +264,7 @@ void ResultsDisplay(TSearch &s)
 	GenPhenMapping(bestVector, phenotype);
 
 	// Reproduce which pars the HP mechanism has access to
-	char plasticparsfname[] = "../../../plasticpars.dat";
+	char plasticparsfname[] = "../../../../plasticpars.dat";
   	ifstream plasticparsfile;
   	TVector<int> plasticitypars(1,N+(N*N));
   	plasticparsfile.open(plasticparsfname);
