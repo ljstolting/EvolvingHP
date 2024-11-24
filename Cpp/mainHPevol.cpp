@@ -157,7 +157,7 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	// cout << Agent.adaptbiases << endl;
 
 	// Instantiate the nervous system
-	char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/0/pyloriccircuit.ns";
+	char fname[] = "./pyloriccircuit.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -263,7 +263,7 @@ void ResultsDisplay(TSearch &s)
 	GenPhenMapping(bestVector, phenotype);
 
 	// Reproduce which pars the HP mechanism has access to
-	char plasticparsfname[] = "../../plasticpars.dat";
+	char plasticparsfname[] = "../../../plasticpars.dat";
   	ifstream plasticparsfile;
   	TVector<int> plasticitypars(1,N+(N*N));
   	plasticparsfile.open(plasticparsfname);
@@ -307,12 +307,11 @@ void EvolutionaryRunDisplay(TSearch &s)
 // ------------------------------------
 int main (int argc, const char* argv[]) 
 {
-	// Evolution condition
-	Evolfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/evol.dat");
-	BestIndividualsFile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/bestind.dat");
+	Evolfile.open("./evol.dat");
+	BestIndividualsFile.open("./bestind.dat");
 	for (int i=1;i<=trials;i++){
 		long randomseed = static_cast<long>(time(NULL));
-		if (argc == 2)
+		if (argc == 1)
 			randomseed += atoi(argv[1]);
 		// long IDUM=-time(0);
 		TSearch s(VectSize);

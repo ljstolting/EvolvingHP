@@ -10,9 +10,9 @@
 #SBATCH --mem=16G
 #SBATCH -A r00213
 
-mkdir ./Generalist\ HP\ Mechanisms/$JB;
-cd ./Generalist\ HP\ Mechanisms/$JB;
-echo "ND" $JB
-time ../../main $JB
+# mkdir ./Generalist\ HP\ Mechanisms/$JB;
+cd ./Specifically\ Evolved\ HP\ mechanisms/Every\ Circuit/$JB;
+# echo "ND" $JB
+time ../../../main $JB
 cd ../../;
 
