@@ -46,7 +46,7 @@ const double B = 0.1; 		// Plasticity Low Boundary (symmetric)
 const double BT = 20.0;		// Bias Time Constant
 const double WT = 40.0;		// Weight Time Constant
 
-int	VectSize = N*N + 2*N;
+int	CTRNNVectSize = N*N + 2*N;
 
 // ------------------------------------
 // Genotype-Phenotype Mapping Functions
@@ -80,7 +80,7 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 // {
 // 	// Map genootype to phenotype
 // 	TVector<double> phenotype;
-// 	phenotype.SetBounds(1, VectSize);
+// 	phenotype.SetBounds(1, CTRNNVectSize);
 // 	GenPhenMapping(genotype, phenotype);
 
 // 	TMatrix<double> OutputHistory;
@@ -291,7 +291,7 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 
 double PyloricFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, RandomState &rs){
 	TVector<double> phenotype;
-	phenotype.SetBounds(1, VectSize);
+	phenotype.SetBounds(1, CTRNNVectSize);
 	GenPhenMapping(genotype, phenotype);
 
 	CTRNN Agent(3);
@@ -326,7 +326,7 @@ void EvolutionaryRunDisplay(TSearch &s)
 
 	TVector<double> bestVector;
 	TVector<double> phenotype;
-	phenotype.SetBounds(1, VectSize);
+	phenotype.SetBounds(1, CTRNNVectSize);
 
 	// Save the genotype of the best individual
 	bestVector = s.BestIndividual();
@@ -339,7 +339,7 @@ void ResultsDisplay(TSearch &s)
 {
 	TVector<double> bestVector;
 	TVector<double> phenotype;
-	phenotype.SetBounds(1, VectSize);
+	phenotype.SetBounds(1, CTRNNVectSize);
 
 	// Save the genotype of the best individual
 	bestVector = s.BestIndividual();
@@ -357,7 +357,7 @@ void BestRecord(TSearch &s,ofstream &bestofthebestfile)
 {
 	TVector<double> bestVector;
 	TVector<double> phenotype;
-	phenotype.SetBounds(1, VectSize);
+	phenotype.SetBounds(1, CTRNNVectSize);
 
 	// Save the genotype of the best individual
 	bestVector = s.BestIndividual();
@@ -379,12 +379,12 @@ int main (int argc, const char* argv[])
 
 	int success = 0;
 	for (int i=1;i<=trials;i++){
-		if(success <= 11){
+		if(success <= 5){
 			long randomseed = static_cast<long>(time(NULL));
 			if (argc == 2)
 				randomseed += atoi(argv[1]);
 			// long IDUM=-time(0);
-			TSearch s(VectSize);
+			TSearch s(CTRNNVectSize);
 
 			// Configure the search
 			s.SetRandomSeed(randomseed);

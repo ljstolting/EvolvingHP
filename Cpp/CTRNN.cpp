@@ -327,8 +327,9 @@ void CTRNN::EulerStep(double stepsize, bool adaptpars)
   // Update the state of all neurons.
   for (int i = 1; i <= size; i++) {
     double input = externalinputs[i];
-    for (int j = 1; j <= size; j++)
+    for (int j = 1; j <= size; j++) {
       input += weights[j][i] * outputs[j];
+    }
     states[i] += stepsize * Rtaus[i] * (input - states[i]);
     outputs[i] = sigmoid(gains[i] * (states[i] + biases[i]));
   } 
@@ -689,7 +690,7 @@ void CTRNN::WriteHPGenome(ostream& os){
 ostream& operator<<(ostream& os, CTRNN& c)
 {//NOT UPDATED TO READ OUT HP PARAMETERS
 	// Set the precision
-	os << setprecision(32);
+	os << setprecision(8);
 	// Write the size
 	os << c.size << endl << endl;
 	// Write the time constants

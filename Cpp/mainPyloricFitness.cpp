@@ -12,12 +12,12 @@
 int N = 3;
 int CTRNNphenotypelen = (2*N)+(N*N);
 
-int num_indivs = 90;
+int num_indivs = 26;
 
 ifstream genomesfile;
 ofstream outfile;
-char genomesfname[] = "../Pyloric CTRNN Genomes/savinggoodgenomes.dat";
-char outfilefname[] = "../Pyloric CTRNN Genomes/goodgenomesnormalizedfit.dat";
+char genomesfname[] = "../Pyloric CTRNN Genomes/somelessgoodgenomes.dat";
+char outfilefname[] = "../Pyloric CTRNN Genomes/lessgoodgenomesnormalizedfit.dat";
 
 int main(){
     genomesfile.open(genomesfname);

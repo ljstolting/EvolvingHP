@@ -157,7 +157,7 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	// cout << Agent.adaptbiases << endl;
 
 	// Instantiate the nervous system
-	char fname[] = "./Functioning2D/TestBestonDifferentSolutions/Pete/Pete.ns";
+	char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/0/pyloriccircuit.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -308,8 +308,8 @@ void EvolutionaryRunDisplay(TSearch &s)
 int main (int argc, const char* argv[]) 
 {
 	// Evolution condition
-	Evolfile.open("evol.dat");
-	BestIndividualsFile.open("bestind.dat");
+	Evolfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/evol.dat");
+	BestIndividualsFile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/bestind.dat");
 	for (int i=1;i<=trials;i++){
 		long randomseed = static_cast<long>(time(NULL));
 		if (argc == 2)
@@ -356,7 +356,7 @@ int main (int argc, const char* argv[])
 		// }
 
 		s.SetInitialPtsforEval(ptlist);
-		s.SetEvaluationFunction(HPGeneralistFitnessFunction);
+		s.SetEvaluationFunction(HPFitnessFunction);
 		s.ExecuteSearch(false);
 
 		
