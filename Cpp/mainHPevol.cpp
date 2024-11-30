@@ -24,8 +24,8 @@
 // const double tolerance = .1; //for detecting double periodicity
 
 // EA params
-const int POPSIZE = 20;
-const int GENS = 100;
+const int POPSIZE = 25;
+const int GENS = 200;
 const int trials = 1;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
@@ -33,7 +33,7 @@ const double EXPECTED = 1.1;
 const double ELITISM = 0.1;
 const double scaling_factor = 25; // boost to add to solutions that are fully pyloric
 
-const int num_optimization_genomes = 10; //number of circuits to test a generalist mechanism on (number listed in the file)
+const int num_optimization_genomes = 20; //number of circuits to test a generalist mechanism on (number listed in the file)
 
 // Parameter variability modality only
 //const int Repetitions = 10; 
@@ -231,7 +231,7 @@ double HPGeneralistFitnessFunction(TVector<double> &genotype, TMatrix<double> &p
 	// cout << "checkpoint 2" << endl;
 
 	// Load in list of genomes in the optimization set
-	char fname[] = "../../../Pyloric CTRNN Genomes/optimizationset3.dat";
+	char fname[] = "../../../Pyloric CTRNN Genomes/optimizationsetengineered.dat";
 	ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -264,7 +264,7 @@ void ResultsDisplay(TSearch &s)
 	GenPhenMapping(bestVector, phenotype);
 
 	// Reproduce which pars the HP mechanism has access to
-	char plasticparsfname[] = "../../../../plasticpars.dat";
+	char plasticparsfname[] = "../../plasticpars.dat";
   	ifstream plasticparsfile;
   	TVector<int> plasticitypars(1,N+(N*N));
   	plasticparsfile.open(plasticparsfname);
@@ -356,7 +356,7 @@ int main (int argc, const char* argv[])
 		// }
 
 		s.SetInitialPtsforEval(ptlist);
-		s.SetEvaluationFunction(HPFitnessFunction);
+		s.SetEvaluationFunction(HPGeneralistFitnessFunction);
 		s.ExecuteSearch(false);
 
 		
