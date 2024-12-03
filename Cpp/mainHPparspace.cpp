@@ -28,7 +28,7 @@ const int num_indivs = 1; //how many genomes in the file (100 for Local Run Mode
 // HP parameter space specifications
 const double LB1step = .025;
 const double LB3step = .025;
-const double range = .2; //assume constant range across neurons
+const double range = .1; //assume constant range across neurons
 const double Btauval = 150; //right in the middle of evol range
 const double SWval = 5; //right in middle of evol range (in seconds)
 
@@ -94,7 +94,7 @@ int main(int argc, const char* argv[])
         // strcat(outfile, "/HPparslice.dat");
 
         // Parallel Supercomputer Mode
-        char outfile[] = "./HPparslicerangepoint2.dat";
+        char outfile[] = "./HPparslicerangepoint1.dat";
 
         HPparspacefile.open(outfile);
 
