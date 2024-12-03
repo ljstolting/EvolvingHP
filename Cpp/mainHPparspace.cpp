@@ -75,11 +75,11 @@ int main(int argc, const char* argv[])
         // Local Run Mode
         // ifs >> phenotype;
         // ifs >> pyl_fitness;
+        // phenotype >> Circuit;
 
         // Parallel Supercomputer Mode
         ifs.open("./pyloriccircuit.ns");
-        
-        phenotype >> Circuit;
+        ifs >> Circuit;
 
         //Define HP parslice output file
         ofstream HPparspacefile;
@@ -94,7 +94,7 @@ int main(int argc, const char* argv[])
         // strcat(outfile, "/HPparslice.dat");
 
         // Parallel Supercomputer Mode
-        char outfile[] = "./HPparslicerangepoint2.dat"
+        char outfile[] = "./HPparslicerangepoint2.dat";
 
         HPparspacefile.open(outfile);
 
