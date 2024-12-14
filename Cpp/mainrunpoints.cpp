@@ -10,7 +10,7 @@
 
 // Task params
 // const double TransientDuration = 1000; //Seconds with HP off
-const double PlasticDuration = 10000; //Seconds with HP running
+const double PlasticDuration = 20000; //Seconds with HP running
 const double RunDuration = 150; //How long to test for pyloricness
 // const double StepSize = 0.025;
 const int RunSteps = RunDuration/StepSize;
@@ -37,12 +37,12 @@ const bool random_mode = false; //randomize in other dimensions besides HP dimen
 const bool taus_set = false;
 
 //Filenames
-char Nfname[] = "../Pyloric CTRNN Genomes/Wanda.ns";
-char HPfname[] = "./Generalist HP Mechanisms/25/bestind.dat";
-char Fitnessesfname[] = "./Wandageneralist25fitness.dat";
-char ICsfname[] = "./Wandageneralist25ICs.dat";
-char biastrackfname[] = "./Wandageneralist25biastrack.dat";
-char statestrackfname[] = "./Wandageneralist25statestrack.dat";
+char Nfname[] = "../Pyloric CTRNN Genomes/Trickster.ns";
+char HPfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/4/bestind.dat";
+char Fitnessesfname[] = "./TricksterSpecifist4fitnesslong.dat";
+char ICsfname[] = "./TricksterSpecifist4ICslong.dat";
+char biastrackfname[] = "./TricksterSpecifist4biastracklong.dat";
+char statestrackfname[] = "./TricksterSpecifist4statestracklong.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials

@@ -8,37 +8,57 @@
 #include "random.h"
 #include "pyloric.h"
 
+//INDIVIDUALIZED HP MODE
+#include <stdio.h>
+#include <cstring>
+#include <sys/stat.h>
+#define Max_Digits 2
+
 // Task params
 const double TransientDurationold = 50; //Seconds with HP off
 const double PlasticDuration = 15000; //Seconds with HP running
 const int N = 3;
 const int CTRNNphenotypelen = (2*N)+(N*N);
-const int num_indivs = 90; //how many genomes in the file
+const int num_indivs = 100; //how many genomes in the file
 
 int main(int argc, const char* argv[])
 {
     ofstream testfile;
-    testfile.open("allpyloricXpoint25.dat");
+    testfile.open("allpyloricXgeneralist100.dat");
+    bool range_encoding = true;
+
+    // 2D GRID OF POINTS
+    int resolution = 5;
+    TVector<double> par_vals(1,resolution);
+    par_vals[1] = -16;
+    par_vals[2] = -8;
+    par_vals[3] = 0;
+    par_vals[4] = 8;
+    par_vals[5] = 16;
+
+    int num_pts = pow(resolution,num);
+    TMatrix<double> ptlist(1,num_pts,1,num);
+    PointGrid(ptlist,par_vals);
+
+    ifstream evolvedHP;
+    ifstream ifs;
 
 	CTRNN Circuit(3);
-    //FILE CONTAINING THE GENOME OF 2-D HP#33, BUT IN THE FORMAT THAT THE CODE READS NOW
-    char HPfname[] = "./Functioning2D/HP_unevolved/HPpoint25bestind.gn";
-    ifstream HPin;
-    HPin.open(HPfname);
-    if (!HPin) {
+    // ONE HP MODE
+    char HPfname[] = "./Generalist HP Mechanisms/100/bestind.dat"; 
+    evolvedHP.open(HPfname);
+    if (!evolvedHP) {
         cerr << "File not found: " << HPfname << endl;
         exit(EXIT_FAILURE);
     }
-    bool range_encoding = true;
 
-    Circuit.SetHPPhenotype(HPin,StepSize,range_encoding);
+     //ONE HP MODE
+    Circuit.SetHPPhenotype(evolvedHP,StepSize,true);
+    // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
 
-    // cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << endl;
-    // cout << Circuit.plasticitypars << endl << Circuit.plasticneurons << endl; 
-
+    // bool all_pyloric = true; //is true until proven false for one initial condition
 
     char fname[] = "../Pyloric CTRNN Genomes/goodgenomesnormalizedfit.dat";
-    ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
         cerr << "File not found: " << fname << endl;
@@ -47,60 +67,84 @@ int main(int argc, const char* argv[])
 
     TVector<double>phenotype(1,CTRNNphenotypelen);
     double pyl_fitness =  0;
-    int num_perf = 0;
-    for (int indiv=1;indiv<=num_indivs;indiv++){
+    for (int indiv=0;indiv<num_indivs;indiv++){
 
-        for (int i=1;i<=CTRNNphenotypelen;i++){
-            ifs >> phenotype[i];
-        }
-        // read through the fitness value (pyloric fitness)
-        
+        ifs >> phenotype;
         ifs >> pyl_fitness;
         
         phenotype >> Circuit;
+        // cout << Circuit.biases << endl;
 
-        // 2D GRID OF POINTS
-        int resolution = 4;
-        TVector<double> par_vals(1,resolution);
-        par_vals[1] = -16;
-        par_vals[2] = -5;
-        par_vals[3] = 5;
-        par_vals[4] = 16;
+        for (int j = 0;j<1;j++){ //5
+            // cout << "j" << j << endl;
+            // char indiv_char[Max_Digits + sizeof(char)];
+            // std::sprintf(indiv_char, "%d", indiv);
+                
+            // char infile[(2*Max_Digits) + (2*sizeof(char)) + 51+13 ];
+            // strcpy(infile, "./Specifically Evolved HP mechanisms/Every Circuit/");
+            // strcat(infile, indiv_char);
+            // strcat(infile, "/");
 
-        int num_pts = pow(resolution,num);
-        TMatrix<double> ptlist(1,num_pts,1,num);
-        PointGrid(ptlist,par_vals);
+            // char evol_char[1 + sizeof(char)];
+            // std::sprintf(evol_char, "%d", j);
 
-        double pyloricness = 0;
-        bool all_pyloric = true; //is true until proven false for one initial condition
+            // strcat(infile,evol_char);
+            // strcat(infile, "/bestind.dat");
 
-        //IN THE BIAS1,BIAS3 PLANE
-        for (int i=1;i<=num_pts;i++){
-            Circuit.SetNeuronBias(1,ptlist(i,1));
-            Circuit.SetNeuronBias(3,ptlist(i,2));
-            Circuit.RandomizeCircuitOutput(0.5, 0.5);
+            // evolvedHP.open(infile);
+            // if (!evolvedHP) {
+            //     cerr << "File not found: " << infile << endl;
+            //     exit(EXIT_FAILURE);
+            // }
 
-            // Run the circuit for an initial transient; HP is off and fitness is not evaluated
-            for (double t = StepSize; t <= TransientDuration; t += StepSize) {
-                Circuit.EulerStep(StepSize,false);
+            // evolvedHP.open("./Specifically Evolved HP mechanisms/Every Circuit/0/0/bestind.dat");
+            // TVector<int> plastpars(1,N+(N*N));
+            // evolvedHP >> plastpars;
+            // TVector<double> HPgenotype(1,(num*4));
+            // evolvedHP >> HPgenotype;
+            // TVector<double> HPphenotype(1,(num*4));
+            // evolvedHP >> HPphenotype;
+            // Circuit.SetHPPhenotype(HPphenotype,StepSize,true);
+
+
+            //IN THE BIAS1,BIAS3 PLANE
+            for (int i=1;i<=num_pts;i++){
+                Circuit.SetNeuronBias(1,ptlist(i,1));
+                Circuit.SetNeuronBias(3,ptlist(i,2));
+                Circuit.RandomizeCircuitOutput(0.5, 0.5);
+
+                // Run the circuit for an initial transient; HP is off and fitness is not evaluated
+                for (double t = StepSize; t <= TransientDuration; t += StepSize) {
+                    Circuit.EulerStep(StepSize,false);
+                }
+                // cout << "transient done" << endl;
+
+                for (double t = StepSize; t <= PlasticDuration; t += StepSize) {
+                    Circuit.EulerStep(StepSize,true);
+                }
+
+                // cout << "plasticity period done" << endl;
+
+                double pyloricness;
+                pyloricness = PyloricPerformance(Circuit); //HP is left on during test
+
+                // cout <<"Pyloricness tested" << endl;
+                testfile << pyloricness << " ";
+                // if (pyloricness < .3){
+                    // all_pyloric = false;
+                // }
             }
-
-            for (double t = StepSize; t <= PlasticDuration; t += StepSize) {
-                Circuit.EulerStep(StepSize,true);
-            }
-            pyloricness = PyloricPerformance(Circuit); //HP is left on during test
-            testfile << pyloricness << " ";
-            if (pyloricness < .3){
-                all_pyloric = false;
-            }
+            //INDIVIDUALIZED HP MODE
+            // testfile << endl;
+            // evolvedHP.close();
         }
-        num_perf = num_perf + all_pyloric;
-        testfile << all_pyloric << endl;
+        testfile << endl;
+        // testfile << all_pyloric << endl;
     }
 
-    cout << num_perf;
+    //ONE HP MODE
+    evolvedHP.close();
 
-    HPin.close();
     ifs.close();
     testfile.close();
 

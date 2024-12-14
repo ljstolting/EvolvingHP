@@ -30,12 +30,12 @@ int main (int argc, const char* argv[])
 {
 	// Create file to hold data
 	ofstream slicefile;
-	// slicefile.open("Sven_slice.dat");
-	slicefile.open("Pete_maxmindetected_HP129.dat");
+	slicefile.open("Trickster_slice.dat");
+	// slicefile.open("Pete_maxmindetected_HP129.dat");
 
 	// Load the base CTRNN parameters
     CTRNN Circuit(3);
-    char fname[] = "Pete.ns";
+    char fname[] = "../Pyloric CTRNN Genomes/Trickster.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -46,28 +46,32 @@ int main (int argc, const char* argv[])
 
 	// Load in the HP mechanism for the purpose of specifying the sliding windows
 	ifstream HPfile;
-	char HPfname[] = "./129/bestindsrangeencoding.dat";
+	char HPfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/0/0/bestind.dat";
 	HPfile.open(HPfname);
 	bool range_encoding = true;
 
-	Circuit.SetHPPhenotypebestind(HPfile,StepSize,range_encoding);
+	Circuit.SetHPPhenotype(HPfile,StepSize,range_encoding);
 	// cout << Circuit.windowsize << endl;
 	
 	// For every pair of parameter values specified, (right now, par1=theta1, par2=theta3)
 	for (double par1=par1min; par1<=par1max; par1+=par1step){
+		cout << par1 << endl;
 		Circuit.SetNeuronBias(1,par1);
 		for (double par2=par2min; par2<=par2max; par2+=par2step){
 			Circuit.SetNeuronBias(3,par2);
 			Circuit.RandomizeCircuitState(0,0); // resets sliding window calculation utilities, as well
 			// cout << Circuit.windowsize << endl << Circuit.minavg << endl << Circuit.maxavg << endl << endl;
+
 			for (double t = StepSize; t<= TransientDuration; t+=StepSize){
-				Circuit.EulerStep(StepSize,false,false);
+				Circuit.EulerStep(StepSize,false);
 			}
-			for (double t = StepSize; t<= TestDuration; t+=StepSize){
-				Circuit.EulerStepAvgsnoHP(StepSize);
-			}
-			slicefile << Circuit.minavg << endl << Circuit.maxavg << endl << endl;
+			// for (double t = StepSize; t<= TestDuration; t+=StepSize){
+			// 	Circuit.EulerStepAvgsnoHP(StepSize);
+			// }
+			// slicefile << Circuit.minavg << endl << Circuit.maxavg << endl << endl;
+			slicefile << PyloricPerformance(Circuit) << " ";
 		}
+		slicefile << endl;
 	}	
 	slicefile.close();
   return 0;
