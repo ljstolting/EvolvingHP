@@ -26,8 +26,8 @@
 const double TransientDuration = 250; //seconds without HP, made pretty long for this analysis (considering HP is off)
 const double RunDuration = 50; //seconds to look for an oscillation cycle
 const double StepSize = 0.005; //small step size for accuracy
-const double leaving_tolerance = 0.01; // in state space for greater accuracy
-const double return_tolerance = 0.0075; //less than leaving tolerance
+const double leaving_tolerance = 0.05; // in state space for greater accuracy
+const double return_tolerance = 0.025; //less than leaving tolerance
 
 // Parameter space resolution
 const double par1min = -16.0;
@@ -38,7 +38,7 @@ const double par2max = 16.0;
 const double par2step = .1;
 
 // Output file
-char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/0/HPAgnosticAverage.dat";
+char avgsfname[] = "./HPAgnosticAverage.dat";
 
 // Nervous system params
 const int N = 3;
@@ -53,7 +53,7 @@ int main (int argc, const char* argv[])
 	avgsfile.open(avgsfname);
 	
     CTRNN Circuit(N);
-    char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/0/pyloriccircuit.ns";
+    char fname[] = "./pyloriccircuit.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -67,7 +67,7 @@ int main (int argc, const char* argv[])
 	TVector<double> acc(1,N); //vector to store the average value of each neuron
 	for (double par1=par1min; par1<=par1max; par1+=par1step){
 		Circuit.SetNeuronBias(1,par1);
-		cout << par1 << endl;
+		// cout << par1 << endl; //don't print if on supercomputer
 		for (double par2=par2min; par2<=par2max; par2+=par2step){
 			//don't have to reset biases all the time because shouldn't actually be allowed to change...
 			Circuit.SetNeuronBias(3,par2);

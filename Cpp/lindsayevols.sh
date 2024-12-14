@@ -6,7 +6,7 @@
 #SBATCH -e lindsay_%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=16
-#SBATCH --time=2:00:00
+#SBATCH --time=0:30:00
 #SBATCH --mem=16G
 #SBATCH -A r00213
 
@@ -23,7 +23,7 @@ cd  ./Specifically\ Evolved\ HP\ mechanisms/Every\ Circuit/$JB; #./Generalist\ H
 #     cd ../;
 # done
 
-time ../../../main $JB
+time ../../../mainPyloric $JB
 
 cd ../../../;
 
