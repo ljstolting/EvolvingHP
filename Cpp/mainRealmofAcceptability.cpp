@@ -22,8 +22,8 @@ const double par2max = 16.0;
 const double par2step = .1;
 
 // HP genome file
-char HPfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/4/bestind.dat"; 
-char netchangefname[] = "TricksternetchangeX18_4.dat";
+char HPfname[] = "./Functioning2D/2DHPmechanisms/33/bestind.dat"; 
+char netchangefname[] = "PetenetchangeX33.dat";
 
 // Nervous system params
 const int N = 3;
@@ -38,7 +38,7 @@ int main (int argc, const char* argv[])
 	netchangefile.open(netchangefname);
 	
     CTRNN Circuit(N);
-    char fname[] = "../Pyloric CTRNN Genomes/Trickster.ns";
+    char fname[] = "../Pyloric CTRNN Genomes/Pete.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {

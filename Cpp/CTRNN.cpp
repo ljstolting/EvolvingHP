@@ -132,8 +132,8 @@ void CTRNN::SetCircuitSize(int newsize)
   br = 16;
 
   // new for subset of params
-  char plasticparsfname[] = "../../../plasticpars.dat";
-  // char plasticparsfname[] = "./plasticpars.dat";
+  // char plasticparsfname[] = "../../../plasticpars.dat";
+  char plasticparsfname[] = "./plasticpars.dat";
   ifstream plasticparsfile;
   plasticparsfile.open(plasticparsfname);
   if (!plasticparsfile) {
