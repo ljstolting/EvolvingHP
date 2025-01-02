@@ -42,3 +42,13 @@ __pycache__
 *.err
 Cpp/main
 Cpp/Functioning2D/main
+
+#large files i don't want to deal with right now
+Cpp/Functioning2D/HP_unevolved/DetectedActivitypoint5.dat
+Cpp/Functioning2D/HP_unevolved/StatesTrackpoint5.dat
+Cpp/Functioning2D/TestBestonDifferentSolutions/Sven/StatesTrackpoint1.dat
+Cpp/TricksterSpecifist4biastrack.dat
+Cpp/TricksterSpecifist4biastracklong.dat
+Cpp/Victor33biastrack.dat
+Cpp/Victorgeneralist25biastrack.dat
+Cpp/Wandageneralist25biastrack.dat
