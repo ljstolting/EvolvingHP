@@ -1,7 +1,8 @@
 // ---------------------------------------------------------------
-//  Family of functions for evaluating CTRNNs on their pyloricness
+//  Breaking out the family of pyloric fitness functions that are
+//  copied in every main file
 //
-//  Lindsay Stolting 4/6/24
+//  Lindsay 4/6/24
 // ---------------------------------------------------------------
 
 #include "CTRNN.h"
@@ -20,6 +21,12 @@ const double TestDuration = 100; //maximum number of seconds allowed to test pyl
 const bool HPtest = false;       //does HP remain on during test (shouldn't matter if platicity time constants are slow enough)
 const double StepSize = 0.01;
 const int TestSteps = TestDuration/StepSize; // in steps
+
+// Plasticity params 
+// MUST MANUALLY CHANGE to reflect plasticpars file BECAUSE I CANNOT WORK OUT THE FILE DEPENDENCIES
+int num = 2;
+int neuronschanging = 2;
+int VectSize =  num + (neuronschanging * 3);
 
 // Detection params
 const double burstthreshold = .5; //threshold that must be crossed for detecting bursts
@@ -943,8 +950,6 @@ void PointGrid(TMatrix<double> &points, TVector<double> &parVals){
 	//calculate initial conditions on a predefined grid -- gets too unruly when many parameter dimensions are considered
 	int resolution = parVals.Size(); //number of points per dimenison
 
-	int num = points.ColumnUpperBound();
-
 	TMatrix<double> par_ICs(1,num,1,resolution);
 	for (int i = 1; i <= num; i++){
 		for (int j = 1; j <= resolution; j++){
@@ -957,8 +962,11 @@ void PointGrid(TMatrix<double> &points, TVector<double> &parVals){
 	
 	PointCombos(par_idxs,resolution);
 	
+
 	for (int i = 1; i <= points.RowUpperBound(); i ++){
 		for (int b=1;b<=num;b++){
+			// cout << par_idxs[b] << endl;
+			// cout << par_ICs(b,par_idxs(i,b)) << endl;
 			points(i,b) = par_ICs(b,par_idxs(i,b));
 		}
 	}

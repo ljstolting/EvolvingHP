@@ -30,12 +30,12 @@ int main (int argc, const char* argv[])
 {
 	// Create file to hold data
 	ofstream slicefile;
-	slicefile.open("./pyloricslice.dat");
+	slicefile.open("./Wanda_slice.dat");
 	// slicefile.open("Pete_maxmindetected_HP129.dat");
 
 	// Load the base CTRNN parameters
     CTRNN Circuit(3);
-    char fname[] = "./pyloriccircuit.ns";
+    char fname[] = "../Pyloric CTRNN Genomes/Wanda.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {

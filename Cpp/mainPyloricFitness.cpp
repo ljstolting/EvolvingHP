@@ -16,8 +16,8 @@ int num_indivs = 26;
 
 ifstream genomesfile;
 ofstream outfile;
-char genomesfname[] = "../Pyloric CTRNN Genomes/somelessgoodgenomes.dat";
-char outfilefname[] = "../Pyloric CTRNN Genomes/lessgoodgenomesnormalizedfit.dat";
+char genomesfname[] = "../Pyloric CTRNN Genomes/goodgenomesnormalizedfit.dat";
+char outfilefname[] = "../Pyloric CTRNN Genomes/testgoodgenomesnormalizedfit.dat";
 
 int main(){
     genomesfile.open(genomesfname);

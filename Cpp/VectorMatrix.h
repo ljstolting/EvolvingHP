@@ -385,6 +385,7 @@ void TMatrix<EltType>::SetBounds(int newlb1, int newub1, int newlb2, int newub2)
 {
 	// Only do it if we have to
 	if (newlb1 == lb1 && newub1 == ub1 && newlb2 == lb2 && newub2 == ub2) return;
+	// cout << "setting bounds:" << newlb1 << " " << newub1 << " " << newlb2 << " " << newub2 << endl;
 	// If storage is currently allocated, reclaim it
 	if (collen != 0) {
 		if (rowlen != 0)
@@ -395,6 +396,7 @@ void TMatrix<EltType>::SetBounds(int newlb1, int newub1, int newlb2, int newub2)
 	// Save the new bounds info
 	lb1 = newlb1; ub1 = newub1; lb2 = newlb2; ub2 = newub2;
 	collen = ub1 - lb1 + 1; rowlen = ub2 - lb2 + 1;
+	
 	// No negative sizes allowed!
 	if (collen < 0 || rowlen < 0) {
 		cerr << "Attempt to allocate a negative sized TMatrix\n";

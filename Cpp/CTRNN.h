@@ -90,7 +90,7 @@ class CTRNN {
           int k = 0;
           while (k < i){
             par_index++;
-            if (plasticitypars[par_index] == 1){
+            if (plasticitypars(par_index) == 1){
               k++;
             }
           }
@@ -110,7 +110,7 @@ class CTRNN {
           int k = 0;
           while (k < i){
             par_index++;
-            if (plasticitypars[par_index] == 1){
+            if (plasticitypars(par_index) == 1){
               k++;
             }
           }
@@ -137,10 +137,11 @@ class CTRNN {
           if (value > 1){
             value = 1;
           }
-          l_boundary[i] = value;
+          l_boundary(i) = value;
           } //putting clipping here just to be safe
         double PlasticityUB(int i) {return u_boundary[i];};
         void SetPlasticityUB(int i, double value) {
+          //must always be used after SetPlasticityLB
           if (value < 0){
             value = 0;
           }
@@ -150,7 +151,7 @@ class CTRNN {
           else if (value > 1){
             value = 1;
           }
-          u_boundary[i] = value;
+          u_boundary(i) = value;
           } //putting clipping here just to be safe
         double NeuronBiasTimeConstant(int i) {return tausBiases[i];};
         void SetNeuronBiasTimeConstant(int i, double value) {tausBiases[i] = value; RtausBiases[i] = 1/value;};
@@ -160,7 +161,7 @@ class CTRNN {
         // Built in protections against changing step sizes -- entered SW is always time-based
         void SetSlidingWindow(int i, double windsize, double dt) 
         {
-          windowsize[i]=int(1+(windsize/dt));
+          windowsize(i)=1+int(windsize/dt);
         };
         void SetMaxavg(int i, double a) {maxavg[i] = a;};
         void SetMinavg(int i, double a) {minavg[i] = a;};
@@ -173,8 +174,8 @@ class CTRNN {
             }
         }
         void SetCenterCrossing(void);
-        void SetHPPhenotype(istream& is, double dt, bool range_encoding);
-        void SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding);
+        istream& SetHPPhenotype(istream& is, double dt, bool range_encoding);
+        TVector<double>& SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding);
         void WriteHPGenome(ostream& os);
         void SetHPPhenotypebestind(istream& is, double dt, bool range_encoding);
         void PrintMaxMinAvgs(void);
@@ -197,15 +198,14 @@ class CTRNN {
         // void RK4Step(double stepsize);
 
         int size, stepnum;
-        TVector<int> windowsize, plasticitypars, plasticneurons; // NEW for AVERAGING
+        TVector<int> windowsize, plasticitypars, plasticneurons, outputhiststartidxs; // NEW for AVERAGING
         double wr, br; // NEWER for CAPPING
         int max_windowsize, num_pars_changed;
         bool adaptbiases, adaptweights;
         TVector<double> states, outputs, biases, gains, taus, Rtaus, externalinputs;
         TVector<double> rhos, tausBiases, RtausBiases, l_boundary, u_boundary, minavg, maxavg; // NEW
-        TVector<double> avgoutputs, sumoutputs; // NEW for AVERAGING
+        TVector<double> avgoutputs, sumoutputs, outputhist; // NEW for AVERAGING, change outputhist into a vector
         TMatrix<double> weights;
         TMatrix<double> tausWeights, RtausWeights; // NEW
-        TMatrix<double> outputhist; // NEW for AVERAGING
-        TVector<double> TempStates,TempOutputs;
+        // TVector<double> TempStates,TempOutputs;
 };
