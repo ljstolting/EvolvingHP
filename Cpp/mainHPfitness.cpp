@@ -10,14 +10,14 @@
 // to do: make the plasticity pars file crutch obsolete
 
 const int Max_Digits = 10;
-const bool range_encoding = true;
+const bool range_encoding = false;
 
 const int num = 2; //How many parameters does HP have access to change in this data set?
 
 // specify the CTRNN individual on which these HP mechanisms operate
 const char Circuitfname[] = "../Pyloric CTRNN Genomes/Pete.ns";
 // specify output file name and location
-const char outfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/normalizedHPfits.dat";
+const char outfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/normalizedHPfitsnonrangeencoding.dat";
 
 // STANDARDIZED PARAMETERS THAT AFFECT THE HP FITNESS
 // ALREADY DEFINED IN PYLORIC.H (THEREFORE IN THEORY SHOULD BE STANDARDIZED)
@@ -49,7 +49,7 @@ double HPPerformance(CTRNN &Agent, TMatrix<double> &ptlist, double scaling_facto
 	for (int i = 1; i <= num_points; i ++){
         // std::cout << "checkpoint 2 " << endl;
 		for (int b=1;b<=num;b++){
-            std::cout<< i << " " << b << " " << endl;//<< ptlist(i,b) << endl;
+            // std::cout<< i << " " << b << " " << endl;//<< ptlist(i,b) << endl;
 			// Agent.SetArbDParam(b,ptlist(i,b)); 
 		}
         Agent.RandomizeCircuitOutput(0.5,0.5);
@@ -66,13 +66,13 @@ double HPPerformance(CTRNN &Agent, TMatrix<double> &ptlist, double scaling_facto
 
 		// Run the circuit for a period of time with HP so the paramters can change
 		for (double t = StepSize; t<= PlasticDuration; t+= StepSize){
-			Agent.EulerStep(StepSize,true);  //set to only adapt biases, not weights
+			Agent.EulerStep(StepSize,true); 
 		}
 		// Calculate the Pyloric Fitness
 		// cout << Agent.NeuronBias(1) << " " << Agent.NeuronBias(3) << endl;
 		double fit = PyloricPerformance(Agent);
 
-		cout << "fitness" << fit << endl;
+		// cout << "fitness" << fit << endl;
 		// Transform it so Pyloricness at all is worth a lot
 		if (fit >= .3){fit = fit+scaling_factor;}
 
@@ -123,21 +123,32 @@ PointGrid(ptlist,par_vals);
 ifstream Circuitfile;
 Circuitfile.open(Circuitfname);
 if (!Circuitfile) {
-        cerr << "File not found: " << Circuitfname << endl;
-        exit(EXIT_FAILURE);
-    }
+	cerr << "File not found: " << Circuitfname << endl;
+	exit(EXIT_FAILURE);
+}
 CTRNN Agent(3);
 Circuitfile >> Agent; 
 Circuitfile.close();
-for (int indiv = 20; indiv < num_HPs; indiv ++){
-    // Agent.WindowReset();
-    // cout << indiv << endl;
+ 
+for (int indiv = 0; indiv < num_HPs; indiv ++){
+	// REDEFINING CIRCUIT EVERY TIME AS A CHECK
+    // Circuitfile.open(Circuitfname);
+	// if (!Circuitfile) {
+	// 	cerr << "File not found: " << Circuitfname << endl;
+	// 	exit(EXIT_FAILURE);
+	// }
+	// CTRNN Agent(3);
+	// Circuitfile >> Agent; 
+	// Circuitfile.close();
+
+	Agent.RandomizeCircuitOutput(.5,.5);
+
     // import HP
 
     string bestindfile = "./Specifically Evolved HP mechanisms/Pete/2D/0/bestind.dat";
 
     bestindfile.replace(45, 1, to_string(indiv));
-    cout << bestindfile << endl;
+    // cout << bestindfile << endl;
     ifstream HPbestind;
     HPbestind.open(bestindfile);
     if (!HPbestind) {
@@ -145,11 +156,11 @@ for (int indiv = 20; indiv < num_HPs; indiv ++){
         exit(EXIT_FAILURE);
     }
     Agent.SetHPPhenotype(HPbestind,StepSize,range_encoding);
-	cout << "testing1 " << endl;
+	// cout << "testing1 " << endl;
 	// cout << HPbestind << endl;
-	// HPbestind.close();
-    cout << "Biases:" << Agent.NeuronBias(1) << endl;
-    cout << "Lower Boundaries:" << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(3) << endl;
+	HPbestind.close();
+    // cout << "Biases:" << Agent.NeuronBias(1) << endl;
+    // cout << "Lower Boundaries:" << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(3) << endl;
     // cout << Agent.NeuronTimeConstant(1) << endl;
     
     // Evaluate fitness
@@ -159,6 +170,7 @@ for (int indiv = 20; indiv < num_HPs; indiv ++){
     outfile << fitness << endl;
 }
 // HPbestind.close();
+
 outfile.close();
 return 0;
 }

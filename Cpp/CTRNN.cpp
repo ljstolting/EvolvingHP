@@ -208,7 +208,7 @@ void CTRNN::SetCircuitSize(int newsize)
 
 // Reset all sliding window utilities and the step counter (crucial if using the same circuit between parameter resets)
 void CTRNN::WindowReset(){
-  cout << "Window Resetting" << endl;
+  // cout << "Window Resetting" << endl;
   minavg.FillContents(1);
   maxavg.FillContents(0);
   sumoutputs.FillContents(0);
@@ -365,7 +365,7 @@ void CTRNN::EulerStep(double stepsize, bool adaptpars)
     
       // NEW: Update Biases
     if(adaptbiases==true){
-    //  cout << "biaschangeflag" << endl;
+    //  // cout << "biaschangeflag" << endl;
       for (int i = 1; i <= size; i++){
         if (plasticitypars[i]==1){
           biases[i] += stepsize * RtausBiases[i] * rhos[i];
@@ -575,7 +575,7 @@ istream& CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding){
     }
   }
 
-  cout << "plasticneurons set by HPphenotype:" << plasticneurons << endl;
+  // cout << "plasticneurons set by HPphenotype:" << plasticneurons << endl;
 
    // pass by the genotype until you get to the first value of the phenotype, which will be a time constant >= 100
   double testvar = 0;
@@ -616,9 +616,8 @@ istream& CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding){
     }
   }
   
-  int num_neurons_changed = plasticneurons.Sum();
   // Read the lower bounds
-  TVector<double> lbs(1,num_neurons_changed);
+  TVector<double> lbs(1,size);
   for(int i = 1; i<= size; i++){
     if (plasticneurons[i] == 1){
       is >> lbs[i];
@@ -663,11 +662,11 @@ istream& CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding){
 
   double fitness;
   is >> fitness; // just trying something
-  cout << endl << "all HP params set" << endl;
+  // cout << endl << "all HP params set" << endl;
   // IT IS CRUCIAL TO FIX THE SLIDING WINDOW AVERAGING BEFORE EVALUATION
   // Just in case there is not a transient long enough to fill up the history before HP needs to activate
   max_windowsize = windowsize.Max();
-  cout << "Max window size:" << max_windowsize << endl;
+  // cout << "Max window size:" << max_windowsize << endl;
   avgoutputs.SetBounds(1,size);
   outputhist.SetBounds(1,windowsize.Sum());
   int cumulative = 1;
@@ -676,7 +675,7 @@ istream& CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding){
     cumulative += windowsize(neuron);
   }
   WindowReset();
-  cout << "SetHPPhenotype complete" << endl;
+  // cout << "SetHPPhenotype complete" << endl;
 	return is;
 }
 

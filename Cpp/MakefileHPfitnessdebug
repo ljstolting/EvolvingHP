@@ -1,0 +1,19 @@
+# The target executable
+main: mainHPfitness.o CTRNN.o random.o
+		g++ -pthread -fsanitize=address -g -o main mainHPfitness.o CTRNN.o random.o
+
+# Compilation of random.o with ASan
+random.o: random.cpp random.h VectorMatrix.h
+		g++ -pthread -fsanitize=address -g -O3 -c random.cpp
+
+# Compilation of CTRNN.o with ASan
+CTRNN.o: CTRNN.cpp random.h CTRNN.h
+		g++ -pthread -fsanitize=address -g -O3 -c CTRNN.cpp
+
+# Compilation of main.o with ASan
+main.o: mainHPfitness.cpp CTRNN.h random.h pyloric.h VectorMatrix.h
+		g++ -pthread -fsanitize=address -g -O3 -c mainHPfitness.cpp
+
+# Clean target to remove object files and the executable
+clean:
+		rm *.o main

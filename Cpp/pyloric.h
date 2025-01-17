@@ -18,7 +18,7 @@ const double PlasticDuration1 = 5000; //seconds allowing HP to act
 const double PlasticDuration2 = 5000; //number of seconds to wait before testing again, to make sure not relying on precise timing
 const double TestDuration = 100; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
 const bool HPtest = false;       //does HP remain on during test (shouldn't matter if platicity time constants are slow enough)
-const double StepSize = 0.01;
+const double StepSize = 0.005;
 const int TestSteps = TestDuration/StepSize; // in steps
 
 // Detection params
@@ -727,7 +727,7 @@ double PyloricPerformance(CTRNN &Agent)
 
 //overload but output the neuron trajectories to a file and the burst start/endpoints to another
 double PyloricPerformance(CTRNN &Agent, ofstream &trajfile, ofstream &burstfile){
-	    int N = Agent.CircuitSize();
+	int N = Agent.CircuitSize();
 	// cout << "checkpoint1" << endl;
     TMatrix<double> OutputHistory(1,TestSteps,1,N);
 	// cout << "checkpoint2" << endl;

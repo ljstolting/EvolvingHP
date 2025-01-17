@@ -52,3 +52,5 @@ Cpp/TricksterSpecifist4biastracklong.dat
 Cpp/Victor33biastrack.dat
 Cpp/Victorgeneralist25biastrack.dat
 Cpp/Wandageneralist25biastrack.dat
+#memory error detection software
+valgrind-3.24.0

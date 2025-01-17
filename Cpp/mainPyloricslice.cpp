@@ -14,12 +14,12 @@
 // const int RunSteps = RunDuration/StepSize; // in steps
 
 // Parameter space resolution
-const double par1min = -16;
-const double par1max = 16;
-const double par1step = .1;
-const double par2min = -16;
-const double par2max = 16;
-const double par2step = .1;
+const double par1min = -10;
+const double par1max = 20;
+const double par1step = .05;
+const double par2min = -20;
+const double par2max = 10;
+const double par2step = .05;
 
 // Nervous system params
 const int N = 3;
@@ -30,12 +30,12 @@ int main (int argc, const char* argv[])
 {
 	// Create file to hold data
 	ofstream slicefile;
-	slicefile.open("./Wanda_slice.dat");
+	slicefile.open("./Specifically Evolved HP mechanisms/Every Circuit/19/pyloricslice_highres.dat");
 	// slicefile.open("Pete_maxmindetected_HP129.dat");
 
 	// Load the base CTRNN parameters
     CTRNN Circuit(3);
-    char fname[] = "../Pyloric CTRNN Genomes/Wanda.ns";
+    char fname[] = "../Pyloric CTRNN Genomes/Pete.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
