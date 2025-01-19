@@ -33,13 +33,12 @@ using namespace std;
 
 // General run parameters
 char CTRNNfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/pyloriccircuit.ns";
-const double par1min = -10;
-const double par1max = 20;
+// const double par1min = -10;
+// const double par1max = 20;
 const double par1step = .05;
 const double par2min = -20;
 const double par2max = 10;
 const double par2step = .05;
-char outfilefname[] = "./CompareHPagnostic.dat";
 const double targetstep = .005;
 
 // HP-desired movement parameters (initially taken from other files)
@@ -123,7 +122,14 @@ void HPDesiredMovement(CTRNN &Agent, TVector<double> &outputvec){
     return;
 }
 
-int main(void){
+int main(int argc, const char* argv[]){
+    double temp = atoi(argv[1]);
+    double bias1fromcall = -10 + temp/20; //will ultimately run for integers between 0 and 600
+
+    string outfilefname = "./CompareHPagnostic0.dat";
+
+    outfilefname.replace(19, 1, to_string(atoi(argv[1])));
+
     ofstream outfile;
     outfile.open(outfilefname);
 
@@ -147,7 +153,7 @@ int main(void){
     Circuit.SetHPPhenotype(HPin,StepSize,true);
     HPin.close();
 
-    for (double bias1=par1min;bias1<=par1max;bias1+=par1step){
+    for (double bias1=bias1fromcall;bias1<=bias1fromcall;bias1+=par1step){
         cout << bias1 << endl;
         Circuit.SetNeuronBias(1,bias1);
         for (double bias3=par2min;bias3<=par2max;bias3+=par2step){
@@ -172,8 +178,9 @@ int main(void){
             bool N1flip = false;
             bool N3flip = false;
             TVector<double> HPdesav(1,Circuit.CircuitSize());
-            TVector<double> HPdesav_init(HPdesav);
-            TVector<double> HPdesavhist(HPdesav);
+            HPdesav.FillContents(0);
+            TVector<double> HPdesav_init(1,Circuit.CircuitSize());
+            TVector<double> HPdesavhist(1,Circuit.CircuitSize());
             TVector<double> flip_targets(1,2);
 
             for (double t=0;t<=1;t+=targetstep){
@@ -187,7 +194,7 @@ int main(void){
                 Circuit.SetPlasticityLB(3,t); //both neurons can be done at the same time because they're
                 Circuit.SetPlasticityUB(3,t); // both tracking the same cycle and not changing anything
                 HPDesiredMovement(Circuit,HPdesav);
-                cout << t << " " << HPdesav(1) << " " << HPdesav(3) << " " <<  ((HPdesav(1)*HPdesavhist(1))<0) << " "<<  ((HPdesav(3)*HPdesavhist(3))<0) << endl;
+                // cout << t << " " << HPdesav(1) << " " << HPdesav(3) << " " <<  ((HPdesav(1)*HPdesavhist(1))<0) << " "<<  ((HPdesav(3)*HPdesavhist(3))<0) << endl;
                 
                 if (t == 0){
                     for (int i=1;i<=Circuit.CircuitSize();i++){

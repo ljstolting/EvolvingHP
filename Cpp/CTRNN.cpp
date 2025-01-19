@@ -146,8 +146,8 @@ void CTRNN::SetCircuitSize(int newsize)
   outputhiststartidxs.FillContents(1);
 
   // NEW for CAPPING
-  wr = 16;
-  br = 16;
+  wr = 20;
+  br = 20;
 
   // new for subset of params
   // char plasticparsfname[] = "../../../plasticpars.dat";

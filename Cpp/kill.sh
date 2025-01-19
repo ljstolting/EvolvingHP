@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for ((i = 3759716; i <= 3759721; i += 1));
+for ((i = 4268223; i <= 4268232; i += 1));
 do
   scancel $i
   sleep 3 
