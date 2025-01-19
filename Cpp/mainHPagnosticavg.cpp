@@ -170,7 +170,7 @@ int main (int argc, const char* argv[])
 					if (points_equal == true){uniqueness_flag = false;}
 				}
 
-				if (uniqueness_flag && num_unique_endpoints <= 2){
+				if (uniqueness_flag && num_unique_endpoints <= 2){ //pretty sure you can only have two stable solutions in a 3N CTRNN...
 					for (int i = 1; i <= N; i++){
 						unique_endpoints(num_unique_endpoints,i) = avg[i];
 					}

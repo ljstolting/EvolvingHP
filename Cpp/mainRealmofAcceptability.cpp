@@ -14,15 +14,15 @@ const double RunDuration = 500; //seconds to accumulate movement
 const double StepSize = 0.01;
 
 // Parameter space resolution
-const double par1min = -16.0;
-const double par1max = 16.0;
-const double par1step = .1;
-const double par2min = -16.0;
-const double par2max = 16.0;
-const double par2step = .1;
+const double par1min = -10.0;
+const double par1max = 20.0;
+const double par1step = .05;
+const double par2min = -20.0;
+const double par2max = 10.0;
+const double par2step = .05;
 
 // HP genome file
-char HPfname[] = "./Functioning2D/2DHPmechanisms/33/bestind.dat"; 
+char HPfname[] = "../"; 
 char netchangefname[] = "PetenetchangeX33.dat";
 
 // Nervous system params

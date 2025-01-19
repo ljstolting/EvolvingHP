@@ -10,7 +10,7 @@
 
 // Task params
 // const double TransientDuration = 1000; //Seconds with HP off
-const double PlasticDuration = 20000; //Seconds with HP running
+const double PlasticDuration = 2000; //Seconds with HP running
 const double RunDuration = 150; //How long to test for pyloricness
 // const double StepSize = 0.025;
 const int RunSteps = RunDuration/StepSize;
@@ -30,7 +30,7 @@ const double TMIN = .1;
 const double TMAX = 2;
 const double BR = 16;
 const double WR = 16;
-const int num_ICs = 100;
+const int num_ICs = 1000;
 
 // Mode
 const bool random_mode = false; //randomize in other dimensions besides HP dimensions 
@@ -38,16 +38,16 @@ const bool taus_set = false;
 
 //Filenames
 char Nfname[] = "../Pyloric CTRNN Genomes/Pete.ns";
-char HPfname[] = "./Convenient HP Mechanisms/good100sw.dat";
+char HPfname[] = "./Convenient HP Mechanisms/good.dat";
 // char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/33/bestind.dat";
-char Fitnessesfname[] = "./Convenient HP Mechanisms/good_fitnesses100sw.dat";
-char ICsfname[] = "./Convenient HP Mechanisms/good_ics100sw.dat";
-char biastrackfname[] = "./Convenient HP Mechanisms/good_biastrack100sw.dat";
-char statestrackfname[] = "./Convenient HP Mechanisms/good_statestrack100sw.dat";
+char Fitnessesfname[] = "./Convenient HP Mechanisms/good_fitnesses.dat";
+char ICsfname[] = "./Convenient HP Mechanisms/good_ics.dat";
+char biastrackfname[] = "./Convenient HP Mechanisms/good_biastrack.dat";
+char statestrackfname[] = "./Convenient HP Mechanisms/good_statestrack.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
-const bool trackparams = true;
+const bool trackparams = false;
 const int trackparamsinterval = 100; //Track biases for every X trials
 
 void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
@@ -154,6 +154,7 @@ int main(){
                 //check for biases
                 if (Circuit.plasticitypars[k]==1){
                     Circuit.SetNeuronBias(j,phenotype(k+N)); //start after time constants
+                    // Circuit.SetNeuronBias(j,-10); //if want a specific value
                     // cout << "set a bias" << endl;
                 }
                 k++;

@@ -27,6 +27,10 @@ const int HPphenotypelen = num*4;
 const int num_indivs = 1; //how many genomes in the file (100 for Local Run Mode)
 
 // HP parameter space specifications
+const double LB1min = 0.03;
+const double LB1max = 0.03;
+const double LB3min = 0.30;
+const double LB3max = 0.30;
 const double LB1step = .01;
 const double LB3step = .005;
 const double range = 0; //assume constant range across neurons
@@ -107,9 +111,10 @@ int main(int argc, const char* argv[])
         HPparspacefile.open(outfile);
 
         //Define HPs based on position in parspace slice
-        for (double LB1=0;LB1<=1;LB1+=LB1step){
-            cout << LB1 << endl;
-            for (double LB3=0;LB3<=1;LB3+=LB3step){
+        for (double LB1=LB1min;LB1<=LB1max;LB1+=LB1step){
+            cout << endl << LB1 << endl;
+            for (double LB3=LB3min;LB3<=LB3max;LB3+=LB3step){
+                cout << LB3 << " ";
                 TVector<double> HPphenotype(1,HPphenotypelen);
                 int k = 1;
                 for (int i=1;i<=num;i++){
