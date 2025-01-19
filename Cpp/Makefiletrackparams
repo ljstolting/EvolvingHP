@@ -1,5 +1,5 @@
-maintrackparams: maintrackparams.o CTRNN.o TSearch.o random.o
-	g++ -pthread -o maintrackparams maintrackparams.o CTRNN.o TSearch.o random.o
+main: maintrackparams.o CTRNN.o TSearch.o random.o
+	g++ -pthread -o main maintrackparams.o CTRNN.o TSearch.o random.o
 random.o: random.cpp random.h VectorMatrix.h
 	g++ -pthread -c -O3 random.cpp
 CTRNN.o: CTRNN.cpp random.h CTRNN.h
@@ -9,4 +9,4 @@ TSearch.o: TSearch.cpp TSearch.h
 maintrackparams.o: maintrackparams.cpp CTRNN.h TSearch.h
 	g++ -pthread -c -O3 maintrackparams.cpp
 clean:
-	rm *.o maintrackparams
+	rm *.o main

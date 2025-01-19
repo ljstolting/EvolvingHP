@@ -30,19 +30,20 @@ const double TMIN = .1;
 const double TMAX = 2;
 const double BR = 16;
 const double WR = 16;
-const int num_ICs = 1000;
+const int num_ICs = 100;
 
 // Mode
 const bool random_mode = false; //randomize in other dimensions besides HP dimensions 
 const bool taus_set = false;
 
 //Filenames
-char Nfname[] = "../Pyloric CTRNN Genomes/Trickster.ns";
-char HPfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/4/bestind.dat";
-char Fitnessesfname[] = "./TricksterSpecifist4fitnesslong.dat";
-char ICsfname[] = "./TricksterSpecifist4ICslong.dat";
-char biastrackfname[] = "./TricksterSpecifist4biastracklong.dat";
-char statestrackfname[] = "./TricksterSpecifist4statestracklong.dat";
+char Nfname[] = "../Pyloric CTRNN Genomes/Pete.ns";
+char HPfname[] = "./Convenient HP Mechanisms/good100sw.dat";
+// char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/33/bestind.dat";
+char Fitnessesfname[] = "./Convenient HP Mechanisms/good_fitnesses100sw.dat";
+char ICsfname[] = "./Convenient HP Mechanisms/good_ics100sw.dat";
+char biastrackfname[] = "./Convenient HP Mechanisms/good_biastrack100sw.dat";
+char statestrackfname[] = "./Convenient HP Mechanisms/good_statestrack100sw.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
@@ -110,6 +111,7 @@ int main(){
     Circuit.SetHPPhenotype(HPifs,StepSize,true);
 
     cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << endl;
+    cout << Circuit.SlidingWindow(1) << endl;
 
     for (int i = 0;i<num_ICs;i++){
 
@@ -170,7 +172,7 @@ int main(){
         }
 
 
-        Circuit.RandomizeCircuitState(0,0);
+        Circuit.RandomizeCircuitOutput(0.5,0.5);
 
         // Run for transient without HP
         for(double t=0;t<TransientDuration;t+=StepSize){
@@ -191,7 +193,7 @@ int main(){
         // Run with HP for a time
         for(double t=0;t<PlasticDuration;t+=StepSize){
             if (trackparams && (i%trackparamsinterval==0)){
-                for(int j = 1; j<= num; j++){
+                for(int j = 1; j<= Circuit.plasticitypars.Sum(); j++){
                     biastrack << Circuit.ArbDParam(j) << " "; //record only the parameters that are changing throughout the run
                 }
                 biastrack << endl;

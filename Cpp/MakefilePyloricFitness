@@ -4,7 +4,7 @@ random.o: random.cpp random.h VectorMatrix.h
 	g++ -pthread -c -O3 random.cpp
 CTRNN.o: CTRNN.cpp random.h VectorMatrix.h CTRNN.h
 	g++ -pthread -c -O3 CTRNN.cpp
-main.o: mainPyloricFitness.cpp CTRNN.h pyloric.h VectorMatrix.h
-	g++ -pthread -c -O3 main.cpp
+mainPyloricFitness.o: mainPyloricFitness.cpp CTRNN.h pyloric.h VectorMatrix.h
+	g++ -pthread -c -O3 mainPyloricFitness.cpp
 clean:
 	rm *.o main

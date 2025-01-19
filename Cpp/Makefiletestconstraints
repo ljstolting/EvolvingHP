@@ -6,7 +6,7 @@ CTRNN.o: CTRNN.cpp random.h CTRNN.h
 	g++ -pthread -c -O3 CTRNN.cpp
 TSearch.o: TSearch.cpp TSearch.h
 	g++ -pthread -c -O3 TSearch.cpp
-main.o: maintestconstraints.cpp CTRNN.h TSearch.h
-	g++ -pthread -c -O3 main.cpp
+maintestconstraints.o: maintestconstraints.cpp CTRNN.h TSearch.h
+	g++ -pthread -c -O3 maintestconstraints.cpp
 clean:
 	rm *.o main

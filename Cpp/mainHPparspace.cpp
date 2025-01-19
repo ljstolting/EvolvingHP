@@ -22,15 +22,16 @@ const double TransientDurationold = 50; //Seconds with HP off
 const double PlasticDuration = 10000; //Seconds with HP running
 const int N = 3;
 const int CTRNNphenotypelen = (2*N)+(N*N);
+const int num = 2;
 const int HPphenotypelen = num*4;
 const int num_indivs = 1; //how many genomes in the file (100 for Local Run Mode)
 
 // HP parameter space specifications
-const double LB1step = .025;
-const double LB3step = .025;
-const double range = .1; //assume constant range across neurons
+const double LB1step = .01;
+const double LB3step = .005;
+const double range = 0; //assume constant range across neurons
 const double Btauval = 150; //right in the middle of evol range
-const double SWval = 5; //right in middle of evol range (in seconds)
+const double SWval = 0; //right in middle of evol range (in seconds)
 
 int main(int argc, const char* argv[])
 {
@@ -68,7 +69,7 @@ int main(int argc, const char* argv[])
     //     ifs >> pyl_fitness;
     // }
 
-    for (int indiv=0;indiv<num_indivs;indiv++){
+    for (int indiv=19;indiv<20;indiv++){
 
         //Define pyloric circuit around which to center the slice
 
@@ -78,7 +79,11 @@ int main(int argc, const char* argv[])
         // phenotype >> Circuit;
 
         // Parallel Supercomputer Mode
-        ifs.open("./pyloriccircuit.ns");
+        // ifs.open("./pyloriccircuit.ns");
+        // ifs >> Circuit;
+
+        // Pete only mode
+        ifs.open("../Pyloric CTRNN Genomes/Pete.ns");
         ifs >> Circuit;
 
         //Define HP parslice output file
@@ -94,12 +99,16 @@ int main(int argc, const char* argv[])
         // strcat(outfile, "/HPparslice.dat");
 
         // Parallel Supercomputer Mode
-        char outfile[] = "./HPparslicerangepoint1.dat";
+        // char outfile[] = "./HPparslicerangepoint1.dat";
+
+        // Only Pete Mode
+        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/HPparslice_highres.dat";
 
         HPparspacefile.open(outfile);
 
         //Define HPs based on position in parspace slice
         for (double LB1=0;LB1<=1;LB1+=LB1step){
+            cout << LB1 << endl;
             for (double LB3=0;LB3<=1;LB3+=LB3step){
                 TVector<double> HPphenotype(1,HPphenotypelen);
                 int k = 1;
@@ -119,8 +128,9 @@ int main(int argc, const char* argv[])
                     HPphenotype[k] = SWval;
                     k++;
                 }
+                // cout << "before phen set" << endl;
                 Circuit.SetHPPhenotype(HPphenotype,StepSize,true);
-
+                // cout << "after phen set" << endl;
                 //Check grid of initial points to see how many end up pyloric (will just be counting, not keeping fitness)
                 int pyloric_count = 0;
                 //IN THE BIAS1,BIAS3 PLANE
@@ -130,6 +140,7 @@ int main(int argc, const char* argv[])
 
                     //Reset Circuit
                     Circuit.RandomizeCircuitOutput(0.5, 0.5);
+                    Circuit.WindowReset();
 
                     // Run the circuit for an initial transient; HP is off and fitness is not evaluated
                     for (double t = StepSize; t <= TransientDuration; t += StepSize) {
@@ -141,7 +152,9 @@ int main(int argc, const char* argv[])
                     }
                     // Evaluate whether pyloric
                     double pyloricness;
-                    pyloricness = PyloricPerformance(Circuit); //HP is left on during test
+                    // cout << "before pyl perf" << endl;
+                    pyloricness = PyloricPerformance(Circuit); //HP is off during test?
+                    // cout << "after pyl perf" << endl;
                     if (pyloricness >= .3){
                         pyloric_count ++;
                     }

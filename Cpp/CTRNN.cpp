@@ -471,6 +471,7 @@ TVector<double>& CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt, bo
     for(int j = 1; j <= size; j++){
       if(plasticitypars[k] == 1){
         SetConnectionWeightTimeConstant(i,j,phenotype[phen_counter]);
+        phen_counter++;
       }
       k ++;
     }
@@ -579,8 +580,14 @@ istream& CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding){
 
    // pass by the genotype until you get to the first value of the phenotype, which will be a time constant >= 100
   double testvar = 0;
+  int varloops = 0;
   while (testvar < 100){
     is >> testvar;
+    varloops ++;
+    if (varloops > 100){
+      cerr << "check HP phenotype file" << endl;
+      exit(EXIT_FAILURE);
+    }
     // cout << testvar << " ";
   }
   // cout << endl;

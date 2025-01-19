@@ -19,6 +19,7 @@ const double PlasticDuration2 = 5000; //number of seconds to wait before testing
 const double TestDuration = 100; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
 const bool HPtest = false;       //does HP remain on during test (shouldn't matter if platicity time constants are slow enough)
 const double StepSize = 0.005;
+// const double StepSize = 0.01;
 const int TestSteps = TestDuration/StepSize; // in steps
 
 // Detection params
@@ -545,11 +546,12 @@ double PyloricPerformance(CTRNN &Agent)
 //Also only runs until three PDstarts are detected to save time
 {
     int N = Agent.CircuitSize();
+	// cout << "N=" << N << endl;
     TMatrix<double> OutputHistory(1,TestSteps,1,N);
-	// OutputHistory.SetBounds(1,TestSteps,1,N);
+	OutputHistory.SetBounds(1,TestSteps,1,N);
 	OutputHistory.FillContents(0.0);
 	// cout << "outhist1,3="<<OutputHistory(1,3) << endl;
-	// cout << "checkpoint2" << endl;
+	// cout << "checkpoint1" << endl;
 	double fitness = 0.0;
 
 	TVector<double> maxoutput(1,N);
@@ -557,7 +559,7 @@ double PyloricPerformance(CTRNN &Agent)
 	TVector<double> minoutput(1,N);
 	minoutput.FillContents(1.0);
 
-	// cout << "checkpoint4" << endl;
+	// cout << "checkpoint2" << endl;
 
 	// Run the circuit to calculate Pyloric fitness -- HP is either left on or turned OFF depending on specification.
 
@@ -567,7 +569,7 @@ double PyloricPerformance(CTRNN &Agent)
 	int PDstartcount = 0;
 	TVector<int> PDstarts(1,3);
 	PDstarts.FillContents(0);
-	// cout << "checkpoint5" << endl;
+	// cout << "checkpoint3" << endl;
 
 	while (tstep <= TestSteps && PDstartcount < 3) {
 		for (int i = 1; i <= N; i += 1) {
@@ -577,9 +579,9 @@ double PyloricPerformance(CTRNN &Agent)
 			if (Agent.NeuronOutput(i) < minoutput(i)) {minoutput(i)=Agent.NeuronOutput(i);}
 		}
 		// cout << OutputHistory(1,1) << OutputHistory(1,2) << OutputHistory(1,3);
-		// cout << "checkpoint6" << endl;
+		// cout << "checkpoint4" << endl;
 		Agent.EulerStep(StepSize,HPtest);
-		// cout << "checkpoint7" << endl;
+		// cout << "checkpoint5" << endl;
 		//Check for PD start
 		if (OutputHistory(tstep,3) < burstthreshold && Agent.NeuronOutput(3) > burstthreshold){
 			PDstartcount += 1;
@@ -588,7 +590,7 @@ double PyloricPerformance(CTRNN &Agent)
 		tstep += 1;
 		t += StepSize;
 	}
-
+	// cout << "checkpoint6" << endl;
 	for (int i = 1; i <= N; i += 1) {
 		// SHORT HAND FOR ALL NEURONS OSCILLATING APPRECIABLY
 		if (minoutput[i] <(burstthreshold-.05)) {
@@ -603,7 +605,7 @@ double PyloricPerformance(CTRNN &Agent)
 		// cout << "fitness" << fitness;
 		return fitness;
 	}
-	// cout << "checkpoint 8" << endl;
+	// cout << "checkpoint7" << endl;
 	if (PDstartcount < 3){
 		cout << "unable to find two full cycles; may want to increase transient, lengthen runtime, or speed up slowest timescale" << endl;
 		return fitness;

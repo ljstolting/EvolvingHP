@@ -6,7 +6,7 @@ CTRNN.o: CTRNN.cpp random.h VectorMatrix.h CTRNN.h
 	g++ -pthread -c -O3 CTRNN.cpp
 TSearch.o: TSearch.cpp TSearch.h
 	g++ -pthread -c -O3 TSearch.cpp
-main.o: maintest.cpp CTRNN.h TSearch.h pyloric.h
-	g++ -pthread -c -O3 main.cpp
+maintest.o: maintest.cpp CTRNN.h TSearch.h pyloric.h
+	g++ -pthread -c -O3 maintest.cpp
 clean:
 	rm *.o main

@@ -6,7 +6,7 @@ CTRNN.o: CTRNN.cpp random.h CTRNN.h
 	g++ -pthread -c -O3 CTRNN.cpp
 TSearch.o: TSearch.cpp TSearch.h
 	g++ -pthread -c -O3 TSearch.cpp
-main.o: mainRealmofAcceptability.cpp CTRNN.h TSearch.h
-	g++ -pthread -c -O3 main.cpp
+mainRealmofAcceptability.o: mainRealmofAcceptability.cpp CTRNN.h TSearch.h
+	g++ -pthread -c -O3 mainRealmofAcceptability.cpp
 clean:
 	rm *.o main

@@ -40,6 +40,7 @@ const double par2step = .05;
 
 // Output file
 char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/HPAgnosticAverage_highres.dat";
+char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/HPAgnosticAverage_highres_multistability.dat";
 
 // Nervous system params
 const int N = 3;
@@ -47,6 +48,7 @@ const int N = 3;
 // Multistability detection mode: to explain trajectory divergences that occur due to multiperiodicity
 // without actually finding the limit set at every point, we simply run the average detection mechanism
 // from multiple starting neural states. In the base case, we will run them from a square grid 
+// FUTURE MULTISTABILITY MODE SHOULD START FROM THE ENDPOINT OF THE LAST CIRCUIT (i.e. just don't reset it)
 const bool multistable_mode = true;
 
 
@@ -58,6 +60,8 @@ int main (int argc, const char* argv[])
 	// Create files to hold data
 	ofstream avgsfile;
 	avgsfile.open(avgsfname);
+	ofstream avgsfilemultistability;
+	avgsfilemultistability.open(avgs_multistabilityfname);
 	
     CTRNN Circuit(N);
     char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/pyloriccircuit.ns";
@@ -76,7 +80,7 @@ int main (int argc, const char* argv[])
 		int resolution = 2;
 		TVector<double> output_vals(1,resolution);
 		output_vals[1] = .25;
-		output_vals[2] = .75;
+		output_vals[2] = .5;
 		num_pts = pow(resolution,N);
 		ptlist.SetBounds(1,num_pts,1,N);
 		PointGrid(ptlist,output_vals);
@@ -149,6 +153,10 @@ int main (int argc, const char* argv[])
 					avg[i] /= stepnum;
 				}
 
+				if (ic == num_pts){
+					avgsfile << avg << endl;
+				}
+
 				bool uniqueness_flag = true;
 				for (int i = 1; i < num_unique_endpoints; i++){
 					// cout << avg << endl << unique_endpoints(i,1) << " " << unique_endpoints(i,3) << endl;
@@ -172,14 +180,15 @@ int main (int argc, const char* argv[])
 			}
 			for (int i = unique_endpoints.RowLowerBound(); i <= unique_endpoints.RowUpperBound(); i++){
 				for (int j = 1; j <= N; j++){
-					avgsfile << unique_endpoints(i,j) << " ";
+					avgsfilemultistability << unique_endpoints(i,j) << " ";
 				}
-				avgsfile << endl;
+				avgsfilemultistability << endl;
 			}
-			avgsfile << endl;
+			avgsfilemultistability << endl;
 		}
-		avgsfile << endl;
+		avgsfilemultistability << endl;
 	}	
 	avgsfile.close();
+	avgsfilemultistability.close();
   return 0;
 }
