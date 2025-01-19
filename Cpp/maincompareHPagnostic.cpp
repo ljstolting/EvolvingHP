@@ -187,7 +187,7 @@ int main(void){
                 Circuit.SetPlasticityLB(3,t); //both neurons can be done at the same time because they're
                 Circuit.SetPlasticityUB(3,t); // both tracking the same cycle and not changing anything
                 HPDesiredMovement(Circuit,HPdesav);
-                // cout << t << " " << HPdesav(1) << " " << HPdesav(3) << " " << (HPdesav(1)>0) << " "<< (HPdesav(3)>0) << endl;
+                cout << t << " " << HPdesav(1) << " " << HPdesav(3) << " " <<  ((HPdesav(1)*HPdesavhist(1))<0) << " "<<  ((HPdesav(3)*HPdesavhist(3))<0) << endl;
                 
                 if (t == 0){
                     for (int i=1;i<=Circuit.CircuitSize();i++){
