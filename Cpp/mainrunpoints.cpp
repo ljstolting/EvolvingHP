@@ -10,7 +10,7 @@
 
 // Task params
 // const double TransientDuration = 1000; //Seconds with HP off
-const double PlasticDuration = 2000; //Seconds with HP running
+const double PlasticDuration = 20000; //Seconds with HP running
 const double RunDuration = 150; //How long to test for pyloricness
 // const double StepSize = 0.025;
 const int RunSteps = RunDuration/StepSize;
@@ -28,9 +28,12 @@ int	CTRNNVectSize = N*N + 2*N;
 
 const double TMIN = .1;
 const double TMAX = 2;
-const double BR = 16;
-const double WR = 16;
-const int num_ICs = 1000;
+const double BRlb1 = 5.82467;
+const double BRub1 = 5.82467;
+const double BRlb3 = -11.5739;
+const double BRub3 = -11.5739;
+const double WR = 10;
+const int num_ICs = 1;
 
 // Mode
 const bool random_mode = false; //randomize in other dimensions besides HP dimensions 
@@ -38,12 +41,12 @@ const bool taus_set = false;
 
 //Filenames
 char Nfname[] = "../Pyloric CTRNN Genomes/Pete.ns";
-char HPfname[] = "./Convenient HP Mechanisms/good.dat";
+char HPfname[] = "./Convenient HP Mechanisms/nullHP.dat";
 // char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/33/bestind.dat";
-char Fitnessesfname[] = "./Convenient HP Mechanisms/good_fitnesses.dat";
-char ICsfname[] = "./Convenient HP Mechanisms/good_ics.dat";
-char biastrackfname[] = "./Convenient HP Mechanisms/good_biastrack.dat";
-char statestrackfname[] = "./Convenient HP Mechanisms/good_statestrack.dat";
+char Fitnessesfname[] = "./Convenient HP Mechanisms/nullfit.dat";
+char ICsfname[] = "./Convenient HP Mechanisms/nullics.dat";
+char biastrackfname[] = "./Convenient HP Mechanisms/nullbiastrack.dat";
+char statestrackfname[] = "./Convenient HP Mechanisms/nullstatestrack.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
@@ -59,10 +62,14 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 		k++;
 	}
 	// Bias
-	for (int i = 1; i <= N; i++) {
-		phen(k) = MapSearchParameter(gen(k), -BR, BR);
+	for (int i = 1; i <= 2; i++) {
+		phen(k) = MapSearchParameter(gen(k), BRlb1, BRub1);
 		k++;
 	}
+    //last neuron
+    phen(k) = MapSearchParameter(gen(k), BRlb3,BRub3);
+    k++;
+    // cout << phen(k);
 	// Weights
 	for (int i = 1; i <= N; i++) {
         for (int j = 1; j <= N; j++) {
@@ -114,8 +121,8 @@ int main(){
     cout << Circuit.SlidingWindow(1) << endl;
 
     for (int i = 0;i<num_ICs;i++){
-
-        long randomseed = static_cast<long>(time(NULL));
+        // long randomseed = static_cast<long>(time(NULL));
+        long randomseed = 6942069420;
         RandomState rs(randomseed+pow(i,2));
         for (int j = 1; j <= genotype.Size(); j++)
             {genotype[j] = rs.UniformRandom(-1,1);}
@@ -154,6 +161,7 @@ int main(){
                 //check for biases
                 if (Circuit.plasticitypars[k]==1){
                     Circuit.SetNeuronBias(j,phenotype(k+N)); //start after time constants
+                    // cout << phenotype(k+N);
                     // Circuit.SetNeuronBias(j,-10); //if want a specific value
                     // cout << "set a bias" << endl;
                 }
@@ -215,7 +223,7 @@ int main(){
         ICsfile << endl << endl;
 
         // Test for Pyloricness with HP
-        double fit = PyloricPerformance(Circuit);
+        double fit = PyloricPerformance(Circuit,biastrack,statestrack);
 
         fitnesses << fit << endl;
 

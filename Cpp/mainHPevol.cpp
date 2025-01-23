@@ -32,6 +32,7 @@ const double CROSSPROB = 0.0;
 const double EXPECTED = 1.1;
 const double ELITISM = 0.1;
 const double scaling_factor = 25; // boost to add to solutions that are fully pyloric
+const bool seed_center_crossing = false;
 
 const int num_optimization_genomes = 20; //number of circuits to test a generalist mechanism on (number listed in the file)
 
@@ -41,6 +42,18 @@ const int num_optimization_genomes = 20; //number of circuits to test a generali
 
 // Nervous system params
 const int N = 3;
+const bool shiftedrho_tf = true;
+	//file from which to pull circuit genome
+	// INDIVIDUAL IN EACH FOLDER MODE
+// const char circuitfname[] = "../pyloriccircuit.ns";
+	// ONE INDIVIDUAL MODE
+const char circuitfname[] = "./Pyloric CTRNN Genomes/Pete.ns";
+	// LIST OF INDIVIDUALS FOR THE GENERALIST MODE
+// const char circuitfname[] = "../../../Pyloric CTRNN Genomes/optimizationsetengineered.dat";
+
+// HP params
+const int num = 2; //number of parameters you want to evolve to change under HP control
+const int VectSize = num*4; //each parameter gets a time constant, an lower bound, a range, and a sliding window
 
 // Plasticity parameter ranges
 const double SWR = 10;		// Max Window Size of Plastic Rule (in seconds now)
@@ -58,7 +71,6 @@ const double BTMAX = 200.0;		// parameter Time Constant
 // ------------------------------------
 void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 {
-
 	int k = 1;
 	// Bias Time-constants
 	for (int i = 1; i <= num; i++) {
@@ -66,18 +78,18 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 		k++;
 	}
 	// Lower Bounds
-	for (int i = 1; i <= neuronschanging; i++) {
+	for (int i = 1; i <= num; i++) {
 		phen(k) = MapSearchParameter(gen(k), LBMIN, LBMAX);
 		k++;
 	}
 	// Upper Bounds OR Range
-	for (int i = 1; i <= neuronschanging; i++) {
+	for (int i = 1; i <= num; i++) {
 		phen(k) = MapSearchParameter(gen(k), UBMIN, UBMAX);
 		// if (phen(k) < phen(k-num)){phen(k)=phen(k-num);} //clipping now happens in the Set functions
 		k++;
 	}
     // Sliding Window -- changed to be time-based (gets rounded to the nearest stepsize in the SetSlidingWindow function)
-    for (int i = 1; i <= neuronschanging; i++) {
+    for (int i = 1; i <= num; i++) {
 		phen(k) = MapSearchParameter(gen(k), 0, SWR);
 		k++;
 	}
@@ -96,7 +108,7 @@ double HPPerformance(CTRNN &Agent, TMatrix<double> &ptlist, double scaling_facto
 		// cout << "init " << Agent.biases << endl;
 		// cout << "parameters " << Agent.NeuronBias(1) << " " << Agent.NeuronBias(2) << " " << Agent.NeuronBias(3) << " " << Agent.ConnectionWeight(1,1) << endl;
 		// Initialize the outputs at 0.5 for all neurons in the circuit
-		for (int n=1;n<=Agent.CircuitSize();n++){Agent.SetNeuronState(n,0);}
+		Agent.RandomizeCircuitOutput(.5,.5);
 
 		// Run the circuit for an initial transient; HP is off and fitness is not evaluated
 		for (double t = StepSize; t <= TransientDuration; t += StepSize) {
@@ -155,14 +167,14 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	
 	// Create the agent
 	CTRNN Agent(3);
+	Agent.ShiftedRho(shiftedrho_tf);
 	// cout << Agent.adaptbiases << endl;
 
 	// Instantiate the nervous system
-	char fname[] = "../pyloriccircuit.ns";
     ifstream ifs;
-    ifs.open(fname);
+    ifs.open(circuitfname);
     if (!ifs) {
-        cerr << "File not found: " << fname << endl;
+        cerr << "File not found: " << circuitfname << endl;
         exit(EXIT_FAILURE);
     }
     ifs >> Agent; 
@@ -220,6 +232,7 @@ double HPGeneralistFitnessFunction(TVector<double> &genotype, TMatrix<double> &p
 	
 	// Create the agent
 	CTRNN Agent(3);
+	Agent.ShiftedRho(shiftedrho_tf);
 	// cout << Agent.plasticneurons << endl;
 	// cout << Agent.adaptweights << endl;
 	// cout << "checkpoint 1" << endl;
@@ -231,11 +244,10 @@ double HPGeneralistFitnessFunction(TVector<double> &genotype, TMatrix<double> &p
 	// cout << "checkpoint 2" << endl;
 
 	// Load in list of genomes in the optimization set
-	char fname[] = "../../../Pyloric CTRNN Genomes/optimizationsetengineered.dat";
 	ifstream ifs;
-    ifs.open(fname);
+    ifs.open(circuitfname);
     if (!ifs) {
-        cerr << "File not found: " << fname << endl;
+        cerr << "File not found: " << circuitfname << endl;
         exit(EXIT_FAILURE);
     }
 	// cout << "checkpoint 3" << endl;
@@ -356,8 +368,8 @@ int main (int argc, const char* argv[])
 		// }
 
 		s.SetInitialPtsforEval(ptlist);
-		s.SetEvaluationFunction(HPGeneralistFitnessFunction);
-		s.ExecuteSearch(false);
+		s.SetEvaluationFunction(HPFitnessFunction);
+		s.ExecuteSearch(seed_center_crossing);
 
 		
 	}

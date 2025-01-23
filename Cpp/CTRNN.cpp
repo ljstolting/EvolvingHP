@@ -149,6 +149,9 @@ void CTRNN::SetCircuitSize(int newsize)
   wr = 20;
   br = 20;
 
+  // Shifted rho default to false
+  shiftedrho = false;
+
   // new for subset of params
   // char plasticparsfname[] = "../../../plasticpars.dat";
   char plasticparsfname[] = "./plasticpars.dat";
@@ -318,29 +321,50 @@ void CTRNN::RhoCalc(void){
       // cout << "checkpoint 3" << endl;
     }
 
-
-    // NEW: Update rho for each neuron.
-    for (int i = 1; i <= size; i++) {
-      // cout << l_boundary[i] << " " << u_boundary[i] << endl;
-      if (avgoutputs[i] < l_boundary[i]) {
-        // cout << l_boundary[i] << endl;
-        rhos[i] = (l_boundary[i] - avgoutputs[i])/l_boundary[i];
-        // cout << l_boundary[i] << endl << endl;
-        // cout << rhos[i] << " " << endl;
+    // SHIFTED RHO METHOD(new): Update rho for each neuron
+    if (shiftedrho){
+      for (int i = 1; i <= size; i++) {
+        // cout << l_boundary[i] << " " << u_boundary[i] << endl;
+        if (avgoutputs[i] < l_boundary[i]) {
+          rhos[i] = -avgoutputs[i]+l_boundary[i];
+        }
+        else{
+          if (avgoutputs[i] > u_boundary[i]){
+            rhos[i] = -avgoutputs[i]+u_boundary[i];
+          }
+          else
+          {
+            rhos[i] = 0.0; 
+          }
+        }
+        // cout << l_boundary[i] << " " << u_boundary[i] << endl << endl;
       }
-      else{
-        if (avgoutputs[i] > u_boundary[i]){
-          // cout << u_boundary[i] << endl;
-          rhos[i] = (u_boundary[i] - avgoutputs[i])/(1.0 - u_boundary[i]);
-          // cout << u_boundary[i] << endl << endl;
+    }
+
+    // SCALED RHO METHOD(default): Update rho for each neuron.
+    else{
+      for (int i = 1; i <= size; i++) {
+        // cout << l_boundary[i] << " " << u_boundary[i] << endl;
+        if (avgoutputs[i] < l_boundary[i]) {
+          // cout << l_boundary[i] << endl;
+          rhos[i] = (l_boundary[i] - avgoutputs[i])/l_boundary[i];
+          // cout << l_boundary[i] << endl << endl;
           // cout << rhos[i] << " " << endl;
         }
-        else
-        {
-          rhos[i] = 0.0; 
+        else{
+          if (avgoutputs[i] > u_boundary[i]){
+            // cout << u_boundary[i] << endl;
+            rhos[i] = (u_boundary[i] - avgoutputs[i])/(1.0 - u_boundary[i]);
+            // cout << u_boundary[i] << endl << endl;
+            // cout << rhos[i] << " " << endl;
+          }
+          else
+          {
+            rhos[i] = 0.0; 
+          }
         }
+        // cout << l_boundary[i] << " " << u_boundary[i] << endl << endl;
       }
-      // cout << l_boundary[i] << " " << u_boundary[i] << endl << endl;
     }
 }
 

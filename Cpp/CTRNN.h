@@ -129,6 +129,7 @@ class CTRNN {
         // -- NEW
         double NeuronRho(int i) {return rhos[i];};
         void SetNeuronRho(int i, double value) {rhos[i] = value;};
+        void ShiftedRho(bool tf){shiftedrho = tf;};
         double PlasticityLB(int i) {return l_boundary[i];};
         void SetPlasticityLB(int i, double value) {
           if (value <0){
@@ -201,7 +202,7 @@ class CTRNN {
         TVector<int> windowsize, plasticitypars, plasticneurons, outputhiststartidxs; // NEW for AVERAGING
         double wr, br; // NEWER for CAPPING
         int max_windowsize, num_pars_changed;
-        bool adaptbiases, adaptweights;
+        bool adaptbiases, adaptweights, shiftedrho;
         TVector<double> states, outputs, biases, gains, taus, Rtaus, externalinputs;
         TVector<double> rhos, tausBiases, RtausBiases, l_boundary, u_boundary, minavg, maxavg; // NEW
         TVector<double> avgoutputs, sumoutputs, outputhist; // NEW for AVERAGING, change outputhist into a vector

@@ -33,16 +33,16 @@ using namespace std;
 
 // General run parameters
 char CTRNNfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/pyloriccircuit.ns";
-// const double par1min = -10;
-// const double par1max = 20;
+const double par1min = 7.65497;
+const double par1max = 7.65497;
 const double par1step = .05;
-const double par2min = -20;
-const double par2max = 10;
+const double par2min = -6.0426;
+const double par2max = -6.0426;
 const double par2step = .05;
 const double targetstep = .005;
 
 // HP-desired movement parameters (initially taken from other files)
-char HPfname[] = "./Convenient HP Mechanisms/good0sw.dat"; //this file is where you specify the sliding window
+char HPfname[] = "./Convenient HP Mechanisms/bad.dat"; //this file is where you specify the sliding window
                                                            //targets are specified by whatever the agnostic average is
 const double RunDuration = 5000;
 
@@ -123,13 +123,14 @@ void HPDesiredMovement(CTRNN &Agent, TVector<double> &outputvec){
 }
 
 int main(int argc, const char* argv[]){
-    double temp = atoi(argv[1]);
-    double bias1fromcall = -10 + temp/20; //will ultimately run for integers between 0 and 600
+    // double temp = atoi(argv[1]);
+    // double bias1fromcall = -10 + temp/20; //will ultimately run for integers between 0 and 600
 
-    string outfilefname = "./CompareHPagnostic0.dat";
+    // string outfilefname = "./CompareHPagnostic0.dat";
 
-    outfilefname.replace(19, 1, to_string(atoi(argv[1])));
+    // outfilefname.replace(19, 1, to_string(atoi(argv[1])));
 
+    string outfilefname = "./CompareHPagnostictest.dat";
     ofstream outfile;
     outfile.open(outfilefname);
 
@@ -153,78 +154,83 @@ int main(int argc, const char* argv[]){
     Circuit.SetHPPhenotype(HPin,StepSize,true);
     HPin.close();
 
-    for (double bias1=bias1fromcall;bias1<=bias1fromcall;bias1+=par1step){
+    for (double bias1=par1min;bias1<=par1max;bias1+=par1step){
         cout << bias1 << endl;
         Circuit.SetNeuronBias(1,bias1);
         for (double bias3=par2min;bias3<=par2max;bias3+=par2step){
             Circuit.SetNeuronBias(3,bias3);
-            // TVector<double> HPagav(1,Circuit.CircuitSize());
-            // HPAgnosticAvg(Circuit, HPagav);
-            // cout << "HP Agnostic Averages:" << HPagav << endl;
+            TVector<double> HPagav(1,Circuit.CircuitSize());
+            HPAgnosticAvg(Circuit, HPagav);
+            cout << "HP Agnostic Averages:" << HPagav << endl;
 
-            // // Assuming here that only n1 and n3 are changing
-            // // uncomment if you are testing difference between given HP and endpoint
+            // Assuming here that only n1 and n3 are changing
+            // uncomment if you are testing difference between given HP and endpoint
             // Circuit.SetPlasticityLB(1,HPagav(1));
             // Circuit.SetPlasticityUB(1,HPagav(1));
             // Circuit.SetPlasticityLB(3,HPagav(3));
             // Circuit.SetPlasticityUB(3,HPagav(3));
+
+            Circuit.SetPlasticityLB(1,.34);
+            Circuit.SetPlasticityUB(1,.34);
+            Circuit.SetPlasticityLB(3,.34);
+            Circuit.SetPlasticityUB(3,.34);
             
-            // TVector<double> HPdesav(1,Circuit.CircuitSize());
-            // HPDesiredMovement(Circuit,HPdesav);
-            // cout << "HP Desired Movement for targets " << Circuit.PlasticityLB(1) << ", " << Circuit.PlasticityLB(3) << ":" << HPdesav << endl;
-            // outfile << HPdesav(1) << " " << HPdesav(3) << endl;
+            TVector<double> HPdesav(1,Circuit.CircuitSize());
+            HPDesiredMovement(Circuit,HPdesav);
+            cout << "HP Desired Movement for targets " << Circuit.PlasticityLB(1) << ", " << Circuit.PlasticityLB(3) << ":" << HPdesav << endl;
+            outfile << HPdesav(1) << " " << HPdesav(3) << endl;
             // if (HPdesav(1) > 0.01 || HPdesav(3) > 0.01){cout << "large flag" << endl;}
 
-            bool N1flip = false;
-            bool N3flip = false;
-            TVector<double> HPdesav(1,Circuit.CircuitSize());
-            HPdesav.FillContents(0);
-            TVector<double> HPdesav_init(1,Circuit.CircuitSize());
-            TVector<double> HPdesavhist(1,Circuit.CircuitSize());
-            TVector<double> flip_targets(1,2);
+        //     bool N1flip = false;
+        //     bool N3flip = false;
+        //     TVector<double> HPdesav(1,Circuit.CircuitSize());
+        //     HPdesav.FillContents(0);
+        //     TVector<double> HPdesav_init(1,Circuit.CircuitSize());
+        //     TVector<double> HPdesavhist(1,Circuit.CircuitSize());
+        //     TVector<double> flip_targets(1,2);
 
-            for (double t=0;t<=1;t+=targetstep){
+        //     for (double t=0;t<=1;t+=targetstep){
                 
-                for (int i = 1; i <= 3; i ++){
-                    HPdesavhist(i) = HPdesav(i);
-                }
+        //         for (int i = 1; i <= 3; i ++){
+        //             HPdesavhist(i) = HPdesav(i);
+        //         }
                 
-                Circuit.SetPlasticityLB(1,t);
-                Circuit.SetPlasticityUB(1,t);
-                Circuit.SetPlasticityLB(3,t); //both neurons can be done at the same time because they're
-                Circuit.SetPlasticityUB(3,t); // both tracking the same cycle and not changing anything
-                HPDesiredMovement(Circuit,HPdesav);
-                // cout << t << " " << HPdesav(1) << " " << HPdesav(3) << " " <<  ((HPdesav(1)*HPdesavhist(1))<0) << " "<<  ((HPdesav(3)*HPdesavhist(3))<0) << endl;
+        //         Circuit.SetPlasticityLB(1,t);
+        //         Circuit.SetPlasticityUB(1,t);
+        //         Circuit.SetPlasticityLB(3,t); //both neurons can be done at the same time because they're
+        //         Circuit.SetPlasticityUB(3,t); // both tracking the same cycle and not changing anything
+        //         HPDesiredMovement(Circuit,HPdesav);
+        //         // cout << t << " " << HPdesav(1) << " " << HPdesav(3) << " " <<  ((HPdesav(1)*HPdesavhist(1))<0) << " "<<  ((HPdesav(3)*HPdesavhist(3))<0) << endl;
                 
-                if (t == 0){
-                    for (int i=1;i<=Circuit.CircuitSize();i++){
-                        HPdesav_init(i) = HPdesav(i);
-                    }
-                }
+        //         if (t == 0){
+        //             for (int i=1;i<=Circuit.CircuitSize();i++){
+        //                 HPdesav_init(i) = HPdesav(i);
+        //             }
+        //         }
 
-                //record the first positive value of either neurons' desav
-                if (N1flip == false && (HPdesav(1)*HPdesavhist(1))<0){
-                    flip_targets(1) = t;
-                    N1flip = true;
-                }
+        //         //record the first positive value of either neurons' desav
+        //         if (N1flip == false && (HPdesav(1)*HPdesavhist(1))<0){
+        //             flip_targets(1) = t;
+        //             N1flip = true;
+        //         }
 
-                if (N3flip == false && (HPdesav(3)*HPdesavhist(3))<0){
-                    flip_targets(2) = t;
-                    N3flip = true;
-                }
+        //         if (N3flip == false && (HPdesav(3)*HPdesavhist(3))<0){
+        //             flip_targets(2) = t;
+        //             N3flip = true;
+        //         }
                 
-                if (N1flip && N3flip){break;}
-            }
-            // if one of them did not flip throughout the whole test range, ask whether it was lowest magnitude at 0 or 1
-            if (!N1flip){
-                flip_targets(1) = (abs(HPdesav_init(1)) > abs(HPdesav(1))); //using booleans
-            }
-            if (!N3flip){
-                flip_targets(2) = (abs(HPdesav_init(3)) > abs(HPdesav(3)));
-            }
-            outfile << flip_targets << endl;
+        //         if (N1flip && N3flip){break;}
+        //     }
+        //     // if one of them did not flip throughout the whole test range, ask whether it was lowest magnitude at 0 or 1
+        //     if (!N1flip){
+        //         flip_targets(1) = (abs(HPdesav_init(1)) > abs(HPdesav(1))); //using booleans
+        //     }
+        //     if (!N3flip){
+        //         flip_targets(2) = (abs(HPdesav_init(3)) > abs(HPdesav(3)));
+            // }
+        //     outfile << flip_targets << endl;
         }
-        outfile << endl;
+        // outfile << endl;
     }
     
 

@@ -18,7 +18,7 @@ const double PlasticDuration1 = 5000; //seconds allowing HP to act
 const double PlasticDuration2 = 5000; //number of seconds to wait before testing again, to make sure not relying on precise timing
 const double TestDuration = 100; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
 const bool HPtest = false;       //does HP remain on during test (shouldn't matter if platicity time constants are slow enough)
-const double StepSize = 0.005;
+const double StepSize = 0.05;
 // const double StepSize = 0.01;
 const int TestSteps = TestDuration/StepSize; // in steps
 
@@ -874,11 +874,13 @@ double PyloricPerformance(CTRNN &Agent, ofstream &trajfile, ofstream &burstfile)
 				//cout << "order3" << endl;
 				fitness += 0.05;
 			}
+
+			int period = PDstarts[2] - PDstarts[1];
+
+			burstfile << (LPstart-PDstarts[1])*StepSize << " " << (LPend-PDstarts[1])*StepSize << " " << (PYstart-PDstarts[1])*StepSize << " " << (PYend-PDstarts[1])*StepSize << " " << (PDstarts[1]-PDstarts[1])*StepSize << " " << (PDend-PDstarts[1])*StepSize << " " << period*StepSize << endl;
+
 				
 			if (fitness == 0.3){
-				int period = PDstarts[2] - PDstarts[1];
-
-				burstfile << (LPstart-PDstarts[1])*StepSize << " " << (LPend-PDstarts[1])*StepSize << " " << (PYstart-PDstarts[1])*StepSize << " " << (PYend-PDstarts[1])*StepSize << " " << (PDstarts[1]-PDstarts[1])*StepSize << " " << (PDend-PDstarts[1])*StepSize << " " << period*StepSize << endl;
 
 				double LPfoo = LPend - LPstart; 
 				double LPdutycycle = LPfoo/period; //burstduration/period
