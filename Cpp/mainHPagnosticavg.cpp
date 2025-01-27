@@ -15,6 +15,15 @@
 // engineer the best possible HP mechanism (as i attempted to before)
 // -- in what cases does this work and in what cases does it not? 
 // seek to explain the unsolvable solutions
+
+// UPDATE 1/23/25 (post ICMNS submission)
+// Averaging is only informative for HP behavior @ fixed points.
+// For limit cycles, I've devised a new HP-agnostic measure which is based on the 
+// rhythm's duty cycle, in combination with its average activity
+// level, along with the assumption that oscillations mostly pause
+// in the very top and very bottom of the output range (due to sigmoid
+// nonlinearity). The hope is that this HP-agnostic measure will
+// be able to predict the 
 // ---------------------------------------------------------
 #include "TSearch.h"
 #include "CTRNN.h"
@@ -38,9 +47,14 @@ const double par2min = -20.0;
 const double par2max = 10.0;
 const double par2step = .05;
 
+// HP mode
+const bool rhoshifted = true; //shifted rho is the new version of HP, where slopes are not adjusted
+							   //the shifted rho HP is the only version for which I've come up with a
+							   // potentially valid HP-agnostic approximation
+
 // Output file
-char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/HPAgnosticAverage_highres.dat";
-char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/HPAgnosticAverage_highres_multistability.dat";
+char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/HPAgnosticAverage_highres_newrho.dat";
+char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/HPAgnosticAverage_highres_multistabilitytest.dat";
 
 // Nervous system params
 const int N = 3;
@@ -49,7 +63,7 @@ const int N = 3;
 // without actually finding the limit set at every point, we simply run the average detection mechanism
 // from multiple starting neural states. In the base case, we will run them from a square grid 
 // FUTURE MULTISTABILITY MODE SHOULD START FROM THE ENDPOINT OF THE LAST CIRCUIT (i.e. just don't reset it)
-const bool multistable_mode = true;
+const bool multistable_mode = false;
 
 
 // ------------------------------------
@@ -72,7 +86,7 @@ int main (int argc, const char* argv[])
         exit(EXIT_FAILURE);
     }
     ifs >> Circuit; 
-	// Circuit should initialize with null HP & one timestep "sliding window"
+	Circuit.ShiftedRho(rhoshifted);
 
 	int num_pts;
 	TMatrix<double> ptlist;
@@ -90,12 +104,13 @@ int main (int argc, const char* argv[])
 		num_pts = 1;
 		ptlist.SetBounds(1,num_pts,1,N);
 		ptlist.FillContents(.5);
+		// ptlist.FillContents(0); //just for now, setting circuit state to zero to align with pyloric plane
 	}
 
 	TMatrix<double> unique_endpoints(1,2,1,N);
 	
 	// For every neuron, (even recording N2 right now, even though not considering HPs that use it)
-	TVector<double> acc(1,N); //vector to store the average value of each neuron
+	TVector<double> acc(1,N); //vector to store the value of the proxy expression for each neuron
 	for (double par1=par1min; par1<=par1max; par1+=par1step){
 		cout << par1 << endl;
 		Circuit.SetNeuronBias(1,par1);
@@ -108,7 +123,8 @@ int main (int argc, const char* argv[])
 			acc.FillContents(0); //reset to all zeros
 			for (int ic=1;ic<=num_pts;ic++){
 				for (int neuron=1;neuron<=N;neuron++){
-					Circuit.SetNeuronOutput(neuron,ptlist(ic,neuron)); 
+					Circuit.SetNeuronOutput(neuron,ptlist(ic,neuron)); //just for now, setting circuit state to align with pyloric fitness plane
+					// Circuit.SetNeuronState(neuron,ptlist(ic,neuron)); 
 					Circuit.WindowReset();
 				}
 				// run for transient
@@ -127,6 +143,10 @@ int main (int argc, const char* argv[])
 				avg.FillContents(0.0);
 				double t = StepSize;
 				int stepnum = 0;
+				TVector<double> dutycycle(1,N);
+				dutycycle.FillContents(0.0);
+				TVector<bool> belowthresh(1,N);
+				belowthresh.FillContents(0);
 				while (t<= RunDuration){
 					Circuit.EulerStep(StepSize,0);
 					stepnum ++;
@@ -135,6 +155,14 @@ int main (int argc, const char* argv[])
 					for (int i = 1; i <= N; i++){
 						dist += pow(Circuit.NeuronState(i)-startstate[i],2);
 						avg[i] += Circuit.NeuronOutput(i);
+						if (Circuit.NeuronOutput(i) > 0.5){
+							dutycycle[i] += 1;
+						}
+						else{
+							if (!belowthresh(i)){
+								belowthresh(i) = true;
+							}
+						}
 					}
 					dist = sqrt(dist);
 
@@ -150,11 +178,23 @@ int main (int argc, const char* argv[])
 				}
 
 				for (int i = 1; i <= N; i++){
+					// make into true average and duty cycle by dividing by the number of steps in the cycle
 					avg[i] /= stepnum;
+					dutycycle[i] /= stepnum;
 				}
 
 				if (ic == num_pts){
 					avgsfile << avg << endl;
+					for (int i = 1; i <= N; i++){
+						if ((dutycycle(i) > 0) && belowthresh(i)){ //if the neuron went above and below the threshold
+							avgsfile << dutycycle(i) << " ";
+						}
+						else{
+							avgsfile << 0 << " ";
+						}
+					}
+					avgsfile << endl << endl;
+
 				}
 
 				bool uniqueness_flag = true;
@@ -180,13 +220,13 @@ int main (int argc, const char* argv[])
 			}
 			for (int i = unique_endpoints.RowLowerBound(); i <= unique_endpoints.RowUpperBound(); i++){
 				for (int j = 1; j <= N; j++){
-					avgsfilemultistability << unique_endpoints(i,j) << " ";
+					if (multistable_mode) {avgsfilemultistability << unique_endpoints(i,j) << " ";}
 				}
-				avgsfilemultistability << endl;
+				if (multistable_mode) {avgsfilemultistability << endl;}
 			}
-			avgsfilemultistability << endl;
+			if (multistable_mode){avgsfilemultistability << endl;}
 		}
-		avgsfilemultistability << endl;
+		if(multistable_mode){avgsfilemultistability << endl;}
 	}	
 	avgsfile.close();
 	avgsfilemultistability.close();

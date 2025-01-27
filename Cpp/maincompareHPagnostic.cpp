@@ -33,11 +33,11 @@ using namespace std;
 
 // General run parameters
 char CTRNNfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/pyloriccircuit.ns";
-const double par1min = 7.65497;
-const double par1max = 7.65497;
+const double par1min = 13.0595;
+const double par1max = 13.0595;
 const double par1step = .05;
-const double par2min = -6.0426;
-const double par2max = -6.0426;
+const double par2min = -15.8667;
+const double par2max = -15.8667;
 const double par2step = .05;
 const double targetstep = .005;
 
@@ -55,7 +55,7 @@ const double return_tolerance = 0.025; //less than leaving tolerance
 // Calculated either over one full cycle of the rhythm or the default duration
 void HPAgnosticAvg(CTRNN &Agent, TVector<double> &outputvec){
     // Start Circuit from Initial Condition
-    Agent.RandomizeCircuitOutput(.5,.5);
+    Agent.RandomizeCircuitState(.5,.5);
 
     // Run Transient
     for (double t=StepSize;t<=TransientDuration;t+=StepSize){

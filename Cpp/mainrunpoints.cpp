@@ -10,14 +10,14 @@
 
 // Task params
 // const double TransientDuration = 1000; //Seconds with HP off
-const double PlasticDuration = 20000; //Seconds with HP running
+const double PlasticDuration = 50000; //Seconds with HP running
 const double RunDuration = 150; //How long to test for pyloricness
 // const double StepSize = 0.025;
 const int RunSteps = RunDuration/StepSize;
 
 // Nervous system params
 const int N = 3;
-
+const bool shiftedrho_tf = true;
 int	CTRNNVectSize = N*N + 2*N;
 
 // Pyloric Detection params
@@ -28,12 +28,12 @@ int	CTRNNVectSize = N*N + 2*N;
 
 const double TMIN = .1;
 const double TMAX = 2;
-const double BRlb1 = 5.82467;
-const double BRub1 = 5.82467;
-const double BRlb3 = -11.5739;
-const double BRub3 = -11.5739;
+const double BRlb1 = -10;
+const double BRub1 = 20;
+const double BRlb3 = -20;
+const double BRub3 = 10;
 const double WR = 10;
-const int num_ICs = 1;
+const int num_ICs = 1000;
 
 // Mode
 const bool random_mode = false; //randomize in other dimensions besides HP dimensions 
@@ -41,17 +41,18 @@ const bool taus_set = false;
 
 //Filenames
 char Nfname[] = "../Pyloric CTRNN Genomes/Pete.ns";
-char HPfname[] = "./Convenient HP Mechanisms/nullHP.dat";
+// char HPfname[] = "./bestindtest.dat";
+char HPfname[] = "./Convenient HP Mechanisms/good.dat";
 // char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/33/bestind.dat";
-char Fitnessesfname[] = "./Convenient HP Mechanisms/nullfit.dat";
-char ICsfname[] = "./Convenient HP Mechanisms/nullics.dat";
-char biastrackfname[] = "./Convenient HP Mechanisms/nullbiastrack.dat";
-char statestrackfname[] = "./Convenient HP Mechanisms/nullstatestrack.dat";
+char Fitnessesfname[] = "./Convenient HP Mechanisms/goodfit.dat";
+char ICsfname[] = "./Convenient HP Mechanisms/goodics.dat";
+char biastrackfname[] = "./Convenient HP Mechanisms/goodbiastrack.dat";
+char statestrackfname[] = "./Convenient HP Mechanisms/goodstatestrack.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
-const bool trackparams = false;
-const int trackparamsinterval = 100; //Track biases for every X trials
+const bool trackparams = true;
+const int trackparamsinterval = 200; //Track biases for every X trials
 
 void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 {
@@ -103,6 +104,7 @@ int main(){
         exit(EXIT_FAILURE);
     }
     ifs >> Circuit; 
+    Circuit.ShiftedRho(shiftedrho_tf);
 
     // Set of random circuit parameters to pull from
     TVector<double> genotype(1,CTRNNVectSize);
@@ -117,12 +119,12 @@ int main(){
     }
     Circuit.SetHPPhenotype(HPifs,StepSize,true);
 
-    cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << endl;
+    cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(1) << " " << Circuit.PlasticityUB(2) << " " << Circuit.PlasticityUB(3) << endl;
     cout << Circuit.SlidingWindow(1) << endl;
 
     for (int i = 0;i<num_ICs;i++){
-        // long randomseed = static_cast<long>(time(NULL));
-        long randomseed = 6942069420;
+        long randomseed = static_cast<long>(time(NULL));
+        // long randomseed = 6942069420; //if need repeats or direct compare
         RandomState rs(randomseed+pow(i,2));
         for (int j = 1; j <= genotype.Size(); j++)
             {genotype[j] = rs.UniformRandom(-1,1);}
@@ -223,7 +225,8 @@ int main(){
         ICsfile << endl << endl;
 
         // Test for Pyloricness with HP
-        double fit = PyloricPerformance(Circuit,biastrack,statestrack);
+        // double fit = PyloricPerformance(Circuit,biastrack,statestrack);
+        double fit = PyloricPerformance(Circuit);
 
         fitnesses << fit << endl;
 

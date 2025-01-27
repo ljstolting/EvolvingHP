@@ -35,7 +35,7 @@ int main (int argc, const char* argv[])
 
 	// Load the base CTRNN parameters
     CTRNN Circuit(3);
-    char fname[] = "../Pyloric CTRNN Genomes/Pete.ns";
+    char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/pyloriccircuit.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -52,7 +52,10 @@ int main (int argc, const char* argv[])
 		Circuit.SetNeuronBias(1,par1);
 		for (double par2=par2min; par2<=par2max; par2+=par2step){
 			Circuit.SetNeuronBias(3,par2);
-			Circuit.RandomizeCircuitState(0,0); // resets sliding window calculation utilities, as well
+			// Circuit.RandomizeCircuitState(0,0); // resets sliding window calculation utilities, as well
+			for (int neuron=1; neuron <= N; neuron ++){
+				Circuit.SetNeuronOutput(neuron,.5); //puts in line with the way the average/proxy is calculated most cleanly
+			}
 			// cout << Circuit.windowsize << endl << Circuit.minavg << endl << Circuit.maxavg << endl << endl;
 
 			for (double t = StepSize; t<= TransientDuration; t+=StepSize){

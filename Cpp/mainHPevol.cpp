@@ -25,7 +25,7 @@
 
 // EA params
 const int POPSIZE = 25;
-const int GENS = 200;
+const int GENS = 100;
 const int trials = 1;    // number of times to run the EA from random starting pop
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
@@ -47,7 +47,7 @@ const bool shiftedrho_tf = true;
 	// INDIVIDUAL IN EACH FOLDER MODE
 // const char circuitfname[] = "../pyloriccircuit.ns";
 	// ONE INDIVIDUAL MODE
-const char circuitfname[] = "./Pyloric CTRNN Genomes/Pete.ns";
+const char circuitfname[] = "../Pyloric CTRNN Genomes/Pete.ns";
 	// LIST OF INDIVIDUALS FOR THE GENERALIST MODE
 // const char circuitfname[] = "../../../Pyloric CTRNN Genomes/optimizationsetengineered.dat";
 
@@ -58,9 +58,9 @@ const int VectSize = num*4; //each parameter gets a time constant, an lower boun
 // Plasticity parameter ranges
 const double SWR = 10;		// Max Window Size of Plastic Rule (in seconds now)
 const double LBMIN = 0;
-const double UBMIN = 0; 		// Plasticity Boundaries
+const double UBMIN = 0; 		// OR range for range encoding
 const double LBMAX = 1;
-const double UBMAX = 1; 		// Plasticity Boundaries 
+const double UBMAX = 0; 		// OR range for range encoding
 const double BTMIN = 100.0;		// parameter Time Constant
 const double BTMAX = 200.0;		// parameter Time Constant
 // const double WTMIN = 40.0;		// Weight Time Constant
@@ -167,8 +167,6 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	
 	// Create the agent
 	CTRNN Agent(3);
-	Agent.ShiftedRho(shiftedrho_tf);
-	// cout << Agent.adaptbiases << endl;
 
 	// Instantiate the nervous system
     ifstream ifs;
@@ -179,13 +177,16 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
     }
     ifs >> Agent; 
 	ifs.close();
+	Agent.ShiftedRho(shiftedrho_tf);
+	// cout << "agent created" << endl;
 
 	// Instantiate the HP mechanism
 	
 	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
 	Agent.SetHPPhenotype(phenotype,StepSize,true); //range encoding active
-	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
+	// cout << "plasticity set" << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
 	double fitness = HPPerformance(Agent, ptlist, scaling_factor);
+	// cout << "fitness calculated" << endl;
     return fitness; //fitness averaged across all times it is taken
 }
 
@@ -276,7 +277,10 @@ void ResultsDisplay(TSearch &s)
 	GenPhenMapping(bestVector, phenotype);
 
 	// Reproduce which pars the HP mechanism has access to
-	char plasticparsfname[] = "../../plasticpars.dat";
+	//LOCAL MODE
+	char plasticparsfname[] = "./plasticpars.dat";
+	//SUPERCOMPUTER MODE
+	// char plasticparsfname[] = "../../plasticpars.dat";
   	ifstream plasticparsfile;
   	TVector<int> plasticitypars(1,N+(N*N));
   	plasticparsfile.open(plasticparsfname);
@@ -320,14 +324,21 @@ void EvolutionaryRunDisplay(TSearch &s)
 // ------------------------------------
 int main (int argc, const char* argv[]) 
 {
+	// cout << "main called" << endl;
 	Evolfile.open("./evol.dat");
 	BestIndividualsFile.open("./bestind.dat");
+	// cout << "files open" << endl;
 	for (int i=1;i<=trials;i++){
+		// cout << "trial " << i << endl;
 		long randomseed = static_cast<long>(time(NULL));
-		if (argc == 1)
-			randomseed += atoi(argv[1]);
 		// long IDUM=-time(0);
+		// cout << "seed initialized" << endl;
+		// No idea why this wouldn't work
+		// if (argc == 1)
+		// 	randomseed += atoi(argv[1]);
+		// cout << "seed set" << endl;
 		TSearch s(VectSize);
+		// cout << "Tsearch set up" << endl;
 
 		// Configure the search
 		s.SetRandomSeed(randomseed);
@@ -369,6 +380,7 @@ int main (int argc, const char* argv[])
 
 		s.SetInitialPtsforEval(ptlist);
 		s.SetEvaluationFunction(HPFitnessFunction);
+		// cout << "TSearch configured" << endl;
 		s.ExecuteSearch(seed_center_crossing);
 
 		
