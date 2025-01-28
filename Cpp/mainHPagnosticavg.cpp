@@ -40,11 +40,11 @@ const double leaving_tolerance = 0.05; // in state space for greater accuracy
 const double return_tolerance = 0.025; //less than leaving tolerance
 
 // Parameter space resolution
-const double par1min = -10.0;
-const double par1max = 20.0;
+const double par1min = 0.0;
+const double par1max = 16.0;
 const double par1step = .05;
-const double par2min = -20.0;
-const double par2max = 10.0;
+const double par2min = 0.0;
+const double par2max = 16.0;
 const double par2step = .05;
 
 // HP mode
@@ -53,8 +53,8 @@ const bool rhoshifted = true; //shifted rho is the new version of HP, where slop
 							   // potentially valid HP-agnostic approximation
 
 // Output file
-char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/HPAgnosticAverage_highres_newrho.dat";
-char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/HPAgnosticAverage_highres_multistabilitytest.dat";
+char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/HPAgnosticAverage_highres_newrho.dat";
+char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/HPAgnosticAverage_highres_multistabilitytest.dat";
 
 // Nervous system params
 const int N = 3;
@@ -78,7 +78,7 @@ int main (int argc, const char* argv[])
 	avgsfilemultistability.open(avgs_multistabilityfname);
 	
     CTRNN Circuit(N);
-    char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/pyloriccircuit.ns";
+    char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/pyloriccircuit.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {

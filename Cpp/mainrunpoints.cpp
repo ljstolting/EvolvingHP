@@ -10,7 +10,7 @@
 
 // Task params
 // const double TransientDuration = 1000; //Seconds with HP off
-const double PlasticDuration = 50000; //Seconds with HP running
+const double PlasticDuration = 100000; //Seconds with HP running
 const double RunDuration = 150; //How long to test for pyloricness
 // const double StepSize = 0.025;
 const int RunSteps = RunDuration/StepSize;
@@ -28,31 +28,31 @@ int	CTRNNVectSize = N*N + 2*N;
 
 const double TMIN = .1;
 const double TMAX = 2;
-const double BRlb1 = -10;
-const double BRub1 = 20;
-const double BRlb3 = -20;
-const double BRub3 = 10;
+const double BRlb1 = 0;
+const double BRub1 = 16;
+const double BRlb3 = 0;
+const double BRub3 = 16;
 const double WR = 10;
-const int num_ICs = 1000;
+const int num_ICs = 200;
 
 // Mode
 const bool random_mode = false; //randomize in other dimensions besides HP dimensions 
 const bool taus_set = false;
 
 //Filenames
-char Nfname[] = "../Pyloric CTRNN Genomes/Pete.ns";
+char Nfname[] = "../Pyloric CTRNN Genomes/Trickster.ns";
 // char HPfname[] = "./bestindtest.dat";
-char HPfname[] = "./Convenient HP Mechanisms/good.dat";
-// char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/33/bestind.dat";
-char Fitnessesfname[] = "./Convenient HP Mechanisms/goodfit.dat";
-char ICsfname[] = "./Convenient HP Mechanisms/goodics.dat";
-char biastrackfname[] = "./Convenient HP Mechanisms/goodbiastrack.dat";
-char statestrackfname[] = "./Convenient HP Mechanisms/goodstatestrack.dat";
+char HPfname[] = "./Convenient HP Mechanisms/trickstergood2.dat";
+// char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/37/bestind.dat";
+char Fitnessesfname[] = "./Convenient HP Mechanisms/tricksterfit2.dat";
+char ICsfname[] = "./Convenient HP Mechanisms/tricksterics2.dat";
+char biastrackfname[] = "./Convenient HP Mechanisms/tricksterbiastrack2.dat";
+char statestrackfname[] = "./Convenient HP Mechanisms/tricksterstatestrack2.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
 const bool trackparams = true;
-const int trackparamsinterval = 200; //Track biases for every X trials
+const int trackparamsinterval = 40; //Track biases for every X trials
 
 void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 {
@@ -184,10 +184,11 @@ int main(){
 
 
         Circuit.RandomizeCircuitOutput(0.5,0.5);
+        Circuit.WindowReset();
 
         // Run for transient without HP
         for(double t=0;t<TransientDuration;t+=StepSize){
-            Circuit.EulerStep(StepSize,0);
+            Circuit.EulerStep(StepSize,false);
         }
 
         // Record all parameters
@@ -210,7 +211,7 @@ int main(){
                 biastrack << endl;
             }
 			if (trackstates && (i%trackstatesinterval==0)){statestrack << Circuit.NeuronOutput(1) << " " << Circuit.NeuronOutput(2) << " " << Circuit.NeuronOutput(3) << endl;}
-            Circuit.EulerStep(StepSize,1);
+            Circuit.EulerStep(StepSize,true);
         }
         if (trackparams && (i%trackparamsinterval==0)) {biastrack << endl;}
 		if (trackstates && (i%trackstatesinterval==0)) {statestrack << endl;}
