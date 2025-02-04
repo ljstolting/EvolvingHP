@@ -53,6 +53,7 @@ const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
 const bool trackparams = false;
 const int trackparamsinterval = 40; //Track biases for every X trials
+const int trackingstepinterval = 5; //make the tracking files smaller by only recording every Xth step
 
 void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 {
@@ -203,15 +204,21 @@ int main(){
         ICsfile << endl;
 
         // Run with HP for a time
+        int tstep = 0;
         for(double t=0;t<PlasticDuration;t+=StepSize){
-            if (trackparams && (i%trackparamsinterval==0)){
+            if (trackparams && (i%trackparamsinterval==0) && (tstep % trackingstepinterval == 0)){
                 for(int j = 1; j<= Circuit.plasticitypars.Sum(); j++){
                     biastrack << Circuit.ArbDParam(j) << " "; //record only the parameters that are changing throughout the run
                 }
                 biastrack << endl;
             }
-			if (trackstates && (i%trackstatesinterval==0)){statestrack << Circuit.NeuronOutput(1) << " " << Circuit.NeuronOutput(2) << " " << Circuit.NeuronOutput(3) << endl;}
+			if (trackstates && (i%trackstatesinterval==0) && (tstep%trackingstepinterval==0)){
+                for (int j = 1; j <= Circuit.size(); j++){
+                    statestrack << Circuit.NeuronOutput(j) << " ";
+                }
+                statestrack << endl;}
             Circuit.EulerStep(StepSize,true);
+            tstep ++;
         }
         if (trackparams && (i%trackparamsinterval==0)) {biastrack << endl;}
 		if (trackstates && (i%trackstatesinterval==0)) {statestrack << endl;}
