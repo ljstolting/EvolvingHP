@@ -43,13 +43,13 @@ int main(int argc, const char* argv[])
     bool range_encoding = true;
 
     // 2D GRID OF POINTS
-    int resolution = 3;
+    int resolution = 5;
     TVector<double> par_vals(1,resolution);
     par_vals[1] = -10;
-    // par_vals[2] = -5;
-    par_vals[2] = 0;
-    // par_vals[4] = 5;
-    par_vals[3] = 10;
+    par_vals[2] = -5;
+    par_vals[3] = 0;
+    par_vals[4] = 5;
+    par_vals[5] = 10;
 
     int num_pts = pow(resolution,num);
     TMatrix<double> ptlist(1,num_pts,1,num);
@@ -95,8 +95,8 @@ int main(int argc, const char* argv[])
         // ifs.open("./pyloriccircuit.ns");
         // ifs >> Circuit;
 
-        // Pete only mode
-        ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/7/pyloriccircuit.ns");
+        // One circuit only mode
+        ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/34/pyloriccircuit.ns");
         ifs >> Circuit;
         Circuit.ShiftedRho(shiftedrho);
 
@@ -115,8 +115,8 @@ int main(int argc, const char* argv[])
         // Parallel Supercomputer Mode
         // char outfile[] = "./HPparslicerangepoint1.dat";
 
-        // Only Pete Mode
-        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/7/HPparslice_newrho_long.dat";
+        // Only one cicuit/HP pair mode
+        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/34/HPparslice_newrho_long.dat";
 
         HPparspacefile.open(outfile);
 

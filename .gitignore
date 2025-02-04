@@ -40,8 +40,13 @@ __pycache__
 #supercomputer output files
 *.txt
 *.err
+
+#compiled executables
 Cpp/main
 Cpp/Functioning2D/main
+Cpp/mainHPagnosticavg
+Cpp/mainrunpoints
+Cpp/mainPyloricslice
 
 #large files i don't want to deal with right now
 Cpp/Functioning2D/HP_unevolved/DetectedActivitypoint5.dat
@@ -52,5 +57,3 @@ Cpp/TricksterSpecifist4biastracklong.dat
 Cpp/Victor33biastrack.dat
 Cpp/Victorgeneralist25biastrack.dat
 Cpp/Wandageneralist25biastrack.dat
-#memory error detection software
-valgrind-3.24.0

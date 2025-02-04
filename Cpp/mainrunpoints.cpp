@@ -33,25 +33,25 @@ const double BRub1 = 16;
 const double BRlb3 = 0;
 const double BRub3 = 16;
 const double WR = 10;
-const int num_ICs = 200;
+const int num_ICs = 1000;
 
 // Mode
-const bool random_mode = false; //randomize in other dimensions besides HP dimensions 
-const bool taus_set = false;
+const bool random_mode = true; //randomize in other dimensions besides HP dimensions 
+const bool taus_set = false; //in random mode, do we want the taus to be variable
 
 //Filenames
-char Nfname[] = "../Pyloric CTRNN Genomes/Trickster.ns";
+char Nfname[] = "../Pyloric CTRNN Genomes/Pete.ns";
 // char HPfname[] = "./bestindtest.dat";
-char HPfname[] = "./Convenient HP Mechanisms/trickstergood2.dat";
-// char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/37/bestind.dat";
-char Fitnessesfname[] = "./Convenient HP Mechanisms/tricksterfit2.dat";
-char ICsfname[] = "./Convenient HP Mechanisms/tricksterics2.dat";
-char biastrackfname[] = "./Convenient HP Mechanisms/tricksterbiastrack2.dat";
-char statestrackfname[] = "./Convenient HP Mechanisms/tricksterstatestrack2.dat";
+char HPfname[] = "./Convenient HP Mechanisms/good.dat";
+// char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/33/bestind.dat";
+char Fitnessesfname[] = "./Convenient HP Mechanisms/Petefittest.dat";
+char ICsfname[] = "./Convenient HP Mechanisms/Peteicstest.dat";
+char biastrackfname[] = "./Convenient HP Mechanisms/Petebiastracktest.dat";
+char statestrackfname[] = "./Convenient HP Mechanisms/Petestatestracktest.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
-const bool trackparams = true;
+const bool trackparams = false;
 const int trackparamsinterval = 40; //Track biases for every X trials
 
 void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
@@ -230,6 +230,8 @@ int main(){
         double fit = PyloricPerformance(Circuit);
 
         fitnesses << fit << endl;
+        if(fit > .3){cout << "pyloric found" << endl;}
+        fitnesses << Circuit.rhos << endl << endl; //proxy for whether HP is satisfied at the end, or whether it just ran into a boundary
 
         if (trackstates){statestrack << Circuit.outputs<< " " << endl;}
     }
