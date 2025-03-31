@@ -28,31 +28,31 @@ int	CTRNNVectSize = N*N + 2*N;
 
 const double TMIN = .1;
 const double TMAX = 2;
-const double BRlb1 = 0;
-const double BRub1 = 16;
-const double BRlb3 = 0;
-const double BRub3 = 16;
+const double BRlb1 = -10;
+const double BRub1 = 20;
+const double BRlb3 = -20;
+const double BRub3 = 10;
 const double WR = 10;
 const int num_ICs = 1000;
 
 // Mode
-const bool random_mode = true; //randomize in other dimensions besides HP dimensions 
+const bool random_mode = false; //randomize in other dimensions besides HP dimensions 
 const bool taus_set = false; //in random mode, do we want the taus to be variable
 
 //Filenames
-char Nfname[] = "../Pyloric CTRNN Genomes/Pete.ns";
+char Nfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/pyloriccircuit.ns";
 // char HPfname[] = "./bestindtest.dat";
-char HPfname[] = "./Convenient HP Mechanisms/good.dat";
+char HPfname[] = "./Convenient HP Mechanisms/bad.dat";
 // char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/33/bestind.dat";
-char Fitnessesfname[] = "./Convenient HP Mechanisms/Petefittest.dat";
-char ICsfname[] = "./Convenient HP Mechanisms/Peteicstest.dat";
-char biastrackfname[] = "./Convenient HP Mechanisms/Petebiastracktest.dat";
-char statestrackfname[] = "./Convenient HP Mechanisms/Petestatestracktest.dat";
+char Fitnessesfname[] = "./Convenient HP Mechanisms/Petefitbad.dat";
+char ICsfname[] = "./Convenient HP Mechanisms/Peteicsbad.dat";
+char biastrackfname[] = "./Convenient HP Mechanisms/Petebiastrackbad.dat";
+char statestrackfname[] = "./Convenient HP Mechanisms/Petestatestrackbad.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
-const bool trackparams = false;
-const int trackparamsinterval = 40; //Track biases for every X trials
+const bool trackparams = true;
+const int trackparamsinterval = 50; //Track biases for every X trials
 const int trackingstepinterval = 5; //make the tracking files smaller by only recording every Xth step
 
 void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
@@ -213,7 +213,7 @@ int main(){
                 biastrack << endl;
             }
 			if (trackstates && (i%trackstatesinterval==0) && (tstep%trackingstepinterval==0)){
-                for (int j = 1; j <= Circuit.size(); j++){
+                for (int j = 1; j <= Circuit.size; j++){
                     statestrack << Circuit.NeuronOutput(j) << " ";
                 }
                 statestrack << endl;}
@@ -237,7 +237,7 @@ int main(){
         double fit = PyloricPerformance(Circuit);
 
         fitnesses << fit << endl;
-        if(fit > .3){cout << "pyloric found" << endl;}
+        // if(fit > .3){cout << "pyloric found" << endl;}
         fitnesses << Circuit.rhos << endl << endl; //proxy for whether HP is satisfied at the end, or whether it just ran into a boundary
 
         if (trackstates){statestrack << Circuit.outputs<< " " << endl;}

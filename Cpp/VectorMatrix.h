@@ -492,3 +492,23 @@ ostream& operator<<(ostream& os, TMatrix<EltType> &m)
 	}
 	return os;
 }
+
+// Read a matrix from a file
+// Added by Lindsay Stolting
+template<class EltType>
+istream& operator>>(istream& is, TMatrix<EltType>& m)
+{
+	int i,j; 
+
+	if ((m.RowSize() == 0) || (m.ColumnSize() == 0)){
+		cerr << "Please choose an output matrix with nonzero size in both dimensions";
+		exit(0);
+	}
+
+	for (i = m.RowLowerBound(); i <= m.RowUpperBound(); i++) {
+		for (j = m.ColumnLowerBound(); j <= m.ColumnUpperBound(); j++){
+			is >> m[i][j];
+		}
+	}
+	return is;
+}

@@ -1,5 +1,6 @@
 // --------------------------------------------------------------
 //  Track the parameters of a CTRNN as it undergoes Homeostatic Plasticity
+//  Updated to new system 3/31/25
 // --------------------------------------------------------------
 #include "TSearch.h"
 #include "CTRNN.h"
@@ -7,161 +8,158 @@
 
 //#define PRINTOFILE
 
-// Task params
-const double TransientDuration = 1000; //Seconds with HP off
-const double PlasticDuration = 100000; //Seconds with HP running
+const bool debugging = true;
+
+// Task params - can be separately defined because does not include the pyloric file
+const double TransientDuration = 50; //Seconds with HP off
+const double PlasticDuration = 100; //Seconds with HP running, during which states and parameters are recorded
 const double StepSize = 0.01;
+
+// Sampling Parameters
+const double TMIN = .1;
+const double TMAX = 2;
+const double BRlb1 = -10;
+const double BRub1 = 20;
+const double BRlb3 = -20;
+const double BRub3 = 10;
+const double WR = 10;
 
 // Nervous system params
 const int N = 3;
-const double TMIN = .1; 
-const double TMAX = 2; 
+const int CTRNNVectSize = (N*N) + (2*N);
 
-// Plasticity parameters
-const int WS = 0;		// Window Size of Plastic Rule (in steps size) (so 1 is no window)
-const double B = 0.25; 		// Plasticity Low Boundary (symmetric)
-const double BT = 20.0;		// Bias Time Constant
-const double WT = 40.0;		// Weight Time Constant
-const double WR = 100;      // Range that weights cannot exceed (make large to not matter)
-const double BR = 100;      // Range that biases cannot exceed (make large to not matter)
-
-int	VectSize = N*N + 2*N;
+const int randomICs = 0;    //how many randomly generated initial conditions (in the subspace of HP's action)
+                            //set to 0 if only generating a timeseries for the evolved solution, without randomization
+                            //all IC trajectories will be recorded
 
 //Filenames for parameter traces
-char redfname[] = "./HP_unevolved/redparamtrack_handdesign.dat";
-char orangefname[] = "./HP_unevolved/orangeparamtrack_handdesign.dat";
-char yellowfname[] = "./HP_unevolved/yellowparamtrack_handdesign.dat";
-char greenfname[] = "./HP_unevolved/greenparamtrack_handdesign.dat";
-char bluefname[] = "./HP_unevolved/blueparamtrack_handdesign.dat";
-char purplefname[] = "./HP_unevolved/purpleparamtrack_handdesign.dat";
+char paramoutfilename[] = "./Specifically Evolved HP mechanisms/Every Circuit/0/paramtrack.dat";
+char outputsoutfilename[] = "./Specifically Evolved HP mechanisms/Every Circuit/0/outputtrack.dat";
+char circuitfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/0/pyloriccircuit.ns";
+char HPfname[] = "./Convenient HP Mechanisms/nullHP.dat";
 
-char HPfname[] = "./HP_unevolved/HPhanddesign.gn";
-
-// Will eventually need a function to map genotype of HP into phenotype of values
+void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
+{
+	int k = 1;
+	// Time-constants
+	for (int i = 1; i <= N; i++) {
+		phen(k) = MapSearchParameter(gen(k), TMIN, TMAX);
+		k++;
+	}
+	// Bias
+	for (int i = 1; i <= 2; i++) {
+		phen(k) = MapSearchParameter(gen(k), BRlb1, BRub1);
+		k++;
+	}
+    //last neuron
+    phen(k) = MapSearchParameter(gen(k), BRlb3,BRub3);
+    k++;
+    // cout << phen(k);
+	// Weights
+	for (int i = 1; i <= N; i++) {
+        for (int j = 1; j <= N; j++) {
+            phen(k) = MapSearchParameter(gen(k), -WR, WR);
+            k++;
+        }
+	}
+}
 
 int main(){
     // Create files to hold data
-	ofstream redfile;
-	redfile.open(redfname);
-    ofstream orangefile;
-	orangefile.open(orangefname);
-    ofstream yellowfile;
-	yellowfile.open(yellowfname);
-    ofstream greenfile;
-	greenfile.open(greenfname);
-    ofstream bluefile;
-	bluefile.open(bluefname);
-    ofstream purplefile;
-	purplefile.open(purplefname);
+	ofstream paramoutfile;
+    paramoutfile.open(paramoutfilename);
+    ofstream outputoutfile;
+    outputoutfile.open(outputsoutfilename);
+    ifstream circuitgenome;
+    circuitgenome.open(circuitfname);
+    if (!circuitgenome) {
+        cerr << "CTRNN genome file not found: " << circuitfname << endl;
+        exit(EXIT_FAILURE);
+    }
+    ifstream HPgenome;
+    HPgenome.open(HPfname);
+    if (!HPgenome) {
+        cerr << "HP genome file not found: " << HPfname << endl;
+        exit(EXIT_FAILURE);
+    }
 
 	// Load the base CTRNN parameters and Set HP parameters
     CTRNN Circuit(3);
-    // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
-    // cout << Circuit.br;
-    char fname[] = "Pete.ns";
-    ifstream ifs;
-    ifs.open(fname);
-    if (!ifs) {
-        cerr << "File not found: " << fname << endl;
-        exit(EXIT_FAILURE);
-    }
-    ifs >> Circuit; 
+    circuitgenome >> Circuit; 
+
     // Set the proper HP parameters 
-    ifstream HPifs;
-    HPifs.open(HPfname);
-    Circuit.SetHPPhenotype(HPifs,StepSize);
+    Circuit.SetHPPhenotype(HPgenome,StepSize,true); //file-based HP setting with range encoding
 
-    cout << "Confirm B1: " << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityUB(1) << endl;
-    cout << "Confirm B3: " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(3) << endl;
-    cout << "Confirm SW: " << Circuit.SlidingWindow(3) << endl;
+    if (debugging){
+        cout << "Confirm biases:" << Circuit.biases << endl;
+        cout << "Confirm bounds N1: " << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityUB(1) << endl;
+        cout << "Confirm bounds N3: " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(3) << endl;
+        cout << "Confirm SW: " << Circuit.SlidingWindow(3) << endl;
+    }
 
+    //Run the base circuit without any randomization first
+    for (int i = 1; i <= N; i ++){
+        Circuit.SetNeuronState(i,0);
+    }
 
-    // Run the red point
-    Circuit.SetNeuronBias(1,.1);
-    Circuit.SetNeuronBias(3,-5);
-    Circuit.RandomizeCircuitState(0,0);
     for(double t=0;t<TransientDuration;t+=StepSize){
-        Circuit.EulerStep(StepSize,0,0);
-        // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
+        Circuit.EulerStep(StepSize,0);
     }
-    // Circuit.PrintMaxMinAvgs();
-    for(double t=0;t<PlasticDuration;t+=StepSize){
-        redfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
-        Circuit.EulerStep(StepSize,1,0);
-        // cout << Circuit.l_boundary << " " << Circuit.u_boundary << endl;
-    }
-    Circuit.PrintMaxMinAvgs();
-    cout << "confirm end red" << Circuit.biases(1) << " " << Circuit.biases(3) << endl;
 
-    // Run the orange point
-    Circuit.SetNeuronBias(1,2.5);
-    Circuit.SetNeuronBias(3,-5);
-    Circuit.RandomizeCircuitState(0,0);
-    for(double t=0;t<TransientDuration;t+=StepSize){
-        Circuit.EulerStep(StepSize,0,0);
-    }
     for(double t=0;t<PlasticDuration;t+=StepSize){
-        orangefile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
-        Circuit.EulerStep(StepSize,1,0);
+        paramoutfile << Circuit.biases << endl;
+        outputoutfile << Circuit.outputs << endl;
+        Circuit.EulerStep(StepSize,1);
     }
-    Circuit.PrintMaxMinAvgs();
-    cout << "confirm end orange" << Circuit.biases(1) << " " << Circuit.biases(3) << endl;
+
+    //Run designated number of randomized initial conditions, recording the action of HP
+    for (int i =1; i<=randomICs; i++){
+        TVector<double> genotype(1,CTRNNVectSize);
+        TVector<double> phenotype(1,CTRNNVectSize);
+
+        for (int j = 1; j <= genotype.Size(); j++)
+            {genotype[j] = UniformRandom(-1,1);}
+        
+        GenPhenMapping(genotype,phenotype);
+
+        int k = 1; 
+        for(int j=1; j<=N; j++){
+            //check for biases
+            if (Circuit.plasticitypars[k]==1){
+                Circuit.SetNeuronBias(j,phenotype(k+N)); //start after time constants
+            }
+            k++;
+        }
+
+        //check for weights
+        for (int j=1; j<=N; j++){
+            for (int l=1; l<=N; l++){
+                if (Circuit.plasticitypars[k]==1){
+                    Circuit.SetConnectionWeight(j,l,phenotype(k+N)); //started after time constants
+                }
+                k++;
+            }
+        }
+
+        for (int j = 1; j <= N; j ++){
+            Circuit.SetNeuronState(j,0);
+        }
+
+        Circuit.WindowReset();
+
+        paramoutfile << endl;
+        outputoutfile << endl;
+
+        for(double t=0;t<TransientDuration;t+=StepSize){
+            Circuit.EulerStep(StepSize,0);
+        }
     
-    // Run the yellow point
-    Circuit.SetNeuronBias(1,4.5);
-    Circuit.SetNeuronBias(3,-5);
-    Circuit.RandomizeCircuitState(0,0);
-    for(double t=0;t<TransientDuration;t+=StepSize){
-        Circuit.EulerStep(StepSize,0,0);
+        for(double t=0;t<PlasticDuration;t+=StepSize){
+            paramoutfile << Circuit.biases << endl;
+            outputoutfile << Circuit.outputs << endl;
+            Circuit.EulerStep(StepSize,1);
+        }
     }
-    for(double t=0;t<PlasticDuration;t+=StepSize){
-        yellowfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
-        Circuit.EulerStep(StepSize,1,0);
-    }
-    Circuit.PrintMaxMinAvgs();
-    cout << "confirm end yellow" << Circuit.biases(1) << " " << Circuit.biases(3) << endl;
-    
-    // Run the green point
-    Circuit.SetNeuronBias(1,4.5);
-    Circuit.SetNeuronBias(3,-8.1);
-    Circuit.RandomizeCircuitState(0,0);
-    for(double t=0;t<TransientDuration;t+=StepSize){
-        Circuit.EulerStep(StepSize,0,0);
-    }
-    for(double t=0;t<PlasticDuration;t+=StepSize){
-        greenfile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
-        Circuit.EulerStep(StepSize,1,0);
-    }
-    Circuit.PrintMaxMinAvgs();
-    cout << "confirm end green" << Circuit.biases(1) << " " << Circuit.biases(3) << endl;
-    
-    // Run the blue point
-    Circuit.SetNeuronBias(1,2.5);
-    Circuit.SetNeuronBias(3,-8.1);
-    Circuit.RandomizeCircuitState(0,0);
-    for(double t=0;t<TransientDuration;t+=StepSize){
-        Circuit.EulerStep(StepSize,0,0);
-    }
-    for(double t=0;t<PlasticDuration;t+=StepSize){
-        bluefile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
-        Circuit.EulerStep(StepSize,1,0);
-    }
-    Circuit.PrintMaxMinAvgs();
-    cout << "confirm end blue" << Circuit.biases(1) << " " << Circuit.biases(3) << endl;
 
-    // Run the purple point
-    Circuit.SetNeuronBias(1,.1);
-    Circuit.SetNeuronBias(3,-8.1);
-    Circuit.RandomizeCircuitState(0,0);
-    for(double t=0;t<TransientDuration;t+=StepSize){
-        Circuit.EulerStep(StepSize,0,0);
-    }
-    for(double t=0;t<PlasticDuration;t+=StepSize){
-        purplefile << Circuit.NeuronBias(1) << " " << Circuit.NeuronBias(3) << endl;
-        Circuit.EulerStep(StepSize,1,0);
-    }
-    Circuit.PrintMaxMinAvgs();
-    cout << "confirm end purple" << Circuit.biases(1) << " " << Circuit.biases(3) << endl;
-    
     return 0;
 }

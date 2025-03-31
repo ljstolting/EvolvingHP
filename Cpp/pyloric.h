@@ -914,6 +914,181 @@ double PyloricPerformance(CTRNN &Agent, ofstream &trajfile, ofstream &burstfile)
 
 }
 
+//TO DO: MAKE THIS THE BASE FUNCTION AND JUST HAVE OTHER FUNCTIONS CALL TO IT
+double PyloricFitfromOutputHist(TMatrix<double> OutputHistory){
+	double fitness = 0;
+
+	int N = OutputHistory.ColumnUpperBound();
+
+	TVector<double> maxoutput(1,N);
+	maxoutput.FillContents(0.0);
+	TVector<double> minoutput(1,N);
+	minoutput.FillContents(1.0);
+
+	// Run the circuit until you identify 3 PD starts (capping 2 full cycles), keeping track of whether each other neuron crossed the threshold or not
+	int tstep = 1;
+	double t = StepSize;
+	int PDstartcount = 0;
+	TVector<int> PDstarts(1,3);
+	PDstarts.FillContents(0);
+
+	while (tstep < OutputHistory.RowUpperBound() && PDstartcount < 3) {
+		for (int i = 1; i <= N; i += 1) {
+			if (OutputHistory[tstep][i] > maxoutput(i)) {maxoutput(i)=OutputHistory[tstep][i];}
+			if (OutputHistory[tstep][i] < minoutput(i)) {minoutput(i)=OutputHistory[tstep][i];}
+		}
+		// trajfile << Agent.NeuronOutput(1) << " " << Agent.NeuronOutput(2) << " " << Agent.NeuronOutput(3) << endl;
+
+		//Check for PD start
+		if (OutputHistory(tstep,3) < burstthreshold && OutputHistory(tstep+1,3) > burstthreshold){
+			PDstartcount += 1;
+			PDstarts[PDstartcount] = tstep;
+		}
+		tstep += 1;
+		t += StepSize;
+	}
+
+	for (int i = 1; i <= N; i += 1) {
+		// SHORT HAND FOR ALL NEURONS OSCILLATING APPRECIABLY
+		if (minoutput[i] <(burstthreshold-.05)) {
+			if (maxoutput[i]>burstthreshold) {
+				fitness += 0.05;
+			}
+		}
+	}
+	if (fitness < 0.15){
+		// cout << "not oscillatory";
+		// cout << "fitness" << fitness;
+		return fitness;
+	}
+	if (PDstartcount < 3){
+		cout << "unable to find two full cycles; may want to increase transient, lengthen runtime, or speed up slowest timescale" << endl;
+		return fitness;
+	}
+
+	else{
+		int PDend = 0;
+		int PDendcount = 0;
+		int LPstart = 0;
+		int LPstartcount = 0;
+		int LPend = 0;
+		int PYstart = 0;
+		int PYstartcount = 0;
+		int PYend = 0;
+		for (int step=PDstarts(1); step<=PDstarts(2); step ++){
+			if (PDendcount == 0){
+				if (OutputHistory(step,3)>burstthreshold){
+					if (OutputHistory(step+1,3)<burstthreshold){
+						PDend = step;
+						PDendcount ++;
+						//cout << "PDend";
+					}
+				}
+			}
+			if (LPstartcount == 0){
+				if (OutputHistory(step,1)<burstthreshold){
+					if (OutputHistory(step+1,1)>burstthreshold){
+						LPstart = step;
+						LPstartcount ++;
+						//cout << "LPstart";
+					}
+				}
+			}
+			if (PYstartcount == 0){
+				if (OutputHistory(step,2)<burstthreshold){
+					if (OutputHistory(step+1,2)>burstthreshold){
+						PYstart = step;
+						PYstartcount ++;
+						//cout << "PYstart";
+					}
+				}
+			}
+		}
+		if (LPstartcount == 1){
+			for (int step=LPstart;step<=PDstarts(3);step++){
+				if (OutputHistory(step,1)>burstthreshold){
+					if (OutputHistory(step+1,1)<burstthreshold){
+						LPend = step;
+						//cout << "LPend";
+						break;
+					}
+				}
+			}
+		}
+		else{cout << "LPstart not found during cycle" << endl; return fitness;}
+
+		if (PYstartcount == 1){
+			for (int step=PYstart;step<=PDstarts(3);step++){
+				if (OutputHistory(step,2)>burstthreshold){
+					if (OutputHistory(step+1,2)<burstthreshold){
+						PYend = step;
+						//cout << "PYend" << endl;
+						break;
+					}
+				}
+			}
+		}
+		else {cout << "PYstart not found during cycle" << endl; return fitness;}
+
+
+		if ((abs(OutputHistory(PDstarts[1],1) - OutputHistory(PDstarts[2],1))<tolerance)&&(abs(OutputHistory(PDstarts[1],2) - OutputHistory(PDstarts[2],2))<tolerance)){
+			// at the two points where PD crosses up, are the other two neurons approximately in the same place?
+			// 	ORDERING CRITERIA
+			if (LPstart <= PYstart){
+				//cout << "order1" << endl;
+				fitness += 0.05;
+			}
+			if (LPend <= PYend){
+				//cout << "order2" << endl;
+				fitness += 0.05;
+			}
+			if (PDend <= LPstart){
+				//cout << "order3" << endl;
+				fitness += 0.05;
+			}
+
+			int period = PDstarts[2] - PDstarts[1];
+
+			// burstfile << (LPstart-PDstarts[1])*StepSize << " " << (LPend-PDstarts[1])*StepSize << " " << (PYstart-PDstarts[1])*StepSize << " " << (PYend-PDstarts[1])*StepSize << " " << (PDstarts[1]-PDstarts[1])*StepSize << " " << (PDend-PDstarts[1])*StepSize << " " << period*StepSize << endl;
+			cout << (LPstart-PDstarts[1])*StepSize << " " << (LPend-PDstarts[1])*StepSize << " " << (PYstart-PDstarts[1])*StepSize << " " << (PYend-PDstarts[1])*StepSize << " " << (PDstarts[1]-PDstarts[1])*StepSize << " " << (PDend-PDstarts[1])*StepSize << " " << period*StepSize << endl;
+
+				
+			if (fitness == 0.3){
+
+				double LPfoo = LPend - LPstart; 
+				double LPdutycycle = LPfoo/period; //burstduration/period
+				double LPdutycyclezscore = abs(LPdutycycle - .264)/.059;
+				double PYfoo = PYend-PYstart;
+				double PYdutycycle = PYfoo/period; //burstduration/period
+				double PYdutycyclezscore = abs(PYdutycycle - .348)/.054;
+				double PDfoo = PDend-PDstarts[1];
+				double PDdutycycle = PDfoo/period; //burstduration/period
+				double PDdutycyclezscore = abs(PDdutycycle - .385)/.040;
+				double LPbar = LPstart-PDstarts[1];
+				double LPstartphase = LPbar/period; //delay/period
+				double LPstartphasezscore = abs(LPstartphase - .533)/.054;
+				double PYbar = PYstart-PDstarts[1];
+				double PYstartphase = PYbar/period; //delay/period
+				double PYstartphasezscore = abs(PYstartphase - .758)/.060;
+				// cout << "Period:" << period << endl;
+				// cout << LPdutycyclezscore<< ", "<<PYdutycyclezscore<<", "<<PDdutycyclezscore<<", "<<LPstartphasezscore<<", "<<PYstartphasezscore<<endl;
+				double average = (LPdutycyclezscore+PYdutycyclezscore+PDdutycyclezscore+LPstartphasezscore+PYstartphasezscore)/5;
+				fitness += 1/(average);
+			}
+			
+		}
+		else{
+			cout << "possible multi-periodicity" << endl;
+			// NO ORDERING POINTS FOR MULTIPERIODIC
+		}
+	}
+	// cout << "fitness" << fitness;
+	return fitness;
+
+
+	return fitness;
+}
+
 void converttobase(int N,int resolution,TVector<int> &converted){
 	//recursive function to convert to base of choice
 	int dimension = converted.UpperBound();
