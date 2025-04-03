@@ -51,16 +51,18 @@ int main(){
 
         TMatrix<double> OutputHist(1,10000-0,1,3);
         ifstream outputhistfile;
-        // outputhistfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/shiftedoutputs.dat");
-        outputhistfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/outputtrack.dat");
+        outputhistfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/shiftedoutputs.dat");
+        // outputhistfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/outputtrack.dat");
         outputhistfile >> OutputHist;
         cout << OutputHist[1][1] << " " << OutputHist[1][2] << " " << OutputHist[1][3] << endl;
 
+        TVector<double> rhythm_features(1,8);
         double pyloricness = 0;
 
-        pyloricness = PyloricFitfromOutputHist(OutputHist); //HP is on during test (set in other file), but null here
+        BurstTimesfromOutputHist(OutputHist, rhythm_features);
+        pyloricness = PyloricFitFromFeatures(rhythm_features); 
 
-        cout << pyloricness;
+        cout << pyloricness << endl;
 
     }
 

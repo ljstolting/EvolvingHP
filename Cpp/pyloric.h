@@ -28,8 +28,7 @@ const double burstthreshold = .5; //threshold that must be crossed for detecting
 const double tolerance = .1; //for detecting double periodicity
 
 //Take an output history matrix and return (# oscillating neurons, LPstart, LPend, PYstart, PYend, PDstart, PDend, period) in that order, in time units, relative to PDstart
-TVector<double> BurstTimesfromOutputHist(TMatrix<double> &OutputHistory){
-	TVector<double> features(1,8);
+void BurstTimesfromOutputHist(TMatrix<double> &OutputHistory, TVector<double> &features){
 	features.FillContents(0);
 
 	int N = OutputHistory.ColumnUpperBound();
@@ -74,16 +73,16 @@ TVector<double> BurstTimesfromOutputHist(TMatrix<double> &OutputHistory){
 	//list of conditions that return zero fitness because they preclude accurately calculating the burst start and end times (assumptions)
 	if (features[1] < 3){
 		// cout << "not all neurons cross burst threshold";
-		return features;
+		return;
 	}
 	if (PDstartcount < 3){
 		cout << "unable to find two full cycles; may want to increase transient, lengthen runtime, or speed up slowest timescale" << endl;
-		return features;
+		return;
 	}
 	// at the two points where PD crosses up, are the other two neurons approximately in the same place?
-	if ((abs(OutputHistory(PDstarts[1],1) - OutputHistory(PDstarts[2],1))<tolerance)&&(abs(OutputHistory(PDstarts[1],2) - OutputHistory(PDstarts[2],2))<tolerance)){
+	if ((abs(OutputHistory(PDstarts[1],1) - OutputHistory(PDstarts[2],1))>tolerance)||(abs(OutputHistory(PDstarts[1],2) - OutputHistory(PDstarts[2],2))>tolerance)){
 		cout << "Too many PD bursts found in one cycle - suspected multiperiodicity";
-		return features;
+		return;
 	}
 	
 	int PDend = 0;
@@ -134,7 +133,7 @@ TVector<double> BurstTimesfromOutputHist(TMatrix<double> &OutputHistory){
 			}
 		}
 	}
-	else{cout << "Too few or too many LP bursts found in one cycle" << endl; return features;}
+	else{cout << "Too few or too many LP bursts found in one cycle" << endl; return;}
 
 	if (PYstartcount == 1){
 		for (int step=PYstart;step<=PDstarts(3);step++){
@@ -147,7 +146,9 @@ TVector<double> BurstTimesfromOutputHist(TMatrix<double> &OutputHistory){
 			}
 		}
 	}
-	else {cout << "Too few or too many PY bursts found in one cycle" << endl; return features;}
+	else {cout << "Too few or too many PY bursts found in one cycle" << endl; return;}
+
+	double period = PDstarts[2] - PDstarts[1];
 
 	// convert all features to be relative to PDstart, and in time units, and collect in solution vector
 	features[2] = (LPstart-PDstarts[1])*StepSize;
@@ -158,7 +159,7 @@ TVector<double> BurstTimesfromOutputHist(TMatrix<double> &OutputHistory){
 	features[7] = (PDend-PDstarts[1])*StepSize;
 	features[8] = period*StepSize;
 
-	return features;
+	return;
 }
 
 //take the vector of rhythm features that are output by the previous function and return pyloric fitness, with a particular fitness awarding system
@@ -170,50 +171,52 @@ double PyloricFitFromFeatures(TVector<double> &FeatureVect){
 	double LPend = FeatureVect[3];
 	double PYstart = FeatureVect[4];
 	double PYend = FeatureVect[5];
-	double PYstart = FeatureVect[6];
-	double PYend = FeatureVect[7];
+	double PDstart = FeatureVect[6];
+	double PDend = FeatureVect[7];
 	double period = FeatureVect[8];
 
 	double scaling_factor = 0.05;
 	//number neurons oscillating
-	fitness += num_oscillating * scaling_factor;
+	int criteria = int(num_oscillating);
 	
 	// 	ORDERING CRITERIA
 	if (LPstart <= PYstart){
 		//cout << "order1" << endl;
-		fitness += scaling_factor;
+		criteria += 1;
 	}
 	if (LPend <= PYend){
 		//cout << "order2" << endl;
-		fitness += scaling_factor;
+		criteria += 1;
 	}
 	if (PDend <= LPstart){
 		//cout << "order3" << endl;
-		fitness += scaling_factor;
+		criteria += 1;
 	}
 
+	fitness += (criteria * scaling_factor);
+
 	//additional fitness for conforming to timing averages
-	if (fitness == 6 * scaling_factor){
+	if (criteria == 6){
 		double LPburstlen = LPend - LPstart; 
 		double LPdutycycle = LPburstlen/period; //burstduration/period
 		double LPdutycyclezscore = abs(LPdutycycle - .264)/.059;
 		double PYburstlen = PYend-PYstart;
 		double PYdutycycle = PYburstlen/period; //burstduration/period
 		double PYdutycyclezscore = abs(PYdutycycle - .348)/.054;
-		double PDburstlen = PDend-PDstarts[1];
+		double PDburstlen = PDend-PDstart;
 		double PDdutycycle = PDburstlen/period; //burstduration/period
 		double PDdutycyclezscore = abs(PDdutycycle - .385)/.040;
-		double LPdelay = LPstart-PDstarts[1];
+		double LPdelay = LPstart-PDstart;
 		double LPstartphase = LPdelay/period; //delay/period
 		double LPstartphasezscore = abs(LPstartphase - .533)/.054;
-		double PYdelay = PYstart-PDstarts[1];
+		double PYdelay = PYstart-PDstart;
 		double PYstartphase = PYdelay/period; //delay/period
 		double PYstartphasezscore = abs(PYstartphase - .758)/.060;
 		// cout << "Period:" << period << endl;
 		// cout << LPdutycyclezscore<< ", "<<PYdutycyclezscore<<", "<<PDdutycyclezscore<<", "<<LPstartphasezscore<<", "<<PYstartphasezscore<<endl;
 		double average = (LPdutycyclezscore+PYdutycyclezscore+PDdutycyclezscore+LPstartphasezscore+PYstartphasezscore)/5;
 		fitness += 1/(average);
-	}	
+	}
 	
 	// cout << "fitness" << fitness;
 	return fitness;
@@ -226,7 +229,13 @@ double PyloricPerformance(CTRNN &Agent)
 	TMatrix<double> OutputHistory;
 	OutputHistory.SetBounds(1,TestSteps,1,N);
 	OutputHistory.FillContents(0.0);
+
 	double fitness = 0.0;
+
+	TVector<double> maxoutput(1,N);
+	maxoutput.FillContents(0.0);
+	TVector<double> minoutput(1,N);
+	minoutput.FillContents(1.0);
 
 	// Run the circuit to calculate Pyloric fitness while HP either on or off depending on global setting.
 	int t = 0;
@@ -241,7 +250,7 @@ double PyloricPerformance(CTRNN &Agent)
 	}
 
 	TVector<double> features(1,8);
-	features = BurstTimesfromOutputHist(OutputHistory);
+	BurstTimesfromOutputHist(OutputHistory, features);
 
 	fitness = PyloricFitFromFeatures(features);
 
@@ -259,7 +268,7 @@ double PyloricPerformance(CTRNN &Agent, double TransientDur)
 		Agent.EulerStep(StepSize,HPequilibrate);
 	}
 
-	fitness = PyloricPerformance(Agent);
+	double fitness = PyloricPerformance(Agent);
 
 	return fitness;
 }
@@ -270,7 +279,13 @@ double PyloricPerformance(CTRNN &Agent, ofstream &trajfile, ofstream &burstfile)
 	TMatrix<double> OutputHistory;
 	OutputHistory.SetBounds(1,TestSteps,1,N);
 	OutputHistory.FillContents(0.0);
+
 	double fitness = 0.0;
+
+	TVector<double> maxoutput(1,N);
+	maxoutput.FillContents(0.0);
+	TVector<double> minoutput(1,N);
+	minoutput.FillContents(1.0);
 
 	// Run the circuit to calculate Pyloric fitness while HP either on or off depending on global setting.
 	int t = 0;
@@ -287,7 +302,7 @@ double PyloricPerformance(CTRNN &Agent, ofstream &trajfile, ofstream &burstfile)
 	}
 
 	TVector<double> features(1,8);
-	features = BurstTimesfromOutputHist(OutputHistory);
+	BurstTimesfromOutputHist(OutputHistory, features);
 	burstfile << features;
 
 	fitness = PyloricFitFromFeatures(features);
