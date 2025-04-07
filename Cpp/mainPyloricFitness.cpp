@@ -51,8 +51,8 @@ int main(){
 
         TMatrix<double> OutputHist(1,10000-0,1,3);
         ifstream outputhistfile;
-        outputhistfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/shiftedoutputs.dat");
-        // outputhistfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/outputtrack.dat");
+        // outputhistfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/shiftedoutputs.dat");
+        outputhistfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/outputtrack.dat");
         outputhistfile >> OutputHist;
         cout << OutputHist[1][1] << " " << OutputHist[1][2] << " " << OutputHist[1][3] << endl;
 

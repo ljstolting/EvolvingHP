@@ -16,16 +16,22 @@ using namespace std;
 // const double TransientDuration = 500; //seconds without HP
 // const double PlasticDuration1 = 5000; //seconds allowing HP to act
 // const double PlasticDuration2 = 5000; //number of seconds to wait before testing again, to make sure not relying on precise timing
-const double TestDuration = 150; //maximum number of seconds allowed to locate cycles of the rhythm
+const double TestDuration = 100; //maximum number of seconds allowed to locate 3 cycles of the rhythm
 const bool HPequilibrate = false; //is HP on during the transient/equilibration period?
 const bool HPtest = false;       //is HP on during test (shouldn't matter if platicity time constants are slow enough)
-const double StepSize = 0.05;
-// const double StepSize = 0.01;
+// const double StepSize = 0.05;
+const double StepSize = 0.005;
 const int TestSteps = TestDuration/StepSize; // in steps
 
 // Detection params
 const double burstthreshold = .5; //threshold that must be crossed for detecting bursts
 const double tolerance = .1; //for detecting double periodicity
+
+// Evaluation params (adjust the fitness function)
+const double scaling_factor = 0.05;   //how much is awarded for each binary criteria met (changes importance relative to timing award)
+const bool timing_award = true;	  //award extra points for timing (true) or cap at reaching all 6 criteria (false)?
+const bool legacy = false;            //use the old set of timing criteria from the Prinz paper using PD end as anchor (LPstart<PYstart, LPend<PYend, PDend<LPstart)
+									  //or the new one using LPstart as anchor (LP starts in silence, PYstart<LPend, LPend<PYend)
 
 //Take an output history matrix and return (# oscillating neurons, LPstart, LPend, PYstart, PYend, PDstart, PDend, period) in that order, in time units, relative to PDstart
 void BurstTimesfromOutputHist(TMatrix<double> &OutputHistory, TVector<double> &features){
@@ -81,7 +87,7 @@ void BurstTimesfromOutputHist(TMatrix<double> &OutputHistory, TVector<double> &f
 	}
 	// at the two points where PD crosses up, are the other two neurons approximately in the same place?
 	if ((abs(OutputHistory(PDstarts[1],1) - OutputHistory(PDstarts[2],1))>tolerance)||(abs(OutputHistory(PDstarts[1],2) - OutputHistory(PDstarts[2],2))>tolerance)){
-		cout << "Too many PD bursts found in one cycle - suspected multiperiodicity";
+		cout << "Too many PD bursts found in one cycle - suspected multiperiodicity"<<endl;
 		return;
 	}
 	
@@ -148,16 +154,16 @@ void BurstTimesfromOutputHist(TMatrix<double> &OutputHistory, TVector<double> &f
 	}
 	else {cout << "Too few or too many PY bursts found in one cycle" << endl; return;}
 
-	double period = PDstarts[2] - PDstarts[1];
+	double period = (PDstarts[2] - PDstarts[1])*StepSize;
 
 	// convert all features to be relative to PDstart, and in time units, and collect in solution vector
-	features[2] = (LPstart-PDstarts[1])*StepSize;
-	features[3] = (LPend-PDstarts[1])*StepSize;
-	features[4] = (PYstart-PDstarts[1])*StepSize;
-	features[5] = (PYend-PDstarts[1])*StepSize;
-	features[6] = (PDstarts[1]-PDstarts[1])*StepSize; // equals 0, but just in case there is ever another relative start point
-	features[7] = (PDend-PDstarts[1])*StepSize;
-	features[8] = period*StepSize;
+	features[2] = std::fmod((LPstart-PDstarts[1])*StepSize,period);
+	features[3] = std::fmod((LPend-PDstarts[1])*StepSize,period);
+	features[4] = std::fmod((PYstart-PDstarts[1])*StepSize,period);
+	features[5] = std::fmod((PYend-PDstarts[1])*StepSize,period);
+	features[6] = std::fmod((PDstarts[1]-PDstarts[1])*StepSize,period); // equals 0, but just in case there is ever another relative start point
+	features[7] = std::fmod((PDend-PDstarts[1])*StepSize,period);
+	features[8] = period;
 
 	return;
 }
@@ -175,28 +181,67 @@ double PyloricFitFromFeatures(TVector<double> &FeatureVect){
 	double PDend = FeatureVect[7];
 	double period = FeatureVect[8];
 
-	double scaling_factor = 0.05;
+	double LPdelay = LPstart-PDstart;
+	double PYdelay = PYstart-PDstart;
+
+	// cout << "before " << FeatureVect << endl;
+
 	//number neurons oscillating
 	int criteria = int(num_oscillating);
 	
-	// 	ORDERING CRITERIA
-	if (LPstart <= PYstart){
-		//cout << "order1" << endl;
-		criteria += 1;
+	if(legacy){
+		// 	ORDERING CRITERIA
+		if (LPstart <= PYstart){
+			//cout << "order1" << endl;
+			criteria += 1;
+		}
+		if (LPend <= PYend){
+			//cout << "order2" << endl;
+			criteria += 1;
+		}
+		if (PDend <= LPstart){
+			//cout << "order3" << endl;
+			criteria += 1;
+		}
 	}
-	if (LPend <= PYend){
-		//cout << "order2" << endl;
-		criteria += 1;
-	}
-	if (PDend <= LPstart){
-		//cout << "order3" << endl;
-		criteria += 1;
+
+	else{
+		//first adjust relative to LP
+		for(int i = 7;i >= 2;i--){
+			FeatureVect[i] = FeatureVect[i] - FeatureVect[2];
+			if (FeatureVect[i] < 0){
+				FeatureVect[i] = FeatureVect[i] + period;
+			}
+		}
+		LPstart = FeatureVect[2];
+		LPend = FeatureVect[3];
+		PYstart = FeatureVect[4];
+		PYend = FeatureVect[5];
+		PDstart = FeatureVect[6];
+		PDend = FeatureVect[7];
+
+		// cout << "PDstart " << PDstart << " PDend " << PDend << endl << ((PDstart<PDend) && (PYstart<PYend)) << endl;
+
+		//Check whether PYstart<PYend and PDstart<PDend (none of them span LPstart)
+		if ((PDstart<PDend) && (PYstart<PYend)){
+			criteria += 1;
+			// cout << criteria << endl;
+		}
+		if (PYstart<LPend){
+			criteria += 1;
+			// cout << criteria << endl;
+		}
+		if (LPend<PYend){
+			criteria += 1;
+			// cout << criteria << endl;
+		}
 	}
 
 	fitness += (criteria * scaling_factor);
+	// cout << fitness << endl;
 
 	//additional fitness for conforming to timing averages
-	if (criteria == 6){
+	if (timing_award && (criteria == 6)){
 		double LPburstlen = LPend - LPstart; 
 		double LPdutycycle = LPburstlen/period; //burstduration/period
 		double LPdutycyclezscore = abs(LPdutycycle - .264)/.059;
@@ -206,14 +251,12 @@ double PyloricFitFromFeatures(TVector<double> &FeatureVect){
 		double PDburstlen = PDend-PDstart;
 		double PDdutycycle = PDburstlen/period; //burstduration/period
 		double PDdutycyclezscore = abs(PDdutycycle - .385)/.040;
-		double LPdelay = LPstart-PDstart;
+		//taking the delay from the original, pd-centric timing for alignment with the paper
 		double LPstartphase = LPdelay/period; //delay/period
 		double LPstartphasezscore = abs(LPstartphase - .533)/.054;
-		double PYdelay = PYstart-PDstart;
 		double PYstartphase = PYdelay/period; //delay/period
 		double PYstartphasezscore = abs(PYstartphase - .758)/.060;
-		// cout << "Period:" << period << endl;
-		// cout << LPdutycyclezscore<< ", "<<PYdutycyclezscore<<", "<<PDdutycyclezscore<<", "<<LPstartphasezscore<<", "<<PYstartphasezscore<<endl;
+
 		double average = (LPdutycyclezscore+PYdutycyclezscore+PDdutycyclezscore+LPstartphasezscore+PYstartphasezscore)/5;
 		fitness += 1/(average);
 	}
@@ -306,6 +349,7 @@ double PyloricPerformance(CTRNN &Agent, ofstream &trajfile, ofstream &burstfile)
 	burstfile << features;
 
 	fitness = PyloricFitFromFeatures(features);
+	// cout << "higher fit:" << fitness << endl;
 
 	return fitness;
 }
