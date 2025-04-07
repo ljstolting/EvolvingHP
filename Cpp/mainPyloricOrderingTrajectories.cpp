@@ -26,7 +26,7 @@ ofstream circuitfile;
 ofstream trajfile;
 ofstream burstfile;
 
-char genomesfname[] = "./pyloric_goodgenomespt2.dat"; //containing the genomes to be collected and their associated fitnesses
+char genomesfname[] = "./pyloric_goodgenomes_timingtest_long.dat"; //containing the genomes to be collected and their associated fitnesses
 // char outdirectory[] = "./No Timing Requirements/"; //to be appended to the beginning of each outfile name
 char outdirectory[] = "./Timing Requirements/";
 char circuitfilefname[] = "/pyloriccircuit.ns"; //store the nervous system
