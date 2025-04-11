@@ -11,27 +11,38 @@
 
 int N = 3;
 int CTRNNphenotypelen = (2*N)+(N*N);
+double TransientDur = 500;
 
 int num_indivs = 1;
 
 ifstream genomesfile;
 ofstream outfile;
-char genomesfname[] = "../Pyloric CTRNN Genomes/goodgenomesnormalizedfit.dat";
-char outfilefname[] = "../Pyloric CTRNN Genomes/testgoodgenomesnormalizedfit.dat";
+ofstream burstfile;
+char genomesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/pyloriccircuit.ns";
+char outfilefname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/pylorictrajectory.ns";
+char burstfilefname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/pyloricbursttimes.dat";
+
+double LPbias = 7;
+double PDbias = 1;
 
 int main(){
-    // genomesfile.open(genomesfname);
-    // outfile.open(outfilefname);
-    // if (!genomesfile) {
-    //     cerr << "File not found: " << genomesfname << endl;
-    //     exit(EXIT_FAILURE);
-    // }
+    genomesfile.open(genomesfname);
+    outfile.open(outfilefname);
+    burstfile.open(burstfilefname);
+    if (!genomesfile) {
+        cerr << "File not found: " << genomesfname << endl;
+        exit(EXIT_FAILURE);
+    }
 
-    // CTRNN Circuit(3);
+    CTRNN Circuit(3);
+    genomesfile >> Circuit;
+
+    // Circuit.SetNeuronBias(1,LPbias);
+    // Circuit.SetNeuronBias(3,PDbias);
 
     // TVector<double>phenotype(1,CTRNNphenotypelen);
-    double pyl_fitness =  0;
     for (int indiv=1;indiv<=num_indivs;indiv++){
+        double pyl_fitness =  0;
 
         // for (int i=1;i<=CTRNNphenotypelen;i++){
         //     genomesfile >> phenotype[i];
@@ -49,22 +60,30 @@ int main(){
             //     Circuit.EulerStep(StepSize,false);
             // }
 
-        TMatrix<double> OutputHist(1,10000-0,1,3);
-        ifstream outputhistfile;
-        // outputhistfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/shiftedoutputs.dat");
-        outputhistfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/outputtrack.dat");
-        outputhistfile >> OutputHist;
-        cout << OutputHist[1][1] << " " << OutputHist[1][2] << " " << OutputHist[1][3] << endl;
+        // TMatrix<double> OutputHist(1,10000,1,3);
+        // ifstream outputhistfile;
+        // // outputhistfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/shiftedoutputs.dat");
+        // outputhistfile.open("./Specifically Evolved HP mechanisms/Every Circuit/0/outputtrack.dat");
+        // outputhistfile >> OutputHist;
+        // cout << OutputHist[1][1] << " " << OutputHist[1][2] << " " << OutputHist[1][3] << endl;
 
-        TVector<double> rhythm_features(1,8);
-        double pyloricness = 0;
+        // TVector<double> rhythm_features(1,8);
+        // double pyloricness = 0;
 
-        BurstTimesfromOutputHist(OutputHist, rhythm_features);
-        pyloricness = PyloricFitFromFeatures(rhythm_features); 
+        // BurstTimesfromOutputHist(OutputHist, rhythm_features);
+        // pyloricness = PyloricFitFromFeatures(rhythm_features);
 
-        cout << pyloricness << endl;
+        for (double t=StepSize;t <= TransientDur; t+=StepSize){
+            Circuit.EulerStep(StepSize,false);
+        }
+        pyl_fitness = PyloricPerformance(Circuit,outfile,burstfile);
+
+        cout << pyl_fitness << endl;
 
     }
+    genomesfile.close();
+    outfile.close();
+    burstfile.close();
 
     return 0;
 }

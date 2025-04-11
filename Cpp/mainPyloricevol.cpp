@@ -22,10 +22,10 @@ const double TransientDuration = 500; //in seconds
 
 // EA params
 const int POPSIZE = 100;
-const int GENS = 500;
+const int GENS = 100;
 const int trials = 200;        		//max number of times to run the EA from random starting pop
-const int num_successes = 5; 		//evolve until you have x successful circuits
-const double success_fitness = 0.3; //a successful evolution is defined as >= this value
+const int num_successes = 4; 		//evolve until you have x successful circuits
+const double success_fitness = 2; //a successful evolution is defined as >= this value
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
 const double EXPECTED = 1.1;
@@ -160,9 +160,9 @@ void BestRecord(TSearch &s,ofstream &bestofthebestfile)
 int main (int argc, const char* argv[]) 
 {
 // Evolution condition
-	Evolfile.open("pyloric_evol_timingtest_long.dat");
-	BestIndividualsFile.open("pyloric_bestind_timingtest_long.dat");
-	BestoftheBestFile.open("pyloric_goodgenomes_timingtest_long.dat");
+	Evolfile.open("pyloric_evol_timing_high.dat");
+	BestIndividualsFile.open("pyloric_bestind_timing_high.dat");
+	BestoftheBestFile.open("pyloric_goodgenomes_timing_high.dat");
 
 	int success = 0;
 	for (int i=1;i<=trials;i++){

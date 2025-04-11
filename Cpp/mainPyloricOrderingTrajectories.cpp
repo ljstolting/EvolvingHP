@@ -19,14 +19,14 @@ double TransientDuration = 500;
 int N = 3;
 int CTRNNphenotypelen = (2*N)+(N*N);
 
-int num_indivs = 5;
+int num_indivs = 100;
 
 ifstream genomesfile;
 ofstream circuitfile;
 ofstream trajfile;
 ofstream burstfile;
 
-char genomesfname[] = "./pyloric_goodgenomes_timingtest_long.dat"; //containing the genomes to be collected and their associated fitnesses
+char genomesfname[] = "./pyloric_goodgenomes_timing.dat"; //containing the genomes to be collected and their associated fitnesses
 // char outdirectory[] = "./No Timing Requirements/"; //to be appended to the beginning of each outfile name
 char outdirectory[] = "./Timing Requirements/";
 char circuitfilefname[] = "/pyloriccircuit.ns"; //store the nervous system

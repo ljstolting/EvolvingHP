@@ -11,7 +11,7 @@
 //#define PRINTOFILE
 
 // Task params (using defined in the pyloric file)
-// const double TransientDuration = 250; //seconds without HP
+const double TransientDuration = 250; //seconds without HP
 // const double PlasticDuration1 = 2500; //seconds allowing HP to act
 // const double PlasticDuration2 = 2500; //number of seconds to wait before testing again, to make sure not relying on precise timing
 // const double TestDuration = 250; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
