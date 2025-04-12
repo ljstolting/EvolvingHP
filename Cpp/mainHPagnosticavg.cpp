@@ -24,6 +24,12 @@
 // in the very top and very bottom of the output range (due to sigmoid
 // nonlinearity). The hope is that this HP-agnostic measure will
 // be able to predict the 
+
+// UPDATE 4/11/25
+// This new HP-agnostic measure isn't particularly accurate since typical oscillations
+// do not satruate, but if you change the structure of HP that we are using (shifted 
+// rather than scaled rho), then the plain old average becomees informative again. 
+// The duty cycle output of this file is no longer needed 
 // ---------------------------------------------------------
 #include "TSearch.h"
 #include "CTRNN.h"
@@ -33,28 +39,28 @@
 //#define PRINTOFILE
 
 // Task params
-// const double TransientDuration = 250; //seconds without HP, made pretty long for this analysis (considering HP is off)
+const double TransientDuration = 250; //seconds without HP, made pretty long for this analysis (considering HP is off)
 const double RunDuration = 50; //seconds to look for an oscillation cycle
 // const double StepSize = 0.005; //small step size for accuracy
 const double leaving_tolerance = 0.05; // in state space for greater accuracy
 const double return_tolerance = 0.025; //less than leaving tolerance
 
-// Parameter space resolution
-const double par1min = 0.0;
-const double par1max = 16.0;
-const double par1step = .05;
-const double par2min = 0.0;
-const double par2max = 16.0;
-const double par2step = .05;
+// Parameter space resolution is now taken from the (high_)res.dat file
+const bool highres = false;
+
+// Inpute files
+char resfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/res.dat";
+char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/36/pyloriccircuit.ns";
 
 // HP mode
 const bool rhoshifted = true; //shifted rho is the new version of HP, where slopes are not adjusted
 							   //the shifted rho HP is the only version for which I've come up with a
 							   // potentially valid HP-agnostic approximation
 
-// Output file
-char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/HPAgnosticAverage_highres_newrho.dat";
-char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/HPAgnosticAverage_highres_multistabilitytest.dat";
+// Output files
+char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/36/HPAgnosticAverage.dat";
+char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/36/HPAgnosticAverage_multistabilitytest.dat";
+
 
 // Nervous system params
 const int N = 3;
@@ -76,15 +82,31 @@ int main (int argc, const char* argv[])
 	avgsfile.open(avgsfname);
 	ofstream avgsfilemultistability;
 	avgsfilemultistability.open(avgs_multistabilityfname);
+
+	ifstream resfile;
+	resfile.open(resfname);
+	if (!resfile){
+		cerr << "File not found: " << resfname << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	double par1min,par1max,par1step ,par2min,par2max,par2step;
+	resfile >> par1min;
+	resfile >> par1max;
+	resfile >> par1step;
+	resfile >> par2min;
+	resfile >> par2max;
+	resfile >> par2step;
 	
     CTRNN Circuit(N);
-    char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/pyloriccircuit.ns";
+    
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
         cerr << "File not found: " << fname << endl;
         exit(EXIT_FAILURE);
     }
+
     ifs >> Circuit; 
 	Circuit.ShiftedRho(rhoshifted);
 
@@ -185,16 +207,16 @@ int main (int argc, const char* argv[])
 
 				if (ic == num_pts){
 					avgsfile << avg << endl;
-					for (int i = 1; i <= N; i++){
-						if ((dutycycle(i) > 0) && belowthresh(i)){ //if the neuron went above and below the threshold
-							avgsfile << dutycycle(i) << " ";
-						}
-						else{
-							avgsfile << 0 << " ";
-						}
-					}
-					avgsfile << endl << endl;
-
+					// no longer care about duty cycles
+					// for (int i = 1; i <= N; i++){
+					// 	if ((dutycycle(i) > 0) && belowthresh(i)){ //if the neuron went above and below the threshold
+					// 		avgsfile << dutycycle(i) << " ";
+					// 	}
+					// 	else{
+					// 		avgsfile << 0 << " ";
+					// 	}
+					// }
+					// avgsfile << endl << endl;
 				}
 
 				bool uniqueness_flag = true;
@@ -227,6 +249,7 @@ int main (int argc, const char* argv[])
 			if (multistable_mode){avgsfilemultistability << endl;}
 		}
 		if(multistable_mode){avgsfilemultistability << endl;}
+		avgsfile << endl;
 	}	
 	avgsfile.close();
 	avgsfilemultistability.close();

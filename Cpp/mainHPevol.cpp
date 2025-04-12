@@ -7,14 +7,16 @@
 #include "random.h"
 #include "pyloric.h"
 #include "VectorMatrix.h"
+#include <stdio.h>
+#include <cstring>
+#include <sys/stat.h> 
 
 //#define PRINTOFILE
 
 // Task params (using defined in the pyloric file)
 const double TransientDuration = 250; //seconds without HP
-// const double PlasticDuration1 = 2500; //seconds allowing HP to act
-// const double PlasticDuration2 = 2500; //number of seconds to wait before testing again, to make sure not relying on precise timing
-// const double TestDuration = 250; //maximum number of seconds allowed to test pyloric performance -- can be with HP still on
+const double PlasticDuration1 = 2500; //seconds allowing HP to act
+const double PlasticDuration2 = 2500; //number of seconds to wait before testing again, to make sure not relying on precise timing
 // const bool HPtest = true;       //does HP remain on during test (shouldn't matter if platicity time constants are slow enough)
 // const double StepSize = 0.25;
 // const int TestSteps = TestDuration/StepSize; // in steps
@@ -31,7 +33,7 @@ const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
 const double EXPECTED = 1.1;
 const double ELITISM = 0.1;
-const double scaling_factor = 25; // boost to add to solutions that are fully pyloric
+const double pyloric_boost = 25; // boost to add to solutions that are fully pyloric
 const bool seed_center_crossing = false;
 
 const int num_optimization_genomes = 20; //number of circuits to test a generalist mechanism on (number listed in the file)
@@ -47,7 +49,7 @@ const bool shiftedrho_tf = true;
 	// INDIVIDUAL IN EACH FOLDER MODE
 // const char circuitfname[] = "../pyloriccircuit.ns";
 	// ONE INDIVIDUAL MODE
-const char circuitfname[] = "../Pyloric CTRNN Genomes/Pete.ns";
+const char circuitfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/pyloriccircuit.ns";
 	// LIST OF INDIVIDUALS FOR THE GENERALIST MODE
 // const char circuitfname[] = "../../../Pyloric CTRNN Genomes/optimizationsetengineered.dat";
 
@@ -95,7 +97,7 @@ void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
 	}
 }
 
-double HPPerformance(CTRNN &Agent, TMatrix<double> &ptlist, double scaling_factor){
+double HPPerformance(CTRNN &Agent, TMatrix<double> &ptlist, double pyloric_boost){
 	double fitness = 0;
 	int num_points = ptlist.RowUpperBound();
 	// cout << "plane" << Agent.biases << endl;
@@ -126,7 +128,7 @@ double HPPerformance(CTRNN &Agent, TMatrix<double> &ptlist, double scaling_facto
 		// cout << "fitness" << fit;
 
 		// Transform it so Pyloricness at all is worth a lot
-		if (fit >= .3){fit = fit+scaling_factor;}
+		if (fit >= .3){fit = fit+pyloric_boost;}
 
 		// cout << "scaledfit" << fit;
 
@@ -143,7 +145,7 @@ double HPPerformance(CTRNN &Agent, TMatrix<double> &ptlist, double scaling_facto
 		fit = PyloricPerformance(Agent);
 
 		// Transform it so Pyloricness at all is worth a lot
-		if (fit >= .3){fit = fit+scaling_factor;}
+		if (fit >= .3){fit = fit+pyloric_boost;}
 
 		// cout << "fitness " << i << " " << fit << endl;
 		fitness += fit;
@@ -185,7 +187,7 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
 	Agent.SetHPPhenotype(phenotype,StepSize,true); //range encoding active
 	// cout << "plasticity set" << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
-	double fitness = HPPerformance(Agent, ptlist, scaling_factor);
+	double fitness = HPPerformance(Agent, ptlist, pyloric_boost);
 	// cout << "fitness calculated" << endl;
     return fitness; //fitness averaged across all times it is taken
 }
@@ -208,7 +210,7 @@ double HPGeneralistPerformance(CTRNN &Agent, ifstream &optimizationgenomesfile, 
 		Agent.RandomizeCircuitOutput(.5,.5);
 		//test the HP mechanism in each of the subspaces given by the evolved pyloric solutions
 		
-		performances[i] = HPPerformance(Agent, ptlist,scaling_factor);
+		performances[i] = HPPerformance(Agent, ptlist,pyloric_boost);
 		// cout << performances[i] << endl << endl;
 	}
 
@@ -325,8 +327,12 @@ void EvolutionaryRunDisplay(TSearch &s)
 int main (int argc, const char* argv[]) 
 {
 	// cout << "main called" << endl;
-	Evolfile.open("./evol.dat");
-	BestIndividualsFile.open("./bestind.dat");
+	// Evolfile.open("./evol.dat");
+	// BestIndividualsFile.open("./bestind.dat");
+	char dirname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/0";
+	int result = mkdir(dirname,0755);
+	Evolfile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/evol.dat");
+	BestIndividualsFile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/bestind.dat");
 	// cout << "files open" << endl;
 	for (int i=1;i<=trials;i++){
 		// cout << "trial " << i << endl;
