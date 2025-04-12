@@ -17,7 +17,7 @@
 const double TransientDuration = 250; //seconds without HP
 const double PlasticDuration1 = 2500; //seconds allowing HP to act
 const double PlasticDuration2 = 2500; //number of seconds to wait before testing again, to make sure not relying on precise timing
-// const bool HPtest = true;       //does HP remain on during test (shouldn't matter if platicity time constants are slow enough)
+// const bool HPtest = true;       //does HP remain on during test (shouldn't matter if plasticity time constants are slow enough)
 // const double StepSize = 0.25;
 // const int TestSteps = TestDuration/StepSize; // in steps
 
@@ -49,7 +49,7 @@ const bool shiftedrho_tf = true;
 	// INDIVIDUAL IN EACH FOLDER MODE
 // const char circuitfname[] = "../pyloriccircuit.ns";
 	// ONE INDIVIDUAL MODE
-const char circuitfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/pyloriccircuit.ns";
+const char circuitfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/93/pyloriccircuit.ns";
 	// LIST OF INDIVIDUALS FOR THE GENERALIST MODE
 // const char circuitfname[] = "../../../Pyloric CTRNN Genomes/optimizationsetengineered.dat";
 
@@ -62,7 +62,7 @@ const double SWR = 10;		// Max Window Size of Plastic Rule (in seconds now)
 const double LBMIN = 0;
 const double UBMIN = 0; 		// OR range for range encoding
 const double LBMAX = 1;
-const double UBMAX = 0; 		// OR range for range encoding
+const double UBMAX = 1; 		// OR range for range encoding
 const double BTMIN = 100.0;		// parameter Time Constant
 const double BTMAX = 200.0;		// parameter Time Constant
 // const double WTMIN = 40.0;		// Weight Time Constant
@@ -165,6 +165,7 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	TVector<double> phenotype;
 	phenotype.SetBounds(1, VectSize);
 	GenPhenMapping(genotype, phenotype);
+	cout << genotype << endl;
 	// cout << "mapped";
 	
 	// Create the agent
@@ -185,8 +186,13 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	// Instantiate the HP mechanism
 	
 	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
+	cout << phenotype << endl;
 	Agent.SetHPPhenotype(phenotype,StepSize,true); //range encoding active
-	// cout << "plasticity set" << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
+	// ifstream HPf;
+	// HPf.open("./Convenient HP Mechanisms/nullHP.dat");
+	// Agent.SetHPPhenotype(HPf,StepSize,true);
+
+	// cout << "plasticity set " << Agent.PlasticityLB(1) << " "  << Agent.PlasticityUB(1) << endl;
 	double fitness = HPPerformance(Agent, ptlist, pyloric_boost);
 	// cout << "fitness calculated" << endl;
     return fitness; //fitness averaged across all times it is taken
@@ -329,10 +335,10 @@ int main (int argc, const char* argv[])
 	// cout << "main called" << endl;
 	// Evolfile.open("./evol.dat");
 	// BestIndividualsFile.open("./bestind.dat");
-	char dirname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/0";
+	char dirname[] = "./Specifically Evolved HP mechanisms/Every Circuit/93/5";
 	int result = mkdir(dirname,0755);
-	Evolfile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/evol.dat");
-	BestIndividualsFile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/bestind.dat");
+	Evolfile.open("./Specifically Evolved HP mechanisms/Every Circuit/93/5/evol.dat");
+	BestIndividualsFile.open("./Specifically Evolved HP mechanisms/Every Circuit/93/5/bestind.dat");
 	// cout << "files open" << endl;
 	for (int i=1;i<=trials;i++){
 		// cout << "trial " << i << endl;
