@@ -47,9 +47,9 @@ const int N = 3;
 const bool shiftedrho_tf = true;
 	//file from which to pull circuit genome
 	// INDIVIDUAL IN EACH FOLDER MODE
-// const char circuitfname[] = "../pyloriccircuit.ns";
+const char circuitfname[] = "../pyloriccircuit.ns";
 	// ONE INDIVIDUAL MODE
-const char circuitfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/pyloriccircuit.ns";
+// const char circuitfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/pyloriccircuit.ns";
 	// LIST OF INDIVIDUALS FOR THE GENERALIST MODE
 // const char circuitfname[] = "../../../Pyloric CTRNN Genomes/optimizationsetengineered.dat";
 
@@ -62,7 +62,7 @@ const double SWR = 10;		// Max Window Size of Plastic Rule (in seconds now)
 const double LBMIN = 0;
 const double UBMIN = 0; 		// OR range for range encoding
 const double LBMAX = 1;
-const double UBMAX = 0; 		// OR range for range encoding
+const double UBMAX = 1; 		// OR range for range encoding
 const double BTMIN = 100.0;		// parameter Time Constant
 const double BTMAX = 200.0;		// parameter Time Constant
 // const double WTMIN = 40.0;		// Weight Time Constant
@@ -280,9 +280,9 @@ void ResultsDisplay(TSearch &s)
 
 	// Reproduce which pars the HP mechanism has access to
 	//LOCAL MODE
-	char plasticparsfname[] = "./plasticpars.dat";
+	// char plasticparsfname[] = "./plasticpars.dat";
 	//SUPERCOMPUTER MODE
-	// char plasticparsfname[] = "../../plasticpars.dat";
+	char plasticparsfname[] = "../../../../plasticpars.dat";
   	ifstream plasticparsfile;
   	TVector<int> plasticitypars(1,N+(N*N));
   	plasticparsfile.open(plasticparsfname);
@@ -327,17 +327,19 @@ void EvolutionaryRunDisplay(TSearch &s)
 int main (int argc, const char* argv[]) 
 {
 	// cout << "main called" << endl;
-	// Evolfile.open("./evol.dat");
-	// BestIndividualsFile.open("./bestind.dat");
-	char dirname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/0";
-	int result = mkdir(dirname,0755);
-	Evolfile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/evol.dat");
-	BestIndividualsFile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/bestind.dat");
+	// SUPERCOMPUTER VERSION
+	Evolfile.open("./evol.dat");
+	BestIndividualsFile.open("./bestind.dat");
+	// LOCAL VERSION
+	// char dirname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/0";
+	// int result = mkdir(dirname,0755);
+	// Evolfile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/evol.dat");
+	// BestIndividualsFile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/bestind.dat");
 	// cout << "files open" << endl;
 	for (int i=1;i<=trials;i++){
 		// cout << "trial " << i << endl;
-		long randomseed = static_cast<long>(time(NULL));
-		// long IDUM=-time(0);
+		// long randomseed = static_cast<long>(time(NULL));
+		long IDUM=-time(0);
 		// cout << "seed initialized" << endl;
 		// No idea why this wouldn't work
 		// if (argc == 1)

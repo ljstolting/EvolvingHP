@@ -1,7 +1,7 @@
 #!/bin/bash
 
-for ((i = 55; i < 100; i += 1));
+for ((i = 92; i < 93; i += 1));
 do
-  sbatch --export=JB=$i lindsayrandom.sh
+  sbatch --export=JB=$i lindsayevols.sh
   sleep 3
 done
