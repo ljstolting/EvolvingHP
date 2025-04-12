@@ -22,7 +22,7 @@ const double TransientDurationold = 50; //Seconds with HP off
 const double PlasticDuration = 50000; //Seconds with HP running
 const int N = 3;
 const int CTRNNphenotypelen = (2*N)+(N*N);
-const int num = 2;
+const int num = 2; //how many paramerters will be under HP control, and perturbed
 const int HPphenotypelen = num*4;
 const int num_indivs = 1; //how many genomes in the file (100 for Local Run Mode)
 const bool shiftedrho = true;
@@ -92,13 +92,13 @@ int main(int argc, const char* argv[])
         // phenotype >> Circuit;
 
         // Parallel Supercomputer Mode
-        // ifs.open("./pyloriccircuit.ns");
-        // ifs >> Circuit;
-
-        // One circuit only mode
-        ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/34/pyloriccircuit.ns");
+        ifs.open("./pyloriccircuit.ns");
         ifs >> Circuit;
         Circuit.ShiftedRho(shiftedrho);
+
+        // One circuit only mode
+        // ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/34/pyloriccircuit.ns");
+        // ifs >> Circuit;
 
         //Define HP parslice output file
         ofstream HPparspacefile;
@@ -113,10 +113,11 @@ int main(int argc, const char* argv[])
         // strcat(outfile, "/HPparslice.dat");
 
         // Parallel Supercomputer Mode
-        // char outfile[] = "./HPparslicerangepoint1.dat";
+        char outfile[] = "./HPparslice_newrho_res5.dat";
+        // char outfile[] = "./HPparslice_test.dat";
 
         // Only one cicuit/HP pair mode
-        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/34/HPparslice_newrho_long.dat";
+        // char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/34/HPparslice_newrho_long.dat";
 
         HPparspacefile.open(outfile);
 
@@ -124,7 +125,7 @@ int main(int argc, const char* argv[])
         for (double LB1=LB1min;LB1<=LB1max;LB1+=LB1step){
             // cout  << LB1 << endl;
             for (double LB3=LB3min;LB3<=LB3max;LB3+=LB3step){
-                cout << LB1 << " " << LB3 << endl;
+                // cout << LB1 << " " << LB3 << endl;
                 TVector<double> HPphenotype(1,HPphenotypelen);
                 int k = 1;
                 for (int i=1;i<=num;i++){
