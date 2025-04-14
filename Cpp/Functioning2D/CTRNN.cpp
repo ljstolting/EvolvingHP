@@ -551,6 +551,7 @@ istream& operator>>(istream& is, CTRNN& c)
 	// Read the size
 	int size;
 	is >> size;
+  cout << size << endl;
   c.size = size;
 	// Read the time constants
 	for (int i = 1; i <= size; i++) {

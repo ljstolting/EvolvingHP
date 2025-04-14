@@ -153,8 +153,8 @@ void CTRNN::SetCircuitSize(int newsize)
   shiftedrho = false;
 
   // new for subset of params
-  char plasticparsfname[] = "../../../../plasticpars.dat";
-  // char plasticparsfname[] = "./plasticpars.dat";
+  // char plasticparsfname[] = "../../../../plasticpars.dat";
+  char plasticparsfname[] = "./plasticpars.dat";
   ifstream plasticparsfile;
   plasticparsfile.open(plasticparsfname);
   if (!plasticparsfile) {
@@ -798,16 +798,20 @@ istream& operator>>(istream& is, CTRNN& c)
 	// Read the size
 	int size;
 	is >> size;
+  // cout << size << endl;
   c.size = size;
 	// Read the time constants
 	for (int i = 1; i <= size; i++) {
 		is >> c.taus[i];
+    // cout << c.taus[i] << " ";
 		c.Rtaus[i] = 1/c.taus[i];
 	}
+  // cout << endl;
 	// Read the biases
 	for (int i = 1; i <= size; i++){
 		is >> c.biases[i];
   }
+  // cout << c.biases << endl;
 	// Read the gains
 	for (int i = 1; i <= size; i++){
 		is >> c.gains[i];

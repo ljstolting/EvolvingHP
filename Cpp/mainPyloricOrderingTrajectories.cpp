@@ -22,27 +22,25 @@ int CTRNNphenotypelen = (2*N)+(N*N);
 int num_indivs = 100;
 
 ifstream genomesfile;
-// ofstream circuitfile;
-ifstream circuitfile;
+ofstream circuitfile;
 ofstream trajfile;
 ofstream burstfile;
 
-// char genomesfname[] = "./pyloric_goodgenomes_timing.dat"; //containing the genomes to be collected and their associated fitnesses
+char genomesfname[] = "../Pyloric CTRNN Genomes/goodgenomesnormalizedfit.dat"; //containing the genomes to be collected and their associated fitnesses
 // char outdirectory[] = "./No Timing Requirements/"; //to be appended to the beginning of each outfile name
-char outdirectory[] = "./Specifically Evolved HP mechanisms/EveryCircuit/";
-char circuitfilefname[] = "/pyloriccircuit.ns"; //store (or read) the nervous system
+char outdirectory[] = "./Specifically Evolved HP mechanisms/Every Circuit/";
+char circuitfilefname[] = "/pyloriccircuit_new.ns"; //store the nervous system
 char trajfilefname[] = "/pylorictrajectory_new.dat"; //store the neuron output space trajectory
 char burstfilefname[] = "/pyloricbursttimes_new.dat"; //store the start and end time or each 
 
 
 int main(){
-    //FROM FILE INTO SEPARATE FOLDERS MODE
-    // genomesfile.open(genomesfname);
+    genomesfile.open(genomesfname);
 
-    // if (!genomesfile) {
-    //     cerr << "File not found: " << genomesfname << endl;
-    //     exit(EXIT_FAILURE);
-    // }
+    if (!genomesfile) {
+        cerr << "File not found: " << genomesfname << endl;
+        exit(EXIT_FAILURE);
+    }
 
     CTRNN Circuit(3);
 
@@ -54,7 +52,7 @@ int main(){
         char n_char[Max_Digits + sizeof(char)];
         std::sprintf(n_char, "%d", indiv);
             
-        char trajfolder[Max_Digits + sizeof(char) + 51 + 25];
+        char trajfolder[Max_Digits + sizeof(char) + 51+25];
         strcpy(trajfolder, outdirectory);
         strcat(trajfolder, n_char);
         int result = mkdir(trajfolder,0755);
@@ -62,33 +60,29 @@ int main(){
         trajfile.open(trajfolder);
         // cout << trajfolder;
 
-        char burstfolder[Max_Digits + sizeof(char) + 51 +26];
+        char burstfolder[Max_Digits + sizeof(char) + 51+26];
         strcpy(burstfolder, outdirectory);
         strcat(burstfolder, n_char);
         strcat(burstfolder,burstfilefname);
         burstfile.open(burstfolder);
 
-        char circuitfolder[Max_Digits + sizeof(char) + 51+18];
+        char circuitfolder[Max_Digits + sizeof(char) + 51+22];
         strcpy(circuitfolder, outdirectory);
         strcat(circuitfolder, n_char);
         strcat(circuitfolder,circuitfilefname);
         circuitfile.open(circuitfolder);
         // cout << circuitfolder << endl;
 
-        //FROM FILE INTO SEPARATE FOLDERS MODE
         // genomesfile >> genotype;
-        // genomesfile >> phenotype; //all at once version
-        // // read through the fitness value (pyloric fitness)
-        // genomesfile >> pyl_fitness;
+
+        genomesfile >> phenotype; //all at once version
+        // read through the fitness value (pyloric fitness)
+    
+        genomesfile >> pyl_fitness;
         
-        // phenotype >> Circuit;
+        phenotype >> Circuit;
 
-        // circuitfile << Circuit;
-
-        //ANALYZE SEPARATE MODE
-        cout << "test" << endl;
-        circuitfile >> Circuit;
-        cout << "testing" << endl;
+        circuitfile << Circuit;
 
         Circuit.RandomizeCircuitState(0,0);
         

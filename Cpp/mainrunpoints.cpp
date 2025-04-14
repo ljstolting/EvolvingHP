@@ -9,7 +9,7 @@
 //#define PRINTOFILE
 
 // Task params
-// const double TransientDuration = 1000; //Seconds with HP off
+const double TransientDuration = 500; //Seconds with HP off
 const double PlasticDuration = 100000; //Seconds with HP running
 const double RunDuration = 150; //How long to test for pyloricness
 // const double StepSize = 0.025;
@@ -33,7 +33,7 @@ const double BRub1 = 20;
 const double BRlb3 = -20;
 const double BRub3 = 10;
 const double WR = 10;
-const int num_ICs = 1000;
+const int num_ICs = 1;
 
 // Mode
 const bool random_mode = false; //randomize in other dimensions besides HP dimensions 
@@ -42,12 +42,16 @@ const bool taus_set = false; //in random mode, do we want the taus to be variabl
 //Filenames
 char Nfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/pyloriccircuit.ns";
 // char HPfname[] = "./bestindtest.dat";
-char HPfname[] = "./Convenient HP Mechanisms/bad.dat";
+char HPfname[] = "./Convenient HP Mechanisms/nullHP.dat";
 // char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/33/bestind.dat";
-char Fitnessesfname[] = "./Convenient HP Mechanisms/Petefitbad.dat";
-char ICsfname[] = "./Convenient HP Mechanisms/Peteicsbad.dat";
-char biastrackfname[] = "./Convenient HP Mechanisms/Petebiastrackbad.dat";
-char statestrackfname[] = "./Convenient HP Mechanisms/Petestatestrackbad.dat";
+// char Fitnessesfname[] = "./Convenient HP Mechanisms/Petefitbad.dat";
+char Fitnessesfname[] = "./testfit.dat";
+// char ICsfname[] = "./Convenient HP Mechanisms/Peteicsbad.dat";
+char ICsfname[] = "./testics.dat";
+// char biastrackfname[] = "./Convenient HP Mechanisms/Petebiastrackbad.dat";
+char biastrackfname[] = "./testbiastrack.dat";
+// char statestrackfname[] = "./Convenient HP Mechanisms/Petestatestrackbad.dat";
+char statestrackfname[] = "./teststatestrack.dat";
 
 const bool trackstates = false;
 const int trackstatesinterval = 200; //Track neural outputs for every X trials
