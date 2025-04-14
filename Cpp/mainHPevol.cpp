@@ -17,7 +17,7 @@
 const double TransientDuration = 250; //seconds without HP
 const double PlasticDuration1 = 2500; //seconds allowing HP to act
 const double PlasticDuration2 = 2500; //number of seconds to wait before testing again, to make sure not relying on precise timing
-// const bool HPtest = true;       //does HP remain on during test (shouldn't matter if platicity time constants are slow enough)
+// const bool HPtest = true;       //does HP remain on during test (shouldn't matter if plasticity time constants are slow enough)
 // const double StepSize = 0.25;
 // const int TestSteps = TestDuration/StepSize; // in steps
 
@@ -165,6 +165,7 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	TVector<double> phenotype;
 	phenotype.SetBounds(1, VectSize);
 	GenPhenMapping(genotype, phenotype);
+	cout << genotype << endl;
 	// cout << "mapped";
 	
 	// Create the agent
@@ -185,8 +186,13 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	// Instantiate the HP mechanism
 	
 	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
+	cout << phenotype << endl;
 	Agent.SetHPPhenotype(phenotype,StepSize,true); //range encoding active
-	// cout << "plasticity set" << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
+	// ifstream HPf;
+	// HPf.open("./Convenient HP Mechanisms/nullHP.dat");
+	// Agent.SetHPPhenotype(HPf,StepSize,true);
+
+	// cout << "plasticity set " << Agent.PlasticityLB(1) << " "  << Agent.PlasticityUB(1) << endl;
 	double fitness = HPPerformance(Agent, ptlist, pyloric_boost);
 	// cout << "fitness calculated" << endl;
     return fitness; //fitness averaged across all times it is taken
@@ -327,14 +333,12 @@ void EvolutionaryRunDisplay(TSearch &s)
 int main (int argc, const char* argv[]) 
 {
 	// cout << "main called" << endl;
-	// SUPERCOMPUTER VERSION
-	Evolfile.open("./evol.dat");
-	BestIndividualsFile.open("./bestind.dat");
-	// LOCAL VERSION
-	// char dirname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/0";
-	// int result = mkdir(dirname,0755);
-	// Evolfile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/evol.dat");
-	// BestIndividualsFile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/bestind.dat");
+	// Evolfile.open("./evol.dat");
+	// BestIndividualsFile.open("./bestind.dat");
+	char dirname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/0";
+	int result = mkdir(dirname,0755);
+	Evolfile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/evol.dat");
+	BestIndividualsFile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/bestind.dat");
 	// cout << "files open" << endl;
 	for (int i=1;i<=trials;i++){
 		// cout << "trial " << i << endl;

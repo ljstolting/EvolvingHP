@@ -739,21 +739,24 @@ void CTRNN::WriteHPGenome(ostream& os){
 	return;
 }
 
-// depracated
-// void CTRNN::SetHPPhenotypebestind(istream &is, double dt, bool range_encoding){
-//   // int trial;
-//   // is >> trial;
-//   TVector<double> gen(1,num_pars_changed*4); 
-//   TVector<double> phen(1,gen.UpperBound());
-//   // for (int i=1;i<=gen.UpperBound();i++){ 
-//   //   is >> gen[i];
-//   // }
-//   for (int i=1;i<=phen.UpperBound();i++){ 
-//     is >> phen[i];
-//   }
-//   // cout << trial << endl<< gen << endl << phen << endl;
-//   SetHPPhenotype(phen,dt,range_encoding);
-// }
+void CTRNN::SetHPPhenotypebestind(istream &is, double dt, bool range_encoding){
+  TVector<double> gen(1,num_pars_changed*4); 
+  TVector<double> phen(1,gen.UpperBound());
+  double fit;
+
+  for(int i = 1; i <= size + (size*size); i++){
+    is >> plasticitypars[i];
+  }
+
+  is >> gen;
+  is >> phen;
+  is >> fit;
+
+  // cout << gen << endl << phen << endl;
+
+  // cout << trial << endl<< gen << endl << phen << endl;
+  SetHPPhenotype(phen,dt,range_encoding);
+}
 
 
 // ****************
@@ -802,15 +805,19 @@ istream& operator>>(istream& is, CTRNN& c)
 		c.Rtaus[i] = 1/c.taus[i];
 	}
 	// Read the biases
-	for (int i = 1; i <= size; i++)
+	for (int i = 1; i <= size; i++){
 		is >> c.biases[i];
+  }
 	// Read the gains
-	for (int i = 1; i <= size; i++)
+	for (int i = 1; i <= size; i++){
 		is >> c.gains[i];
+  }
 	// Read the weights
-	for (int i = 1; i <= size; i++)
-		for (int j = 1; j <= size; j++)
+	for (int i = 1; i <= size; i++){
+		for (int j = 1; j <= size; j++){
 			is >> c.weights[i][j];
+    }
+  }
 	// Return the istream
 	return is;
 }
