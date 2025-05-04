@@ -15,7 +15,8 @@
 
 // Task params
 const double TransientDuration = 50; //Seconds with HP off
-const double PlasticDuration = 15000; //Seconds with HP running
+const double PlasticDuration = 5000; //Seconds with HP running between each check
+const int num_checks = 10;             //How many times to check the pyloric fitness, per initial condition (to examine whether it's reached a steady state)
 const int N = 3;
 const int CTRNNphenotypelen = (2*N)+(N*N);
 const int num_indivs = 100; //how many genomes to loop through
@@ -25,14 +26,27 @@ const int num_dims = 2; //how many dimensions does HP operate in (equivalently, 
 int main(int argc, const char* argv[])
 {
     // 2D GRID OF POINTS
-    int resolution = 6;
+    int resolution = 11;
     TVector<double> par_vals(1,resolution);
+    // par_vals[1] = -15;
+    // par_vals[2] = -9;
+    // par_vals[3] = -3;
+    // par_vals[4] = 3;
+    // par_vals[5] = 9;
+    // par_vals[6] = 15;
+
     par_vals[1] = -15;
-    par_vals[2] = -9;
-    par_vals[3] = -3;
-    par_vals[4] = 3;
-    par_vals[5] = 9;
-    par_vals[6] = 15;
+    par_vals[2] = -12;
+    par_vals[3] = -9;
+    par_vals[4] = -6;
+    par_vals[5] = -3;
+    par_vals[6] = 0;
+    par_vals[7] = 3;
+    par_vals[8] = 6;
+    par_vals[9] = 9;
+    par_vals[10] = 12;
+    par_vals[11] = 15;
+
 
     int num_pts = pow(resolution,num_dims);
     TMatrix<double> ptlist(1,num_pts,1,num_dims);
@@ -42,11 +56,11 @@ int main(int argc, const char* argv[])
     char outdirectory[52] = "./Specifically Evolved HP mechanisms/Every Circuit/";
     char circuitfname[19] = "/pyloriccircuit.ns";
     char evolvedHPfname[13] = "/bestind.dat";
-    char testfname[18] = "/recoverytest.dat";
+    char testfname[27] = "/recoverytest.dat";
 
     CTRNN Circuit(N);
 
-    for (int indiv = 36; indiv < num_indivs; indiv ++){
+    for (int indiv = 0; indiv < 100; indiv ++){
 
         ifstream circuitfile;
 
@@ -63,6 +77,7 @@ int main(int argc, const char* argv[])
             exit(EXIT_FAILURE);
         }
         circuitfile >> Circuit;
+        Circuit.ShiftedRho(true);
         circuitfile.close();
 
         for (int HPevol = 0; HPevol < num_evols; HPevol++){
@@ -70,7 +85,7 @@ int main(int argc, const char* argv[])
             ofstream testfile;
             ifstream evolvedHPfile;
 
-            char testfilename[Max_Digits + sizeof(char) + Max_Digits + sizeof(char) + 51 + 1 + 17];
+            char testfilename[Max_Digits + sizeof(char) + Max_Digits + sizeof(char) + 51 + 1 + 26];
             strcpy(testfilename, outdirectory);
             strcat(testfilename, indiv_char);
 
@@ -113,24 +128,29 @@ int main(int argc, const char* argv[])
             for (int i=1;i<=num_pts;i++){
                 Circuit.SetNeuronBias(1,ptlist(i,1));
                 Circuit.SetNeuronBias(3,ptlist(i,2));
-                Circuit.RandomizeCircuitOutput(0.5, 0.5);
+                Circuit.RandomizeCircuitState(0, 0);
 
                 // Run the circuit for an initial transient; HP is off and fitness is not evaluated
                 for (double t = StepSize; t <= TransientDuration; t += StepSize) {
                     Circuit.EulerStep(StepSize,false);
                 }
 
-                for (double t = StepSize; t <= PlasticDuration; t += StepSize) {
-                    Circuit.EulerStep(StepSize,true);
-                }
-
-                double pyloricness;
-                pyloricness = PyloricPerformance(Circuit); //HP is left on during test
-
                 for (int j=1; j<=num_dims; j++){
                     testfile << ptlist(i,j) << " ";
                 }
-                testfile << pyloricness << endl;
+
+                // Run, check, and record pyloricness for as many times specified
+                for (int check=1; check<=num_checks; check++){
+                    for (double t = StepSize; t <= PlasticDuration; t += StepSize) {
+                        Circuit.EulerStep(StepSize,true);
+                    }
+
+                    double pyloricness;
+                    pyloricness = PyloricPerformance(Circuit); //HP is left on during test
+
+                    testfile << pyloricness << " ";
+                }
+                testfile << endl;
             }
             testfile.close();
         }

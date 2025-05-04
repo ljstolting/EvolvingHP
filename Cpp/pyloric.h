@@ -16,11 +16,11 @@ using namespace std;
 // const double TransientDuration = 500; //seconds without HP
 // const double PlasticDuration1 = 5000; //seconds allowing HP to act
 // const double PlasticDuration2 = 5000; //number of seconds to wait before testing again, to make sure not relying on precise timing
-const double TestDuration = 100; //maximum number of seconds allowed to locate 3 cycles of the rhythm
+const double TestDuration = 500; //maximum number of seconds allowed to locate 3 cycles of the rhythm
 const bool HPequilibrate = false; //is HP on during the transient/equilibration period?
-const bool HPtest = false;       //is HP on during test (shouldn't matter if platicity time constants are slow enough)
-// const double StepSize = 0.05;
-const double StepSize = 0.005;
+const bool HPtest = true;       //is HP on during test (shouldn't matter if platicity time constants are slow enough, *****but seems to be mattering in select cases****)
+// const double StepSize = 0.1;
+const double StepSize = 0.01;
 const int TestSteps = TestDuration/StepSize; // in steps
 
 // Detection params
@@ -190,17 +190,31 @@ double PyloricFitFromFeatures(TVector<double> &FeatureVect){
 	int criteria = int(num_oscillating);
 	
 	if(legacy){
+		// Recorrect to ensure start < end
+		for (int i=2; i <= 6; i+=2){
+			if (FeatureVect(i) > FeatureVect(i+1)){
+				FeatureVect(i+1) = FeatureVect(i+1) + FeatureVect(8);
+			}
+		}
+		double LPstart = FeatureVect[2];
+		double LPend = FeatureVect[3];
+		double PYstart = FeatureVect[4];
+		double PYend = FeatureVect[5];
+		double PDstart = FeatureVect[6];
+		double PDend = FeatureVect[7];
+
 		// 	ORDERING CRITERIA
+		// 
 		if (LPstart <= PYstart){
-			//cout << "order1" << endl;
+			// cout << "order1" << endl;
 			criteria += 1;
 		}
 		if (LPend <= PYend){
-			//cout << "order2" << endl;
+			// cout << "order2" << endl;
 			criteria += 1;
 		}
 		if (PDend <= LPstart){
-			//cout << "order3" << endl;
+			// cout << "order3" << endl;
 			criteria += 1;
 		}
 	}

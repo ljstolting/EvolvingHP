@@ -551,6 +551,7 @@ double PyloricPerformance(CTRNN &Agent)
 //Main difference is that it does not include transient -- assumes circuit is already equilibrated.
 //Also only runs until three PDstarts are detected to save time
 {
+	cout << "using old file" << endl;
     int N = Agent.CircuitSize();
     TMatrix<double> OutputHistory(1,TestSteps,1,N);
 	// OutputHistory.SetBounds(1,TestSteps,1,N);

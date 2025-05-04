@@ -9,8 +9,8 @@
 //#define PRINTOFILE
 
 // Task params
-const double TransientDuration = 500; //Seconds with HP off
-const double PlasticDuration = 100000; //Seconds with HP running
+const double TransientDuration = 150; //Seconds with HP off
+const double PlasticDuration = 100000; //Seconds with HP runnings
 const double RunDuration = 150; //How long to test for pyloricness
 // const double StepSize = 0.025;
 const int RunSteps = RunDuration/StepSize;
@@ -28,35 +28,39 @@ int	CTRNNVectSize = N*N + 2*N;
 
 const double TMIN = .1;
 const double TMAX = 2;
-const double BRlb1 = -10;
+const double BRlb1 = -20;
 const double BRub1 = 20;
 const double BRlb3 = -20;
-const double BRub3 = 10;
+const double BRub3 = 20;
 const double WR = 10;
-const int num_ICs = 1;
+const int num_ICs = 5;
 
 // Mode
 const bool random_mode = false; //randomize in other dimensions besides HP dimensions 
 const bool taus_set = false; //in random mode, do we want the taus to be variable
 
 //Filenames
-char Nfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/pyloriccircuit.ns";
+char Nfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/99/pyloriccircuit.ns";
+char HPfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/99/5/bestind.dat";
+const bool HPfileisbestind = true;
 // char HPfname[] = "./bestindtest.dat";
-char HPfname[] = "./Convenient HP Mechanisms/nullHP.dat";
+// char HPfname[] = "./Convenient HP Mechanisms/nullHP.dat";
 // char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/33/bestind.dat";
 // char Fitnessesfname[] = "./Convenient HP Mechanisms/Petefitbad.dat";
-char Fitnessesfname[] = "./testfit.dat";
+char Fitnessesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/99/5/fit.dat";
 // char ICsfname[] = "./Convenient HP Mechanisms/Peteicsbad.dat";
-char ICsfname[] = "./testics.dat";
+// char ICsfname[] = "./testics.dat";
+char ICsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/99/5/ics.dat";
 // char biastrackfname[] = "./Convenient HP Mechanisms/Petebiastrackbad.dat";
-char biastrackfname[] = "./testbiastrack.dat";
+char biastrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/99/5/biastrack.dat";
 // char statestrackfname[] = "./Convenient HP Mechanisms/Petestatestrackbad.dat";
-char statestrackfname[] = "./teststatestrack.dat";
+// char statestrackfname[] = "./teststatestrack.dat";
+char statestrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/99/5/statestrack.dat";
 
-const bool trackstates = false;
-const int trackstatesinterval = 200; //Track neural outputs for every X trials
+const bool trackstates = true;
+const int trackstatesinterval = 50; //Track neural outputs for every X trials
 const bool trackparams = true;
-const int trackparamsinterval = 50; //Track biases for every X trials
+const int trackparamsinterval = 1; //Track biases for every X trials
 const int trackingstepinterval = 5; //make the tracking files smaller by only recording every Xth step
 
 void GenPhenMapping(TVector<double> &gen, TVector<double> &phen)
@@ -122,7 +126,12 @@ int main(){
         cerr << "File not found: " << HPfname << endl;
         exit(EXIT_FAILURE);
     }
-    Circuit.SetHPPhenotype(HPifs,StepSize,true);
+    if(HPfileisbestind){
+        Circuit.SetHPPhenotypebestind(HPifs,StepSize,true);
+    }
+    else{
+        Circuit.SetHPPhenotype(HPifs,StepSize,true);
+    }
 
     cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(1) << " " << Circuit.PlasticityUB(2) << " " << Circuit.PlasticityUB(3) << endl;
     cout << Circuit.SlidingWindow(1) << endl;

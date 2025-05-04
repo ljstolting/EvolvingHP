@@ -11,19 +11,19 @@
 
 int N = 3;
 int CTRNNphenotypelen = (2*N)+(N*N);
-double TransientDur = 500;
+double TransientDur = 1000;
 
 int num_indivs = 1;
 
 ifstream genomesfile;
 ofstream outfile;
 ofstream burstfile;
-char genomesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/pyloriccircuit.ns";
-char outfilefname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/pylorictrajectory.ns";
-char burstfilefname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/pyloricbursttimes.dat";
+char genomesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/80/pyloriccircuit.ns";
+char outfilefname[] = "./Specifically Evolved HP mechanisms/Every Circuit/80/pylorictrajectory_test.ns";
+char burstfilefname[] = "./Specifically Evolved HP mechanisms/Every Circuit/80/pyloricbursttimes_test.dat";
 
-double LPbias = 7;
-double PDbias = 1;
+// double LPbias = 7;
+// double PDbias = 1;
 
 int main(){
     genomesfile.open(genomesfname);
@@ -36,6 +36,7 @@ int main(){
 
     CTRNN Circuit(3);
     genomesfile >> Circuit;
+    // cout << Circuit.weights << endl;
 
     // Circuit.SetNeuronBias(1,LPbias);
     // Circuit.SetNeuronBias(3,PDbias);
@@ -53,12 +54,12 @@ int main(){
         // genomesfile >> pyl_fitness;
         
         // phenotype >> Circuit;
-        // Circuit.RandomizeCircuitOutput(.5,.5);
+        Circuit.RandomizeCircuitOutput(.5,.5);
 
         // Run the circuit for an initial transient; HP is off and fitness is not evaluated
-            // for (double t = StepSize; t <= TransientDuration; t += StepSize) {
-            //     Circuit.EulerStep(StepSize,false);
-            // }
+        for (double t = StepSize; t <= TransientDur; t += StepSize) {
+            Circuit.EulerStep(StepSize,false);
+        }
 
         // TMatrix<double> OutputHist(1,10000,1,3);
         // ifstream outputhistfile;
@@ -73,12 +74,13 @@ int main(){
         // BurstTimesfromOutputHist(OutputHist, rhythm_features);
         // pyloricness = PyloricFitFromFeatures(rhythm_features);
 
-        for (double t=StepSize;t <= TransientDur; t+=StepSize){
-            Circuit.EulerStep(StepSize,false);
-        }
         pyl_fitness = PyloricPerformance(Circuit,outfile,burstfile);
+        double pyl_fitness_2 = PyloricPerformance(Circuit);
+        double pyl_fitness_3 = PyloricPerformance(Circuit);
 
         cout << pyl_fitness << endl;
+        cout << pyl_fitness_2 << endl;
+        cout << pyl_fitness_3 << endl;
 
     }
     genomesfile.close();

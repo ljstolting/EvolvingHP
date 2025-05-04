@@ -14,11 +14,11 @@ const double TransientDuration = 100; //in seconds
 // const int RunSteps = RunDuration/StepSize; // in steps
 
 // Parameter space resolution
-const double par1min = -5;
-const double par1max = 25;
+const double par1min = -20;
+const double par1max = 20;
 const double par1step = .05;
 const double par2min = -20;
-const double par2max = 10;
+const double par2max = 20;
 const double par2step = .05;
 
 // Nervous system params
@@ -30,15 +30,15 @@ int main (int argc, const char* argv[])
 {
 	// Create file to hold data
 	ofstream slicefile;
-	slicefile.open("./Specifically Evolved HP mechanisms/Every Circuit/99/pyloricslice_highres.dat");
+	slicefile.open("./Specifically Evolved HP mechanisms/Every Circuit/80/pyloricslice_highres.dat");
 	// slicefile.open("Pete_maxmindetected_HP129.dat");
 	ofstream resfile;
-	resfile.open("./Specifically Evolved HP mechanisms/Every Circuit/99/res_highres.dat");
+	resfile.open("./Specifically Evolved HP mechanisms/Every Circuit/80/res_highres.dat");
 	resfile << par1min << " " << par1max << " " << par1step << endl << par2min << " " << par2max << " " << par2step << endl;
 
 	// Load the base CTRNN parameters
     CTRNN Circuit(3);
-    char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/99/pyloriccircuit.ns";
+    char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/80/pyloriccircuit.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
