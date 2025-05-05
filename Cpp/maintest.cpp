@@ -16,10 +16,10 @@
 // Task params
 const double TransientDuration = 50; //Seconds with HP off
 const double PlasticDuration = 5000; //Seconds with HP running between each check
-const int num_checks = 10;             //How many times to check the pyloric fitness, per initial condition (to examine whether it's reached a steady state)
+const int num_checks = 5;             //How many times to check the pyloric fitness, per initial condition (to examine whether it's reached a steady state)
 const int N = 3;
 const int CTRNNphenotypelen = (2*N)+(N*N);
-const int num_indivs = 100; //how many genomes to loop through
+// const int num_indivs = 100; //how many genomes to loop through
 const int num_evols = 5; //how many HP evolutions per circuit
 const int num_dims = 2; //how many dimensions does HP operate in (equivalently, how many dimensions is the plane you are testing)
 

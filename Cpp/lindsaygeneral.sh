@@ -10,8 +10,9 @@
 #SBATCH --mem=16G
 #SBATCH -A r00213
 
-cd ./Specifically\ Evolved\ HP\ mechanisms/Every\ Circuit/$JB;
-../../../main $JB;
-cd ../../../;
+# cd ./Specifically\ Evolved\ HP\ mechanisms/Every\ Circuit/$JB;
+# ../../../main $JB;
+# cd ../../../;
+./main;
 
 
