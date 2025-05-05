@@ -22,10 +22,10 @@ const double TransientDuration = 500; //in seconds
 
 // EA params
 const int POPSIZE = 100;
-const int GENS = 100;
+const int GENS = 500;
 const int trials = 200;        		//max number of times to run the EA from random starting pop
-const int num_successes = 4; 		//evolve until you have x successful circuits
-const double success_fitness = 2; //a successful evolution is defined as >= this value
+const int num_successes = 1; 		//evolve until you have x successful circuits
+const double success_fitness = 5; //a successful evolution is defined as >= this value
 const double MUTVAR = 0.1;
 const double CROSSPROB = 0.0;
 const double EXPECTED = 1.1;
@@ -43,7 +43,7 @@ const double TMIN = .1;
 const double TMAX = 2; 
 
 // Plasticity parameters
-const int WS = 120;		// Window Size of Plastic Rule (in steps size) (so 1 is no window)
+const int WS = 120;		// Window Size of Plastic Rule (in steps size) (so 0 is no window)
 const double B = 0.1; 		// Plasticity Low Boundary (symmetric)
 const double BT = 20.0;		// Bias Time Constant
 const double WT = 40.0;		// Weight Time Constant
@@ -160,9 +160,9 @@ void BestRecord(TSearch &s,ofstream &bestofthebestfile)
 int main (int argc, const char* argv[]) 
 {
 // Evolution condition
-	Evolfile.open("pyloric_evol_timing_high.dat");
-	BestIndividualsFile.open("pyloric_bestind_timing_high.dat");
-	BestoftheBestFile.open("pyloric_goodgenomes_timing_high.dat");
+	Evolfile.open("./pyloric_evol_timing_legacy.dat");
+	BestIndividualsFile.open("./pyloric_bestind_timing_legacy.dat");
+	BestoftheBestFile.open("./pyloric_goodgenomes_timing_legacy.dat");
 
 	int success = 0;
 	for (int i=1;i<=trials;i++){
@@ -189,9 +189,8 @@ int main (int argc, const char* argv[])
 			s.SetElitistFraction(ELITISM);
 			s.SetSearchConstraint(1);
 			s.SetReEvaluationFlag(0); //  Parameter Variability Modality Only
-
 			s.SetEvaluationFunction(PyloricFitnessFunction);
-			s.ExecuteSearch(false);
+			s.ExecuteSearch(true); //Center Crossing Mode or not
 			double bestperf = s.BestPerformance();
 			if (bestperf>=success_fitness){
 				success++;

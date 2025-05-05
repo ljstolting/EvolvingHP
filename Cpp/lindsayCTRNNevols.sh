@@ -10,5 +10,8 @@
 #SBATCH --mem=16G
 #SBATCH -A r00213
 
-time ./main 
+# mkdir ./Specifically\ Evolved\ HP\ mechanisms/Every\ Circuit/$JB;
+cd ./Specifically\ Evolved\ HP\ mechanisms/Every\ Circuit/$JB;
+time ../../../main $JB;
+cd ../;
 

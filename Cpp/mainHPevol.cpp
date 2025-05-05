@@ -15,8 +15,8 @@
 
 // Task params (using defined in the pyloric file)
 const double TransientDuration = 250; //seconds without HP
-const double PlasticDuration1 = 2500; //seconds allowing HP to act
-const double PlasticDuration2 = 2500; //number of seconds to wait before testing again, to make sure not relying on precise timing
+const double PlasticDuration1 = 5000; //seconds allowing HP to act
+const double PlasticDuration2 = 5000; //number of seconds to wait before testing again, to make sure not relying on precise timing
 // const bool HPtest = true;       //does HP remain on during test (shouldn't matter if plasticity time constants are slow enough)
 // const double StepSize = 0.25;
 // const int TestSteps = TestDuration/StepSize; // in steps
@@ -165,7 +165,7 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	TVector<double> phenotype;
 	phenotype.SetBounds(1, VectSize);
 	GenPhenMapping(genotype, phenotype);
-	cout << genotype << endl;
+	// cout << genotype << endl;
 	// cout << "mapped";
 	
 	// Create the agent
@@ -186,7 +186,7 @@ double HPFitnessFunction(TVector<double> &genotype, TMatrix<double> &ptlist, Ran
 	// Instantiate the HP mechanism
 	
 	// cout << Agent.PlasticityLB(1) << " " << Agent.PlasticityLB(2) << " " << Agent.PlasticityLB(3) << endl;
-	cout << phenotype << endl;
+	// cout < < phenotype << endl;
 	Agent.SetHPPhenotype(phenotype,StepSize,true); //range encoding active
 	// ifstream HPf;
 	// HPf.open("./Convenient HP Mechanisms/nullHP.dat");
@@ -299,13 +299,13 @@ void ResultsDisplay(TSearch &s)
   	for (int i = 1; i <= plasticitypars.UpperBound(); i ++){
     	plasticparsfile >> plasticitypars[i];
   	}
-	cout << plasticitypars << endl;
+	// cout << plasticitypars << endl;
 	// BestIndividualsFile << trial << endl;
 	BestIndividualsFile << plasticitypars << endl;
 	BestIndividualsFile << bestVector << endl << phenotype << endl;
 	BestIndividualsFile << s.BestPerformance() << endl << endl;
 
-	cout << trial << "finished" << endl;
+	// cout << trial << "finished" << endl;
 
 	trial ++;
 }
@@ -332,18 +332,19 @@ void EvolutionaryRunDisplay(TSearch &s)
 // ------------------------------------
 int main (int argc, const char* argv[]) 
 {
-	// cout << "main called" << endl;
-	// Evolfile.open("./evol.dat");
-	// BestIndividualsFile.open("./bestind.dat");
-	char dirname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/0";
-	int result = mkdir(dirname,0755);
-	Evolfile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/evol.dat");
-	BestIndividualsFile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/bestind.dat");
-	// cout << "files open" << endl;
+	// SUPERCOMPUTER MODE
+	Evolfile.open("./evol.dat");
+	BestIndividualsFile.open("./bestind.dat");
+	//SPECIFIC LOCAL MODE
+	// char dirname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/0";
+	// int result = mkdir(dirname,0755);
+	// Evolfile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/evol.dat");
+	// BestIndividualsFile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/0/bestind.dat");
+
 	for (int i=1;i<=trials;i++){
 		// cout << "trial " << i << endl;
-		// long randomseed = static_cast<long>(time(NULL));
-		long IDUM=-time(0);
+		long randomseed = static_cast<long>(time(NULL));
+		// long IDUM=-time(0);
 		// cout << "seed initialized" << endl;
 		// No idea why this wouldn't work
 		// if (argc == 1)
@@ -370,11 +371,13 @@ int main (int argc, const char* argv[])
 		s.SetReEvaluationFlag(0); //  Parameter Variability Modality Only
 
 		// GRID MODE
-		int resolution = 3;
+		int resolution = 5;
 		TVector<double> par_vals(1,resolution);
-		par_vals[1] = -10;
-		par_vals[2] = 0;
-		par_vals[3] = 10;
+		par_vals[1] = -16;
+		par_vals[2] = -8;
+		par_vals[3] = 0;
+		par_vals[4] = 8;
+		par_vals[5] = 16;
 
 		int num_pts = pow(resolution,num);
 		TMatrix<double> ptlist(1,num_pts,1,num);
