@@ -18,7 +18,7 @@
 #define Max_Digits 2
 
 // Task params
-const double TransientDurationold = 50; //Seconds with HP off
+const double TransientDuration = 50; //Seconds with HP off
 const double PlasticDuration = 50000; //Seconds with HP running
 const int N = 3;
 const int CTRNNphenotypelen = (2*N)+(N*N);
@@ -36,7 +36,7 @@ const double LB1step = .01;
 const double LB3step = .01;
 const double range = 0; //assume constant range across neurons
 const double Btauval = 150; //right in the middle of evol range
-const double SWval = 0; //right in middle of evol range (in seconds)
+const double SWval = 0; //(in seconds)
 
 int main(int argc, const char* argv[])
 {
@@ -59,11 +59,9 @@ int main(int argc, const char* argv[])
     // int num_pts = 1;
     // TMatrix<double> ptlist(1,num_pts,1,num);
     // ptlist(1,1) = -1.67349; 
-    // ptlist(1,2) = 1.9378;
+    // ptlist(1,2) = 1.9336;
 
     ifstream ifs;
-
-	CTRNN Circuit(3);
 
     // Local Run Mode
     // char fname[] = "../Pyloric CTRNN Genomes/goodgenomesnormalizedfit.dat";
@@ -82,9 +80,14 @@ int main(int argc, const char* argv[])
     //     ifs >> pyl_fitness;
     // }
 
-    for (int indiv=19;indiv<20;indiv++){
+    for (int indiv=36;indiv<=36;indiv++){
 
         //Define pyloric circuit around which to center the slice
+
+        // One circuit only mode
+        ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/36/pyloriccircuit.ns");
+        CTRNN Circuit(3);
+        ifs >> Circuit;
 
         // Local Run Mode
         // ifs >> phenotype;
@@ -92,12 +95,7 @@ int main(int argc, const char* argv[])
         // phenotype >> Circuit;
 
         // Parallel Supercomputer Mode
-        ifs.open("./pyloriccircuit.ns");
-        ifs >> Circuit;
-        Circuit.ShiftedRho(shiftedrho);
-
-        // One circuit only mode
-        // ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/34/pyloriccircuit.ns");
+        // ifs.open("./pyloriccircuit.ns");
         // ifs >> Circuit;
 
         //Define HP parslice output file
@@ -113,25 +111,30 @@ int main(int argc, const char* argv[])
         // strcat(outfile, "/HPparslice.dat");
 
         // Parallel Supercomputer Mode
-        char outfile[] = "./HPparslice_newrho_res5.dat";
+        // char outfile[] = "./HPparslice_newrho_res5.dat";
         // char outfile[] = "./HPparslice_test.dat";
 
         // Only one cicuit/HP pair mode
-        // char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/34/HPparslice_newrho_long.dat";
+        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/36/HPparslice_newrho_res5_test.dat";
 
         HPparspacefile.open(outfile);
+        ifs.close();
 
         //Define HPs based on position in parspace slice
         for (double LB1=LB1min;LB1<=LB1max;LB1+=LB1step){
             // cout  << LB1 << endl;
             for (double LB3=LB3min;LB3<=LB3max;LB3+=LB3step){
-                // cout << LB1 << " " << LB3 << endl;
+                cout << LB1 << " " << LB3 << endl;
+                
+                Circuit.ShiftedRho(shiftedrho);
+
                 TVector<double> HPphenotype(1,HPphenotypelen);
                 int k = 1;
                 for (int i=1;i<=num;i++){
                     HPphenotype[k] = Btauval;
                     k++;
                 }
+
                 HPphenotype[k] = LB1;
                 k++;
                 HPphenotype[k] = LB3;
@@ -145,8 +148,9 @@ int main(int argc, const char* argv[])
                     HPphenotype[k] = SWval;
                     k++;
                 }
-                // cout << "before phen set" << endl;
+                
                 Circuit.SetHPPhenotype(HPphenotype,StepSize,true);
+
                 // cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(1) << " " << Circuit.PlasticityUB(2) << " " << Circuit.PlasticityUB(3) << endl;
                 // cout << "after phen set" << endl;
                 //Check grid of initial points to see how many end up pyloric (will just be counting, not keeping fitness)
@@ -156,7 +160,6 @@ int main(int argc, const char* argv[])
                     // cout << i << endl;
                     Circuit.SetNeuronBias(1,ptlist(i,1));
                     Circuit.SetNeuronBias(3,ptlist(i,2));
-                    // cout << endl << Circuit.biases << endl;
 
                     //Reset Circuit
                     Circuit.RandomizeCircuitOutput(0.5, 0.5);
@@ -166,6 +169,7 @@ int main(int argc, const char* argv[])
                     for (double t = StepSize; t <= TransientDuration; t += StepSize) {
                         Circuit.EulerStep(StepSize,false);
                     }
+                    
                     // Apply plasticity for a period of time
                     for (double t = StepSize; t <= PlasticDuration; t += StepSize) {
                         Circuit.EulerStep(StepSize,true);
