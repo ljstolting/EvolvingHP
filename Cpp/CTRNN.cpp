@@ -143,7 +143,11 @@ void CTRNN::SetCircuitSize(int newsize)
   // cout << "created:" << outputhist.LowerBound() << " " << outputhist.UpperBound() << endl;
   outputhist.FillContents(0.0);
   outputhiststartidxs.SetBounds(1,size);
-  outputhiststartidxs.FillContents(1);
+  int cumulative = 1;
+  for (int neuron = 1; neuron <= size; neuron++){
+    outputhiststartidxs(neuron) = cumulative;
+    cumulative += windowsize(neuron);
+  }
 
   // NEW for CAPPING
   wr = 20;
@@ -295,7 +299,6 @@ void CTRNN::RhoCalc(void){
       }
       // cout << "checkpoint 1" << endl;
       if(stepnum == windowsize[i]){ //do initial add-up
-      // cout << outputhist(i,1) << endl;
         for (int k = 0; k < windowsize[i]; k++){  
           sumoutputs[i] += outputhist(outputhiststartidxs(i)+k);
         }
@@ -385,6 +388,7 @@ void CTRNN::EulerStep(double stepsize, bool adaptpars)
   if (adaptpars == true) 
     {
       RhoCalc();
+      // if(stepnum<10){cout << "rhos:" << rhos << endl << "sumoutputs: << sumoutputs << endl;}
       stepnum ++;
     
       // NEW: Update Biases

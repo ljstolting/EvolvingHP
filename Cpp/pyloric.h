@@ -282,6 +282,7 @@ double PyloricFitFromFeatures(TVector<double> &FeatureVect){
 //Test pyloric performance of a circuit, which is assumed to be already equilibrated
 double PyloricPerformance(CTRNN &Agent)
 {
+	// cout << "6" << Agent.biases << endl;
 	int N = Agent.CircuitSize();
 	TMatrix<double> OutputHistory;
 	OutputHistory.SetBounds(1,TestSteps,1,N);
@@ -293,6 +294,7 @@ double PyloricPerformance(CTRNN &Agent)
 	maxoutput.FillContents(0.0);
 	TVector<double> minoutput(1,N);
 	minoutput.FillContents(1.0);
+	// cout << "7" << Agent.biases << endl;
 
 	// Run the circuit to calculate Pyloric fitness while HP either on or off depending on global setting.
 	int t = 0;
@@ -389,7 +391,6 @@ void PointCombos(TMatrix<int> &answer,int resolution){
 		TVector<int> row(1,dimension);
 		row.FillContents(0);
 		converttobase(i-1,resolution,row);
-		// cout << row << endl;
 		for(int j = 1; j <= dimension; j++){
 			answer(i,j) += row(j); //allows for 1 indexing if matrix initialized with ones
 		}

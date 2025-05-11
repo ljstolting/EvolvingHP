@@ -50,7 +50,7 @@ const bool highres = false;
 
 // Inpute files
 char resfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/res.dat";
-char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/36/pyloriccircuit.ns";
+char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/78/pyloriccircuit.ns";
 
 // HP mode
 const bool rhoshifted = true; //shifted rho is the new version of HP, where slopes are not adjusted
@@ -58,8 +58,8 @@ const bool rhoshifted = true; //shifted rho is the new version of HP, where slop
 							   // potentially valid HP-agnostic approximation
 
 // Output files
-char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/36/HPAgnosticAverage.dat";
-char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/36/HPAgnosticAverage_multistabilitytest.dat";
+char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/78/HPAgnosticAverage.dat";
+char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/78/HPAgnosticAverage_multistabilitytest.dat";
 
 
 // Nervous system params

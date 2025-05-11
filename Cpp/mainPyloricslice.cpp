@@ -14,12 +14,12 @@ const double TransientDuration = 100; //in seconds
 // const int RunSteps = RunDuration/StepSize; // in steps
 
 // Parameter space resolution
-const double par1min = -20;
-const double par1max = 20;
-const double par1step = .05;
-const double par2min = -20;
-const double par2max = 20;
-const double par2step = .05;
+const double par1min = -16;
+const double par1max = 	16;
+const double par1step = .1;
+const double par2min = -16;
+const double par2max = 16;
+const double par2step = .1;
 
 // Nervous system params
 const int N = 3;
@@ -30,15 +30,15 @@ int main (int argc, const char* argv[])
 {
 	// Create file to hold data
 	ofstream slicefile;
-	slicefile.open("./Specifically Evolved HP mechanisms/Every Circuit/80/pyloricslice_highres.dat");
+	slicefile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/pyloricslice.dat");
 	// slicefile.open("Pete_maxmindetected_HP129.dat");
 	ofstream resfile;
-	resfile.open("./Specifically Evolved HP mechanisms/Every Circuit/80/res_highres.dat");
+	resfile.open("./Specifically Evolved HP mechanisms/Every Circuit/res_regular.dat");
 	resfile << par1min << " " << par1max << " " << par1step << endl << par2min << " " << par2max << " " << par2step << endl;
 
 	// Load the base CTRNN parameters
     CTRNN Circuit(3);
-    char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/80/pyloriccircuit.ns";
+    char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/92/pyloriccircuit.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -46,7 +46,9 @@ int main (int argc, const char* argv[])
         exit(EXIT_FAILURE);
     }
     ifs >> Circuit; 
-
+	Circuit.ShiftedRho(true);
+	// cout << "2" << Circuit.biases << endl;
+	// cout << Circuit.l_boundary << " " << Circuit.u_boundary << " " << Circuit.windowsize << endl;
 	// HP should be null
 	
 	// For every pair of parameter values specified, (right now, par1=theta1, par2=theta3)
@@ -59,16 +61,19 @@ int main (int argc, const char* argv[])
 			for (int neuron=1; neuron <= N; neuron ++){
 				Circuit.SetNeuronOutput(neuron,.5); //puts in line with the way the average/proxy is calculated most cleanly
 			}
+			// cout << "3" << Circuit.biases << endl;
 			// cout << Circuit.windowsize << endl << Circuit.minavg << endl << Circuit.maxavg << endl << endl;
 
 			for (double t = StepSize; t<= TransientDuration; t+=StepSize){
 				Circuit.EulerStep(StepSize,false);
 			}
+			// cout << "4" << Circuit.biases << endl;
 			// for (double t = StepSize; t<= TestDuration; t+=StepSize){
 			// 	Circuit.EulerStepAvgsnoHP(StepSize);
 			// }
 			// slicefile << Circuit.minavg << endl << Circuit.maxavg << endl << endl;
 			slicefile << PyloricPerformance(Circuit) << " ";
+			// cout << "5" << Circuit.biases << endl;
 		}
 		slicefile << endl;
 	}	
