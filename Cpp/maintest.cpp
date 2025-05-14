@@ -19,8 +19,8 @@ const double PlasticDuration = 5000; //Seconds with HP running between each chec
 const int num_checks = 5;             //How many times to check the pyloric fitness, per initial condition (to examine whether it's reached a steady state)
 const int N = 3;
 const int CTRNNphenotypelen = (2*N)+(N*N);
-// const int num_indivs = 100; //how many genomes to loop through
-const int num_evols = 5; //how many HP evolutions per circuit
+const int num_indivs = 1; //how many genomes to loop through
+const int num_evols = 211; //how many HP evolutions per circuit
 const int num_dims = 2; //how many dimensions does HP operate in (equivalently, how many dimensions is the plane you are testing)
 
 int main(int argc, const char* argv[])
@@ -53,31 +53,35 @@ int main(int argc, const char* argv[])
     PointGrid(ptlist,par_vals);
 
     bool range_encoding = true;
-    char outdirectory[52] = "./Specifically Evolved HP mechanisms/Every Circuit/";
-    char circuitfname[19] = "/pyloriccircuit.ns";
+    // char outdirectory[52] = "./Specifically Evolved HP mechanisms/Every Circuit/";
+    char outdirectory[46] = "./Specifically Evolved HP mechanisms/Pete/2D/";
+    // char circuitfname[19] = "/pyloriccircuit.ns";
+    char circuitfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/pyloriccircuit.ns";
     char evolvedHPfname[13] = "/bestind.dat";
     char testfname[27] = "/recoverytest.dat";
 
     CTRNN Circuit(N);
 
-    for (int indiv = 0; indiv < 100; indiv ++){
+    for (int indiv = 0; indiv < num_indivs; indiv ++){
 
         ifstream circuitfile;
 
         char indiv_char[Max_Digits + sizeof(char)];
         std::sprintf(indiv_char, "%d", indiv);
 
-        char circuitfilename[Max_Digits + sizeof(char) + 51 + 18];
-        strcpy(circuitfilename, outdirectory);
-        strcat(circuitfilename, indiv_char);
-        strcat(circuitfilename,circuitfname);
-        circuitfile.open(circuitfilename);
+        // char circuitfilename[Max_Digits + sizeof(char) + 51 + 18];
+        // strcpy(circuitfilename, outdirectory);
+        // strcat(circuitfilename, indiv_char);
+        // strcat(circuitfilename,circuitfname);
+        // circuitfile.open(circuitfilename);
+        circuitfile.open(circuitfname);
         if (!circuitfile) {
-            cerr << "File not found: " << circuitfilename << endl;
+            // cerr << "File not found: " << circuitfilename << endl;
+            cerr << "File not found: " << circuitfname << endl;
             exit(EXIT_FAILURE);
         }
         circuitfile >> Circuit;
-        Circuit.ShiftedRho(true);
+        Circuit.ShiftedRho(false);
         circuitfile.close();
 
         for (int HPevol = 0; HPevol < num_evols; HPevol++){
@@ -87,18 +91,18 @@ int main(int argc, const char* argv[])
 
             char testfilename[Max_Digits + sizeof(char) + Max_Digits + sizeof(char) + 51 + 1 + 26];
             strcpy(testfilename, outdirectory);
-            strcat(testfilename, indiv_char);
+            // strcat(testfilename, indiv_char);
 
             // cout << testfilename << endl;
 
             char evolvedHPfilename[Max_Digits + sizeof(char) + sizeof(char) + 51 + 1 + 12];
             strcpy(evolvedHPfilename, outdirectory);
-            strcat(evolvedHPfilename, indiv_char);
+            // strcat(evolvedHPfilename, indiv_char);
 
             char evol_char[Max_Digits + sizeof(char)];
             std::sprintf(evol_char, "%d", HPevol);
 
-            strcat(testfilename, "/");
+            // strcat(testfilename, "/");
             strcat(testfilename, evol_char);
             strcat(testfilename,testfname);
             testfile.open(testfilename);
@@ -107,7 +111,7 @@ int main(int argc, const char* argv[])
                 exit(EXIT_FAILURE);
             }
 
-            strcat(evolvedHPfilename, "/");
+            // strcat(evolvedHPfilename, "/");
             strcat(evolvedHPfilename, evol_char);
             strcat(evolvedHPfilename,evolvedHPfname);
 

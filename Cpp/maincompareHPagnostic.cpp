@@ -32,19 +32,20 @@
 using namespace std;
 
 // General run parameters
-char CTRNNfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/19/pyloriccircuit.ns";
-const double par1min = 13.0595;
-const double par1max = 13.0595;
+char CTRNNfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/94/pyloriccircuit.ns";
+const double par1min = -16;
+const double par1max = 16;
 const double par1step = .05;
-const double par2min = -15.8667;
-const double par2max = -15.8667;
+const double par2min = -16;
+const double par2max = 16;
 const double par2step = .05;
 const double targetstep = .005;
 
 // HP-desired movement parameters (initially taken from other files)
-char HPfname[] = "./Convenient HP Mechanisms/bad.dat"; //this file is where you specify the sliding window
+char HPfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/94/0/bestind.dat"; //this file is where you specify the sliding window
                                                            //targets are specified by whatever the agnostic average is
 const double RunDuration = 5000;
+const double TransientDuration = 50;
 
 // HP-agnostic average parameters (initially taken from other files)
 const double default_duration = 50;
@@ -112,12 +113,27 @@ void HPDesiredMovement(CTRNN &Agent, TVector<double> &outputvec){
         Agent.EulerStep(StepSize,0);
     }
 
+    bool left = false;
+    bool returned = false;
+    //Note circuit state
+    TVector<double> start(Agent.outputs);
+    double distance = 0;
+
     //Keep track of desired bias changes
-    for (double t=StepSize;t<=default_duration;t+=StepSize){
+    double t = StepSize;
+    while ((t <= default_duration) && returned == false){
+        distance = 0;
         Agent.EulerStepAvgsnoHP(StepSize);
         for (int i = 1; i <= Agent.CircuitSize(); i ++){
             outputvec(i) += StepSize * Agent.RtausBiases(i) * Agent.rhos(i);
+            distance += pow(Agent.NeuronOutput(i)-start(i),2);
         }
+        distance = pow(distance,.5);
+
+        if (distance > leaving_tolerance){left = true;}
+        if (left && (distance < return_tolerance)){returned = true;}
+
+        t += StepSize;
     }
     return;
 }
@@ -130,7 +146,7 @@ int main(int argc, const char* argv[]){
 
     // outfilefname.replace(19, 1, to_string(atoi(argv[1])));
 
-    string outfilefname = "./CompareHPagnostictest.dat";
+    string outfilefname = "./Specifically Evolved HP mechanisms/Every Circuit/94/0/CompareHPagnostictest.dat";
     ofstream outfile;
     outfile.open(outfilefname);
 
@@ -159,9 +175,10 @@ int main(int argc, const char* argv[]){
         Circuit.SetNeuronBias(1,bias1);
         for (double bias3=par2min;bias3<=par2max;bias3+=par2step){
             Circuit.SetNeuronBias(3,bias3);
-            TVector<double> HPagav(1,Circuit.CircuitSize());
-            HPAgnosticAvg(Circuit, HPagav);
-            cout << "HP Agnostic Averages:" << HPagav << endl;
+
+            // TVector<double> HPagav(1,Circuit.CircuitSize());
+            // HPAgnosticAvg(Circuit, HPagav);
+            // cout << "HP Agnostic Averages:" << HPagav << endl;
 
             // Assuming here that only n1 and n3 are changing
             // uncomment if you are testing difference between given HP and endpoint
@@ -170,14 +187,14 @@ int main(int argc, const char* argv[]){
             // Circuit.SetPlasticityLB(3,HPagav(3));
             // Circuit.SetPlasticityUB(3,HPagav(3));
 
-            Circuit.SetPlasticityLB(1,.34);
-            Circuit.SetPlasticityUB(1,.34);
-            Circuit.SetPlasticityLB(3,.34);
-            Circuit.SetPlasticityUB(3,.34);
+            // Circuit.SetPlasticityLB(1,.34);
+            // Circuit.SetPlasticityUB(1,.34);
+            // Circuit.SetPlasticityLB(3,.34);
+            // Circuit.SetPlasticityUB(3,.34);
             
             TVector<double> HPdesav(1,Circuit.CircuitSize());
             HPDesiredMovement(Circuit,HPdesav);
-            cout << "HP Desired Movement for targets " << Circuit.PlasticityLB(1) << ", " << Circuit.PlasticityLB(3) << ":" << HPdesav << endl;
+            // cout << "HP Desired Movement for targets " << Circuit.PlasticityLB(1) << ", " << Circuit.PlasticityLB(3) << ":" << HPdesav << endl;
             outfile << HPdesav(1) << " " << HPdesav(3) << endl;
             // if (HPdesav(1) > 0.01 || HPdesav(3) > 0.01){cout << "large flag" << endl;}
 
