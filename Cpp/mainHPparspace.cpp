@@ -19,7 +19,7 @@
 
 // Task params
 const double TransientDuration = 50; //Seconds with HP off
-const double PlasticDuration = 50000; //Seconds with HP running
+const double PlasticDuration = 100000; //Seconds with HP running
 const int N = 3;
 const int CTRNNphenotypelen = (2*N)+(N*N);
 const int num = 2; //how many paramerters will be under HP control, and perturbed
@@ -85,7 +85,7 @@ int main(int argc, const char* argv[])
         //Define pyloric circuit around which to center the slice
 
         // One circuit only mode
-        ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/36/pyloriccircuit.ns");
+        ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/11/pyloriccircuit.ns");
         CTRNN Circuit(3);
         ifs >> Circuit;
 
@@ -115,7 +115,7 @@ int main(int argc, const char* argv[])
         // char outfile[] = "./HPparslice_test.dat";
 
         // Only one cicuit/HP pair mode
-        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/36/HPparslice_newrho_res5_test.dat";
+        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/HPparslice_newrho_res5_test.dat";
 
         HPparspacefile.open(outfile);
         ifs.close();
