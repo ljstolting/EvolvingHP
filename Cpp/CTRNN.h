@@ -200,6 +200,7 @@ class CTRNN {
 
         int size, stepnum;
         TVector<int> windowsize, plasticitypars, plasticneurons, outputhiststartidxs; // NEW for AVERAGING
+        void SetPlasticityPars(TVector<int>& plasticpars){plasticitypars=plasticpars;};
         double wr, br; // NEWER for CAPPING
         int max_windowsize, num_pars_changed;
         bool adaptbiases, adaptweights, shiftedrho;

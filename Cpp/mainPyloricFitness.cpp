@@ -18,9 +18,9 @@ int num_indivs = 1;
 ifstream genomesfile;
 ofstream outfile;
 ofstream burstfile;
-char genomesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/80/pyloriccircuit.ns";
-char outfilefname[] = "./Specifically Evolved HP mechanisms/Every Circuit/80/pylorictrajectory_test.ns";
-char burstfilefname[] = "./Specifically Evolved HP mechanisms/Every Circuit/80/pyloricbursttimes_test.dat";
+char genomesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/pyloriccircuit copy.ns";
+char outfilefname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/pylorictrajectory_copy.ns";
+char burstfilefname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/pyloricbursttimes_copy.dat";
 
 // double LPbias = 7;
 // double PDbias = 1;
@@ -36,7 +36,7 @@ int main(){
 
     CTRNN Circuit(3);
     genomesfile >> Circuit;
-    // cout << Circuit.weights << endl;
+    cout << Circuit.biases << endl;
 
     // Circuit.SetNeuronBias(1,LPbias);
     // Circuit.SetNeuronBias(3,PDbias);

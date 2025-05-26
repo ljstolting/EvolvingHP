@@ -24,14 +24,15 @@ const int N = 3;
 const int CTRNNphenotypelen = (2*N)+(N*N);
 const int num = 2; //how many paramerters will be under HP control, and perturbed
 const int HPphenotypelen = num*4;
+const int indiv_idx = 15; //index of the first individual you'll run
 const int num_indivs = 1; //how many genomes in the file (100 for Local Run Mode)
 const bool shiftedrho = true;
 
 // HP parameter space specifications
-const double LB1min = 0;
-const double LB1max = 1;
-const double LB3min = 0;
-const double LB3max = 1;
+const double LB1min = .37;
+const double LB1max = .37;
+const double LB3min = .4;
+const double LB3max = .5;
 const double LB1step = .01;
 const double LB3step = .01;
 const double range = 0; //assume constant range across neurons
@@ -80,12 +81,12 @@ int main(int argc, const char* argv[])
     //     ifs >> pyl_fitness;
     // }
 
-    for (int indiv=36;indiv<=36;indiv++){
+    for (int indiv=indiv_idx;indiv<indiv_idx+num_indivs;indiv++){
 
         //Define pyloric circuit around which to center the slice
 
         // One circuit only mode
-        ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/11/pyloriccircuit.ns");
+        ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/15/pyloriccircuit.ns");
         CTRNN Circuit(3);
         ifs >> Circuit;
 
@@ -115,7 +116,7 @@ int main(int argc, const char* argv[])
         // char outfile[] = "./HPparslice_test.dat";
 
         // Only one cicuit/HP pair mode
-        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/HPparslice_newrho_res5_test.dat";
+        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/15/HPparslice_newrho_res5_test.dat";
 
         HPparspacefile.open(outfile);
         ifs.close();
