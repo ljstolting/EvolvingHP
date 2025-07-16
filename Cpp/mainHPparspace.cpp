@@ -19,23 +19,23 @@
 
 // Task params
 const double TransientDuration = 50; //Seconds with HP off
-const double PlasticDuration = 100000; //Seconds with HP running
+const double PlasticDuration = 20000; //Seconds with HP running
 const int N = 3;
 const int CTRNNphenotypelen = (2*N)+(N*N);
 const int num = 2; //how many paramerters will be under HP control, and perturbed
 const int HPphenotypelen = num*4;
-const int indiv_idx = 15; //index of the first individual you'll run
+const int indiv_idx = 15; //index of the first individual you'll run, only used if file is list
 const int num_indivs = 1; //how many genomes in the file (100 for Local Run Mode)
 const bool shiftedrho = true;
 
 // HP parameter space specifications
-const double LB1min = .37;
-const double LB1max = .37;
-const double LB3min = .4;
-const double LB3max = .5;
+const double LB1min = 0;
+const double LB1max = .9;
+const double LB3min = 0;
+const double LB3max = .9;
 const double LB1step = .01;
 const double LB3step = .01;
-const double range = 0; //assume constant range across neurons
+const double range = 0.1; //assume constant range across neurons
 const double Btauval = 150; //right in the middle of evol range
 const double SWval = 0; //(in seconds)
 
@@ -116,7 +116,7 @@ int main(int argc, const char* argv[])
         // char outfile[] = "./HPparslice_test.dat";
 
         // Only one cicuit/HP pair mode
-        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/15/HPparslice_newrho_res5_test.dat";
+        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/15/HPparslicerangepoint1_rest.dat";
 
         HPparspacefile.open(outfile);
         ifs.close();
@@ -125,7 +125,7 @@ int main(int argc, const char* argv[])
         for (double LB1=LB1min;LB1<=LB1max;LB1+=LB1step){
             // cout  << LB1 << endl;
             for (double LB3=LB3min;LB3<=LB3max;LB3+=LB3step){
-                cout << LB1 << " " << LB3 << endl;
+                // cout << LB1 << " " << LB3 << endl;
                 
                 Circuit.ShiftedRho(shiftedrho);
 
@@ -149,10 +149,11 @@ int main(int argc, const char* argv[])
                     HPphenotype[k] = SWval;
                     k++;
                 }
-                
+                // cout << HPphenotype << Circuit.plasticitypars << endl;
                 Circuit.SetHPPhenotype(HPphenotype,StepSize,true);
 
-                // cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(1) << " " << Circuit.PlasticityUB(2) << " " << Circuit.PlasticityUB(3) << endl;
+
+                cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(1) << " " << Circuit.PlasticityUB(2) << " " << Circuit.PlasticityUB(3) << endl;
                 // cout << "after phen set" << endl;
                 //Check grid of initial points to see how many end up pyloric (will just be counting, not keeping fitness)
                 int pyloric_count = 0;

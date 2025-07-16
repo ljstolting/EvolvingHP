@@ -1,0 +1,12 @@
+mainavgpyloriccombo: mainavgpyloriccombo.o CTRNN.o TSearch.o random.o
+	g++ -pthread -o mainavgpyloriccombo2 mainavgpyloriccombo.o CTRNN.o TSearch.o random.o
+random.o: random.cpp random.h VectorMatrix.h
+	g++ -pthread -c -O3 random.cpp
+CTRNN.o: CTRNN.cpp random.h CTRNN.h
+	g++ -pthread -c -O3 CTRNN.cpp
+TSearch.o: TSearch.cpp TSearch.h
+	g++ -pthread -c -O3 TSearch.cpp
+mainavgpyloriccombo.o: mainavgpyloriccombo.cpp CTRNN.h TSearch.h
+	g++ -pthread -c -O3 mainavgpyloriccombo.cpp
+clean:
+	rm *.o mainavgpyloriccombo2

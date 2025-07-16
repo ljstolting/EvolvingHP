@@ -30,20 +30,21 @@ int main (int argc, const char* argv[])
 {
 	// Create file to hold data
 	ofstream slicefile;
-	// slicefile.open("./Specifically Evolved HP mechanisms/Every Circuit/92/pyloricslice.dat");
-	slicefile.open("./Test3DHPonPyloricSolutions/pyloricslice3D_39.dat");
+	slicefile.open("./Specifically Evolved HP mechanisms/Every Circuit/11/pyloricslice_addon.dat");
+	// slicefile.open("./Test3DHPonPyloricSolutions/pyloricslice3D_39.dat");
 	// slicefile.open("Pete_maxmindetected_HP129.dat");
 	// ofstream resfile;
 	// resfile.open("./Specifically Evolved HP mechanisms/Every Circuit/res_regular.dat");
 	// resfile << par1min << " " << par1max << " " << par1step << endl << par2min << " " << par2max << " " << par2step << endl;
 	ifstream resfile;
-	resfile.open("./Test3DHPonPyloricSolutions/res.dat");
+	// resfile.open("./Test3DHPonPyloricSolutions/res.dat");
+	resfile.open("./Specifically Evolved HP mechanisms/Every Circuit/res_addon.dat");
 	ifstream dimsfile;
 	dimsfile.open("./avgsdimensions.dat"); 
 
 	// Load the base CTRNN parameters
     CTRNN Circuit(3);
-    char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/pyloriccircuit.ns";
+    char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/pyloriccircuit.ns";
     ifstream ifs;
     ifs.open(fname);
     if (!ifs) {
@@ -74,14 +75,16 @@ int main (int argc, const char* argv[])
 	// For every pair of parameter values specified, (right now, par1=theta1, par2=theta3)
 	bool finished = false;
 	while (!finished){
-		cout << parvec << endl;
+		// cout << parvec << endl;
 		for (int i=1;i<=num_dims;i++){
 			Circuit.SetArbDParam(i,parvec(i));
 		}
+		// cout << Circuit.biases << endl;
 		// Circuit.RandomizeCircuitState(0,0); // resets sliding window calculation utilities, as well
 		for (int neuron=1; neuron <= N; neuron ++){
 			Circuit.SetNeuronOutput(neuron,.5); //puts in line with the way the average/proxy is calculated most cleanly
 		}
+		Circuit.WindowReset();
 		// cout << "3" << Circuit.biases << endl;
 		// cout << Circuit.windowsize << endl << Circuit.minavg << endl << Circuit.maxavg << endl << endl;
 
@@ -95,13 +98,13 @@ int main (int argc, const char* argv[])
 		// slicefile << Circuit.minavg << endl << Circuit.maxavg << endl << endl;
 		slicefile << PyloricPerformance(Circuit) << " ";
 		// cout << "5" << Circuit.biases << endl;
-		slicefile << endl;
 
 		
 		//and then increase the value of the appropriate parameters
 		parvec(num_dims)+=resmat(num_dims,3); //step the last dimension
 		for (int i=(num_dims-1); i>=1; i-=1){ //start at the second to last dimension and count backwards to see if the next dimension has completed a run
 			if(parvec(i+1)>resmat(i+1,2)){   //if the next dimension is over its max
+				slicefile << endl;
 				parvec(i+1) = resmat(i+1,1); //set it to its min
 				parvec(i) += resmat(i,3);    //and step the current dimension
 			}

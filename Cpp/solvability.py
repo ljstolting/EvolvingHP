@@ -25,8 +25,8 @@ par1res_reg = np.arange(par1min_reg,par1max_reg+par1step_reg,par1step_reg)
 par2res_reg = np.arange(par2min_reg,par2max_reg+par2step_reg,par2step_reg)
 # print(len(par1res))
 
-def get_avg_slice(indiv, type = None):
-    if type == "multistability_check":
+def get_avg_slice(indiv, slicetype = None):
+    if slicetype == "multistability_check":
         data = np.loadtxt("./Specifically Evolved HP mechanisms/Every Circuit/%s/HPAgnosticAverage_highres_multistability.dat"%indiv)
         data = data.reshape((len(par2res),len(par1res),2,3))
         avgs = data[:,:,0,:]
@@ -35,17 +35,17 @@ def get_avg_slice(indiv, type = None):
         avgs = np.swapaxes(avgs,1,0)
         multistable = multistable.swapaxes(0,1)
         return avgs, multistable
-    if type == "high_res":
+    if slicetype == "high_res":
         avgs = np.loadtxt("./Specifically Evolved HP mechanisms/Every Circuit/%s/HPAgnosticAverage_highres.dat"%indiv)
         avgs = avgs.reshape((len(par2res),len(par1res),3))
         avgs = np.swapaxes(avgs,1,0)
         return avgs
-    if type == 'netchange':
+    if slicetype == 'netchange':
         avgs = np.loadtxt("./Convenient HP Mechanisms/goodnetchange.dat")
         avgs = avgs.reshape((len(par2res),len(par1res),2))
         avgs = np.swapaxes(avgs,1,0)
         return avgs
-    if type == 'newrho':
+    if slicetype == 'newrho':
         data = np.loadtxt("./Specifically Evolved HP mechanisms/Every Circuit/%s/HPAgnosticAverage_highres_newrho.dat"%indiv)
         data = data.reshape((len(par2res),len(par1res),2,3))
         avgs = data[:,:,0,:]
@@ -100,64 +100,81 @@ def get_pyloric_outline(indiv,high_res=False):
                 borderlist_right.append([par1res[j],par2res[i]])
     return [borderlist_left,borderlist_right[::-1]]
 
-def uniquevals(indiv,tolerance = 0.03,evaluate = False,plot=True,ax=None,progress=False,high_res=True):
-    if high_res:
-        stype = 'high_res'
+def uniquevals(avgs, pyloricslice ,stability_test=True,include_unstable=False,tolerance = 0.01,high_res = True,evaluate = False,plot=True,ax=None,progress=False):
+    avgs_swap = np.swapaxes(avgs,0,1)
+    if stability_test:
+        stability = np.zeros_like(avgs[:,:,0])
+        for i in range(1,len(avgs)-1):
+            for j in range(1,len(avgs[0])-1):
+                if ((avgs_swap[i-1,j,0]<=avgs_swap[i,j,0])):
+                    if ((avgs_swap[i,j-1,2]<=avgs_swap[i,j,2])):
+                        stability[i,j] = 1
     else:
-        stype = None
-    pyloricslice = get_pyloric_slice(indiv, high_res)
-    avgs = get_avg_slice(indiv,type=stype)
-    # maskingslice = np.repeat(pyloricslice,3,axis=1).reshape((len(pyloricslice),len(pyloricslice[0]),3))
-    # pyloricavgs = np.ma.masked_where(maskingslice<0.3,avgs)
-    pyloricavgs = avgs[np.where(pyloricslice>=.3)][:,0::2]
-
-    # num_nonpyloric = len(np.where(maskingslice < 0.3)[0])
-    # nonpyloricavgs = np.ma.masked_where(maskingslice>=0.3,avgs)
-    nonpyloricavgs = avgs[np.where(pyloricslice<.3)][:,0::2]
+        stability = np.ones_like(avgs[:,:,0])
+    stability = np.swapaxes(stability,0,1)
+    
+    pyloricavgs = avgs[pyloricslice>=.3][:,0::2]
+    stable_pyloricavgs = avgs[(pyloricslice>=.3) & (stability==1)][:,0::2]
+    unstable_pyloricavgs = avgs[(pyloricslice>=.3) & (stability==0)][:,0::2]
+    nonpyloricavgs = avgs[pyloricslice<.3][:,0::2]
+    stable_nonpyloricavgs = avgs[(pyloricslice<.3) & (stability == 1)][:,0::2]
+    unstable_nonpyloricavgs = avgs[(pyloricslice<.3) & (stability==0)][:,0::2]
 
     if plot and (ax==None):
         plt.xlim(0,1)
         plt.ylim(0,1)
-        plt.scatter(nonpyloricavgs[:,0],nonpyloricavgs[:,1],color='r',alpha=.2,s=1)
-        plt.scatter(pyloricavgs[:,0],pyloricavgs[:,1],color='g',alpha=.2,s=1)
+        if include_unstable:
+            plt.scatter(unstable_nonpyloricavgs[:,0],unstable_nonpyloricavgs[:,1],color='firebrick',alpha=.5,s=1)
+            plt.scatter(unstable_pyloricavgs[:,0],unstable_pyloricavgs[:,1],color='darkgreen',alpha=.5,s=1)
+        plt.scatter(stable_nonpyloricavgs[:,0],stable_nonpyloricavgs[:,1],color='crimson',alpha=.5,s=1)
+        plt.scatter(stable_pyloricavgs[:,0],stable_pyloricavgs[:,1],color='limegreen',alpha=.5,s=1)
         plt.show()
     if plot and (ax!=None):
         ax.set_xlim(0,1)
         ax.set_ylim(0,1)
-        ax.scatter(nonpyloricavgs[:,0],nonpyloricavgs[:,1],color='r',alpha=.2,s=1)
-        ax.scatter(pyloricavgs[:,0],pyloricavgs[:,1],color='g',alpha=.2,s=1)
-
-    solvable = False
+        if include_unstable:
+            ax.scatter(unstable_nonpyloricavgs[:,0],unstable_nonpyloricavgs[:,1],color='firebrick',alpha=.5,s=1)
+            ax.scatter(unstable_pyloricavgs[:,0],unstable_pyloricavgs[:,1],color='darkgreen',alpha=.5,s=1)
+        ax.scatter(stable_nonpyloricavgs[:,0],stable_nonpyloricavgs[:,1],color='crimson',alpha=.5,s=1)
+        ax.scatter(stable_pyloricavgs[:,0],stable_pyloricavgs[:,1],color='limegreen',alpha=.5,s=1)
 
     if evaluate:
+        solvable = False
+        if include_unstable == True:
+            pyloric_consideration = pyloricavgs
+            nonpyloric_consideration = nonpyloricavgs
+        else:
+            pyloric_consideration = stable_pyloricavgs
+            nonpyloric_consideration = stable_nonpyloricavgs
         if high_res == False: #then, conceivable to run through and check every point in the pyloric list
             for i in range(len(pyloricavgs)):
                 if progress:
                     print(i)
-                dists = np.linalg.norm(nonpyloricavgs-pyloricavgs[i],axis=1)
+                dists = np.linalg.norm(nonpyloric_consideration-pyloric_consideration[i],axis=1)
                 if np.min(dists)>tolerance:
                     solvable = True
                     if progress:
-                        print(pyloricavgs[i],nonpyloricavgs[np.where(dists==np.min(dists))],np.min(dists))
+                        print(pyloric_consideration[i],nonpyloric_consideration[np.where(dists==np.min(dists))],np.min(dists))
                     break
         else: #takes too long to check every point, so we have a more complicated scheme (see markdown)
-            elimination_pyl_list = np.copy(pyloricavgs)
+            elimination_pyl_list = np.copy(pyloric_consideration)
             while len(elimination_pyl_list>0):
                 pyl_pt = elimination_pyl_list[0]
-                dists_pyl = np.linalg.norm(nonpyloricavgs-pyl_pt,axis=1)
+                dists_pyl = np.linalg.norm(nonpyloric_consideration-pyl_pt,axis=1)
                 if np.min(dists_pyl)>tolerance:
                     solvable = True
                     if progress:
-                        print(pyl_pt,nonpyloricavgs[np.where(dists_pyl==np.min(dists_pyl))],np.min(dists))
+                        print(pyl_pt,nonpyloric_consideration[np.where(dists_pyl==np.min(dists_pyl))],np.min(dists))
                     break
-                else:
-                    nonpyl_pt = nonpyloricavgs[np.where(dists_pyl==np.min(dists_pyl))]
-                    dists_nonpyl = np.linalg.norm(elimination_pyl_list-nonpyl_pt,axis=1)
-                    elimination_pyl_list = elimination_pyl_list[dists_nonpyl>tolerance]
-                    if progress:
-                        print(len(elimination_pyl_list))
-            # print(solvable)
-    return solvable
+
+                nonpyl_pt = nonpyloric_consideration[np.where(dists_pyl==np.min(dists_pyl))[0][0]]
+                dists_nonpyl = np.linalg.norm(elimination_pyl_list-nonpyl_pt,axis=1)
+                elimination_pyl_list = elimination_pyl_list[dists_nonpyl>tolerance]
+                if progress:
+                    print(len(elimination_pyl_list))
+        return solvable
+    else:
+        return
 # print("functions defined")
 
 recovery = np.zeros((100,5,121,5))
@@ -175,12 +192,16 @@ for i in range(100):
 
 # print("recovery data gathered")
 
-for i in range(78,100):
-    solvability = uniquevals(i,evaluate=True,plot=False)
-    with open('./solvability_output.txt', 'a') as f:
+for i in range(100):
+    pyloricslice = get_pyloric_slice(i,high_res=True)
+    avgs = get_avg_slice(i,slicetype="high_res") #swaps the axes
+    solvability_unstable = uniquevals(avgs,pyloricslice,tolerance=0.01,include_unstable=True,evaluate=True,plot=False)
+    solvability = uniquevals(avgs,pyloricslice,tolerance=0.01,include_unstable=False,evaluate=True,plot=False)
+    with open('./solvability_output_smallertol.txt', 'a') as f:
         print(i,file=f)
         print("Solvable: ", solvability,file=f)
+        print("When include unstable points: ", solvability_unstable,file=f)
         print("Evolved solutions: ", int(np.max(evolved_pyl_recovery[i])),file=f)
         print("Zero Range Solutions: ", int(zerorange_pyl_recovery[i]),file=f)
-    with open('./solvability_readable.txt', 'a') as f:
-        print(i, int(solvability), int(np.max(evolved_pyl_recovery[i])), int(zerorange_pyl_recovery[i]),file=f) 
+    with open('./solvability_readable_smallertol.txt', 'a') as f:
+        print(i, int(solvability), int(solvability_unstable), int(np.max(evolved_pyl_recovery[i])), int(zerorange_pyl_recovery[i]),file=f) 

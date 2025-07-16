@@ -200,7 +200,6 @@ class CTRNN {
 
         int size, stepnum;
         TVector<int> windowsize, plasticitypars, plasticneurons, outputhiststartidxs; // NEW for AVERAGING
-        void SetPlasticityPars(TVector<int>& plasticpars){plasticitypars=plasticpars;};
         double wr, br; // NEWER for CAPPING
         int max_windowsize, num_pars_changed;
         bool adaptbiases, adaptweights, shiftedrho;
@@ -209,5 +208,33 @@ class CTRNN {
         TVector<double> avgoutputs, sumoutputs, outputhist; // NEW for AVERAGING, change outputhist into a vector
         TMatrix<double> weights;
         TMatrix<double> tausWeights, RtausWeights; // NEW
+        void SetPlasticityPars(TVector<int>& plasticpars){
+          plasticitypars=plasticpars;
+          // determine if only weights or only biases are changed
+          adaptbiases = false;
+          adaptweights = false;
+          for(int i=1;i<=size;i++){
+            //check biases
+            plasticneurons[i] = plasticitypars[i];
+            if (plasticitypars[i] == 1){adaptbiases = true;}
+          }
+
+          for(int i=size+1;i<=plasticitypars.UpperBound();i++){
+            if (plasticitypars[i] == 1) {adaptweights = true;}
+          }
+          //determine which neurons need to have ranges and windows
+          for(int i=1;i<=size;i++){
+            //check incoming weights if not already flagged
+            if (plasticitypars[i] == 0){
+              for (int j=0;j<=(plasticitypars.UpperBound()-i-size);j+=size){
+                if (plasticitypars[size+i+j] == 1){
+                  plasticneurons[i] = 1;
+                  break;
+                }
+              }
+            }
+          }
+          num_pars_changed = plasticpars.Sum();
+        };
         // TVector<double> TempStates,TempOutputs;
 };

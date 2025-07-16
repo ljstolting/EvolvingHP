@@ -49,9 +49,9 @@ const double return_tolerance = 0.025; //less than leaving tolerance
 const bool highres = false;
 
 // Input files
-// char resfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/res.dat";
-char resfname[] = "./Test3DHPonPyloricSolutions/res.dat";
-char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/pyloriccircuit.ns";
+char resfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/res_addon.dat";
+// char resfname[] = "./Test3DHPonPyloricSolutions/res.dat";
+char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/pyloriccircuit.ns";
 char dimsfname[] = "./avgsdimensions.dat"; //file that lists the dimensions which we will vary to calculate the average, in the same
 										   //format used to indicate the dimensions HP has control over
 										   //crucial that the res.dat file has the same number of rows as the number of dimensions
@@ -62,9 +62,9 @@ const bool rhoshifted = true; //shifted rho is the new version of HP, where slop
 							   // potentially valid HP-agnostic approximation
 
 // Output files
-// char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/HPAgnosticAverage.dat";
-char avgsfname[] = "./Test3DHPonPyloricSolutions/HPAgnosticAverage3D_39.dat";
-char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/HPAgnosticAverage_multistabilitytest.dat";
+char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/HPAgnosticAverage_addon.dat";
+// char avgsfname[] = "./Test3DHPonPyloricSolutions/HPAgnosticAverage3D_39.dat";
+char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/HPAgnosticAverage_multistabilitytest.dat";
 
 
 // Nervous system params
@@ -167,7 +167,7 @@ int main (int argc, const char* argv[])
 	TVector<double> acc(1,N); //vector to store the value of the proxy expression for each neuron
 	bool finished = false;
 	while (!finished){
-		cout << parvec << endl;
+		// cout << parvec << endl;
 		for (int i=1;i<=num_dims;i++){
 			Circuit.SetArbDParam(i,parvec(i));
 		}
@@ -178,8 +178,8 @@ int main (int argc, const char* argv[])
 			for (int neuron=1;neuron<=N;neuron++){
 				Circuit.SetNeuronOutput(neuron,ptlist(ic,neuron)); //just for now, setting circuit state to align with pyloric fitness plane
 				// Circuit.SetNeuronState(neuron,ptlist(ic,neuron)); 
-				Circuit.WindowReset();
 			}
+			Circuit.WindowReset();
 			// run for transient
 			for (double t=StepSize;t<=TransientDuration;t+=StepSize){
 				Circuit.EulerStep(StepSize,0);
@@ -278,12 +278,12 @@ int main (int argc, const char* argv[])
 			if (multistable_mode){avgsfilemultistability << endl;}
 		}
 		if(multistable_mode){avgsfilemultistability << endl;}
-		avgsfile << endl;
 
 		//and then increase the value of the appropriate parameters
 		parvec(num_dims)+=resmat(num_dims,3); //step the last dimension
 		for (int i=(num_dims-1); i>=1; i-=1){ //start at the second to last dimension and count backwards to see if the next dimension has completed a run
 			if(parvec(i+1)>resmat(i+1,2)){   //if the next dimension is over its max
+				avgsfile << endl;
 				parvec(i+1) = resmat(i+1,1); //set it to its min
 				parvec(i) += resmat(i,3);    //and step the current dimension
 			}

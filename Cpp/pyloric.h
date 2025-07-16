@@ -69,7 +69,7 @@ void BurstTimesfromOutputHist(TMatrix<double> &OutputHistory, TVector<double> &f
 
 	for (int i = 1; i <= N; i += 1) {
 		// SHORT HAND FOR ALL NEURONS OSCILLATING APPRECIABLY
-		if (minoutput[i] <(burstthreshold-.05)) {
+		if (minoutput[i]<(burstthreshold)) {
 			if (maxoutput[i]>burstthreshold) {
 				features[1] += 1;
 			}
@@ -83,6 +83,7 @@ void BurstTimesfromOutputHist(TMatrix<double> &OutputHistory, TVector<double> &f
 	}
 	if (PDstartcount < 3){
 		cout << "unable to find two full cycles; may want to increase transient, lengthen runtime, or speed up slowest timescale" << endl;
+		cout << features << endl;
 		return;
 	}
 	// at the two points where PD crosses up, are the other two neurons approximately in the same place?

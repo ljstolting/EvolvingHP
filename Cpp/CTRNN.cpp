@@ -150,62 +150,19 @@ void CTRNN::SetCircuitSize(int newsize)
   }
 
   // NEW for CAPPING
-  wr = 20;
-  br = 20;
+  wr = 16;
+  br = 16;
 
-  // Shifted rho default to false
-  shiftedrho = false;
+  // Shifted rho default to true
+  shiftedrho = true;
 
-  // new for subset of params
-  // char plasticparsfname[] = "../../../../plasticpars.dat";
-  char plasticparsfname[] = "./plasticpars.dat";
-  ifstream plasticparsfile;
-  plasticparsfile.open(plasticparsfname);
-  if (!plasticparsfile) {
-        cerr << "File not found: " << plasticparsfname << endl;
-        exit(EXIT_FAILURE);
-    }
   plasticitypars.SetBounds(1,size+(size*size)); //which parameters are under HP's control
   plasticneurons.SetBounds(1,size); //and therefore, which neurons do we need to define a range for 
                                     //*note that the range and sliding window is shared for bias and 
                                     //all incoming weights to a neuron, but each of these parameters 
                                     //may have a different time constant
-  for (int i = 1; i <= plasticitypars.UpperBound(); i ++){
-    plasticparsfile >> plasticitypars[i];
-  }
-  // plasticparsfile >> plasticitypars; //whole vector at once version
-  // cout << "plasticitypars:" << plasticitypars << endl;
-
-  //determine which neurons need to have ranges and windows
-  // determine if only weights or only biases are changed
-  adaptbiases = false;
-  adaptweights = false;
-  for(int i=1;i<=size;i++){
-    //check biases
-    plasticneurons[i] = plasticitypars[i];
-    if (plasticitypars[i] == 1){adaptbiases = true;}
-  }
-
-  for(int i=size+1;i<=plasticitypars.UpperBound();i++){
-    if (plasticitypars[i] == 1) {adaptweights = true;}
-  }
-
-  for(int i=1;i<=size;i++){
-    //check incoming weights if not already flagged
-    if (plasticitypars[i] == 0){
-      for (int j=0;j<=(plasticitypars.UpperBound()-i-size);j+=size){
-        if (plasticitypars[size+i+j] == 1){
-          plasticneurons[i] = 1;
-          break;
-        }
-      }
-    }
-  }
-  // cout << "plasticneurons set" << endl;
-
-  num_pars_changed = plasticitypars.Sum();
-  // int VectSize = num_pars_changed + (3*plasticneurons.Sum());
-  plasticparsfile.close();
+  plasticitypars.FillContents(0);
+  plasticneurons.FillContents(0);
 }
 
 
@@ -481,6 +438,10 @@ void CTRNN::SetCenterCrossing(void)
 // Define HP parameters from a phenotype vector
 TVector<double>& CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding){
   // cout << "using phenotype vector" << endl;
+  ifstream plasticpars;
+  plasticpars.open("./plasticpars.dat");
+  plasticpars >> plasticitypars;
+  SetPlasticityPars(plasticitypars);
 
   int k = 1;
   int phen_counter = 1;
@@ -572,37 +533,39 @@ istream& CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding){
   for(int i = 1; i <= size + (size*size); i++){
     is >> plasticitypars[i];
   }
-  //determine which neurons need to have ranges and windows
-  for(int i=1;i<=size;i++){
-    //check biases
-    plasticneurons[i] = plasticitypars[i];
-  }
+  SetPlasticityPars(plasticitypars);
+  //NOW ALL CONTAINED WITHIN THAT FUNCTION
+  // //determine which neurons need to have ranges and windows
+  // for(int i=1;i<=size;i++){
+  //   //check biases
+  //   plasticneurons[i] = plasticitypars[i];
+  // }
 
-  // Determine if only weights or biases are changing - speeds up the code
-  int k = 1;
-  adaptbiases = false;
-  adaptweights = false;
-  for (int i=1;i<=size;i++){
-    if (plasticitypars[k] == 1) {adaptbiases = true;}
-    k ++;
-  }
+  // // Determine if only weights or biases are changing - speeds up the code
+  // int k = 1;
+  // adaptbiases = false;
+  // adaptweights = false;
+  // for (int i=1;i<=size;i++){
+  //   if (plasticitypars[k] == 1) {adaptbiases = true;}
+  //   k ++;
+  // }
   
-  for (int i=1;i<=(size*size);i++){
-    if (plasticitypars[k] == 1) {adaptweights = true;}
-    k ++;
-  }
+  // for (int i=1;i<=(size*size);i++){
+  //   if (plasticitypars[k] == 1) {adaptweights = true;}
+  //   k ++;
+  // }
 
-  for(int i=1;i<=size;i++){
-    //check incoming weights if not already flagged
-    if (plasticitypars[i] == 0){
-      for (int j=0;j<=(plasticitypars.UpperBound()-i-size);j+=size){
-        if (plasticitypars[size+i+j] == 1){
-          plasticneurons[i] = 1;
-          break;
-        }
-      }
-    }
-  }
+  // for(int i=1;i<=size;i++){
+  //   //check incoming weights if not already flagged
+  //   if (plasticitypars[i] == 0){
+  //     for (int j=0;j<=(plasticitypars.UpperBound()-i-size);j+=size){
+  //       if (plasticitypars[size+i+j] == 1){
+  //         plasticneurons[i] = 1;
+  //         break;
+  //       }
+  //     }
+  //   }
+  // }
 
   // cout << "plasticneurons set by HPphenotype:" << plasticneurons << endl;
 
@@ -620,7 +583,7 @@ istream& CTRNN::SetHPPhenotype(istream& is, double dt, bool range_encoding){
   }
   // cout << endl;
   bool use_flag = 0;
-  k = 1;
+  int k = 1;
   // Read the bias time constants
   double btau;
   for(int i = 1; i <= size; i++){
@@ -744,16 +707,18 @@ void CTRNN::WriteHPGenome(ostream& os){
 }
 
 void CTRNN::SetHPPhenotypebestind(istream &is, double dt, bool range_encoding){
+  for(int i = 1; i <= size + (size*size); i++){
+    is >> plasticitypars[i];
+  }
+  SetPlasticityPars(plasticitypars);
+  cout << num_pars_changed;
   TVector<double> gen(1,num_pars_changed*4); 
   TVector<double> phen(1,gen.UpperBound());
   double fit;
 
-  for(int i = 1; i <= size + (size*size); i++){
-    is >> plasticitypars[i];
-  }
-
   is >> gen;
   is >> phen;
+  cout << phen << endl;
   is >> fit;
 
   // cout << gen << endl << phen << endl;
