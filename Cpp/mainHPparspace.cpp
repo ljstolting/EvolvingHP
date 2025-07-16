@@ -29,7 +29,7 @@ const int num_indivs = 1; //how many genomes in the file (100 for Local Run Mode
 const bool shiftedrho = true;
 
 // HP parameter space specifications
-const double LB1min = 0;
+const double LB1min = .16;
 const double LB1max = .9;
 const double LB3min = 0;
 const double LB3max = .9;

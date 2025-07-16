@@ -20,7 +20,7 @@ const double TestDuration = 500; //maximum number of seconds allowed to locate 3
 const bool HPequilibrate = false; //is HP on during the transient/equilibration period?
 const bool HPtest = true;       //is HP on during test (shouldn't matter if platicity time constants are slow enough, *****but seems to be mattering in select cases****)
 // const double StepSize = 0.1;
-const double StepSize = 0.01;
+const double StepSize = 0.05;
 const int TestSteps = TestDuration/StepSize; // in steps
 
 // Detection params
