@@ -45,32 +45,32 @@ const double BRlb3 = -16;
 const double BRub3 = 16;
 
 const double WR = 10;
-const int num_ICs = 25;
+const int num_ICs = 5;
 
 // Mode
 const bool random_mode = false; //randomize in other dimensions besides HP dimensions 
 const bool taus_set = false; //in random mode, do we want the taus to be variable
 
 //Filenames
-char Nfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/pyloriccircuit.ns";
-char HPfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/5/bestind.dat";
-// char HPfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/3D/HP3Dfor15.dat";
+char Nfname[] = "./No Timing Requirements/1/pyloriccircuit.ns";
+char HPfname[] = "./No Timing Requirements/1/5/bestind.dat";
+// char HPfname[] = "./No Timing Requirements/18/3D/HP3Dfor15.dat";
 // char HPfname[] = "./bestindtest.dat";
 // char HPfname[] = "./Convenient HP Mechanisms/nullHP.dat";
 // char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/33/bestind.dat";
 // char Fitnessesfname[] = "./Convenient HP Mechanisms/Petefitbad.dat";
-char Fitnessesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/5/fit.dat";
-// char Fitnessesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/Other Plane Trajectories/fit.dat";
+char Fitnessesfname[] = "./No Timing Requirements/1/5/fit.dat";
+// char Fitnessesfname[] = "./No Timing Requirements/18/Other Plane Trajectories/fit.dat";
 // char ICsfname[] = "./Convenient HP Mechanisms/Peteicsbad.dat";
-// char ICsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/Other Plane Trajectories/ics.dat";
-char ICsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/5/ics.dat";
+// char ICsfname[] = "./No Timing Requirements/18/Other Plane Trajectories/ics.dat";
+char ICsfname[] = "./No Timing Requirements/1/5/ics.dat";
 // char biastrackfname[] = "./Convenient HP Mechanisms/Petebiastrackbad.dat";
-char biastrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/5/biastrack.dat";
+char biastrackfname[] = "./No Timing Requirements/1/5/biastrack.dat";
 // char biastrackfname[] = "Specifically Evolved HP mechanisms/Every Circuit/18/Other Plane Trajectories/biastrack.dat";
 // char statestrackfname[] = "./Convenient HP Mechanisms/Petestatestrackbad.dat";
 // char statestrackfname[] = "./teststatestrack.dat";
-char statestrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/5/statestrack.dat";
-// char statestrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/Other Plane Trajectories/evolved.dat";
+char statestrackfname[] = "./No Timing Requirements/1/5/statestrack.dat";
+// char statestrackfname[] = "./No Timing Requirements/18/Other Plane Trajectories/evolved.dat";
 
 const bool trackstates =false;
 const int trackstatesinterval = 50; //Track neural outputs for every X trials

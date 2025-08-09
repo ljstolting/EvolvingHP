@@ -439,7 +439,7 @@ void CTRNN::SetCenterCrossing(void)
 TVector<double>& CTRNN::SetHPPhenotype(TVector<double>& phenotype, double dt, bool range_encoding){
   // cout << "using phenotype vector" << endl;
   ifstream plasticpars;
-  plasticpars.open("./plasticpars.dat");
+  plasticpars.open("../../plasticpars.dat");
   plasticpars >> plasticitypars;
   SetPlasticityPars(plasticitypars);
 
