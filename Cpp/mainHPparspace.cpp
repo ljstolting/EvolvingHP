@@ -67,6 +67,7 @@ int main(int argc, const char* argv[])
 
 	dimsfile >> dims;
 	num = dims.Sum();
+
     int HPphenotypelen = num*4;
 
     TMatrix<double> resmat(1,num,1,3);
@@ -123,24 +124,27 @@ int main(int argc, const char* argv[])
         CTRNN Circuit(3);
 
         // One circuit only mode
-        // ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/59/pyloriccircuit.ns");
-        // ifs >> Circuit;
+        ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/59/pyloriccircuit.ns");
 
-        // Local Run Mode
+
+        // Parallel Supercomputer Mode
+        // ifs.open("./pyloriccircuit.ns");
+
+        ifs >> Circuit;
+
+        // Local Serial Run Mode (one file)
         // ifs >> phenotype;
         // ifs >> pyl_fitness;
         // phenotype >> Circuit;
 
-        // Parallel Supercomputer Mode
-        ifs.open("./pyloriccircuit.ns");
-        ifs >> Circuit;
         Circuit.SetPlasticityPars(dims);
         Circuit.ShiftedRho(shiftedrho);
 
         //Define HP parslice output file
         ofstream HPparspacefile;
 
-        // Local (Serial) Run Mode
+        // OUTPUT FILES
+        // Local Serial Run Mode 
         // char indiv_char[Max_Digits + sizeof(char)];
         // std::sprintf(indiv_char, "%d", indiv);
             
@@ -149,7 +153,7 @@ int main(int argc, const char* argv[])
         // strcat(outfile, indiv_char);
         // strcat(outfile, "/HPparslice.dat");
 
-        // Parallel Supercomputer Mode
+        // Parallel Supercomputer Mode OR 
         // char outfile[] = "./HPparslice_newrho_res5.dat";
         char outfile[] = "./HPparslice_3D.dat";
 
@@ -215,21 +219,20 @@ int main(int argc, const char* argv[])
                 if (pyloricness >= .3){
                     pyloric_count ++;
                 }
-                HPparspacefile << pyloric_count << " ";
-
-                //and then increase the value of the appropriate parameters
-                parvec(num)+=resmat(num,3); //step the last dimension
-                for (int i=(num-1); i>=1; i-=1){ //start at the second to last dimension and count backwards to see if the next dimension has completed a run
-                    if(parvec(i+1)>resmat(i+1,2)){   //if the next dimension is over its max
-                        HPparspacefile << endl;
-                        parvec(i+1) = resmat(i+1,1); //set it to its min
-                        parvec(i) += resmat(i,3);    //and step the current dimension
-                    }
+            }
+            HPparspacefile << pyloric_count << " ";
+            //and then increase the value of the appropriate parameters
+            parvec(num)+=resmat(num,3); //step the last dimension
+            for (int i=(num-1); i>=1; i-=1){ //start at the second to last dimension and count backwards to see if the next dimension has completed a run
+                if(parvec(i+1)>resmat(i+1,2)){   //if the next dimension is over its max
+                    HPparspacefile << endl;
+                    parvec(i+1) = resmat(i+1,1); //set it to its min
+                    parvec(i) += resmat(i,3);    //and step the current dimension
                 }
-                if (parvec(1)>resmat(1,2)){
-                    finished = true;
-                }
-            }  
+            }
+            if (parvec(1)>resmat(1,2)){
+                finished = true;
+            }
         }
         HPparspacefile.close();
     }
