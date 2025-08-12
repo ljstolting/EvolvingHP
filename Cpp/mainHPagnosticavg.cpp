@@ -39,7 +39,7 @@
 //#define PRINTOFILE
 
 // Task params
-const double TransientDuration = 250; //seconds without HP, made pretty long for this analysis (considering HP is off)
+const double TransientDuration = 100; //seconds without HP, made pretty long for this analysis (considering HP is off)
 const double RunDuration = 50; //seconds to look for an oscillation cycle
 // const double StepSize = 0.005; //small step size for accuracy
 const double leaving_tolerance = 0.05; // in state space for greater accuracy
@@ -49,9 +49,9 @@ const double return_tolerance = 0.025; //less than leaving tolerance
 const bool highres = false;
 
 // Input files
-char resfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/res_addon.dat";
-// char resfname[] = "./Test3DHPonPyloricSolutions/res.dat";
-char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/pyloriccircuit.ns";
+// char resfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/res.dat";
+char resfname[] = "./Test3DHPonPyloricSolutions/res_high.dat";
+char fname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/pyloriccircuit.ns";
 char dimsfname[] = "./avgsdimensions.dat"; //file that lists the dimensions which we will vary to calculate the average, in the same
 										   //format used to indicate the dimensions HP has control over
 										   //crucial that the res.dat file has the same number of rows as the number of dimensions
@@ -62,9 +62,9 @@ const bool rhoshifted = true; //shifted rho is the new version of HP, where slop
 							   // potentially valid HP-agnostic approximation
 
 // Output files
-char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/HPAgnosticAverage_addon.dat";
-// char avgsfname[] = "./Test3DHPonPyloricSolutions/HPAgnosticAverage3D_39.dat";
-char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/11/HPAgnosticAverage_multistabilitytest.dat";
+// char avgsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/HPAgnosticAverage_3D.dat";
+char avgsfname[] = "./Test3DHPonPyloricSolutions/HPAgnosticAverage3D_39new.dat";
+char avgs_multistabilityfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/HPAgnosticAverage_multistabilitytest.dat";
 
 
 // Nervous system params
@@ -284,6 +284,7 @@ int main (int argc, const char* argv[])
 		for (int i=(num_dims-1); i>=1; i-=1){ //start at the second to last dimension and count backwards to see if the next dimension has completed a run
 			if(parvec(i+1)>resmat(i+1,2)){   //if the next dimension is over its max
 				avgsfile << endl;
+				cout << parvec << endl;
 				parvec(i+1) = resmat(i+1,1); //set it to its min
 				parvec(i) += resmat(i,3);    //and step the current dimension
 			}

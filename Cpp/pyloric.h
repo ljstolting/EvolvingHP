@@ -16,11 +16,11 @@ using namespace std;
 // const double TransientDuration = 500; //seconds without HP
 // const double PlasticDuration1 = 5000; //seconds allowing HP to act
 // const double PlasticDuration2 = 5000; //number of seconds to wait before testing again, to make sure not relying on precise timing
-const double TestDuration = 1000; //maximum number of seconds allowed to locate 3 cycles of the rhythm
+const double TestDuration = 50; //maximum number of seconds allowed to locate 3 cycles of the rhythm
 const bool HPequilibrate = false; //is HP on during the transient/equilibration period? 
 const bool HPtest = true;       //is HP on during test (shouldn't matter if platicity time constants are slow enough, *****but seems to be mattering in select cases****)
 // const double StepSize = 0.1;
-const double StepSize = 0.05;
+const double StepSize = 0.01;
 const int TestSteps = TestDuration/StepSize; // in steps
 
 // Detection params
@@ -311,6 +311,7 @@ double PyloricPerformance(CTRNN &Agent)
 
 	TVector<double> features(1,8);
 	BurstTimesfromOutputHist(OutputHistory, features);
+	cout << features << endl;
 
 	fitness = PyloricFitFromFeatures(features);
 
