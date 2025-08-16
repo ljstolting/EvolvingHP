@@ -1,3 +1,9 @@
+//Update 8/13/25: If the intention of this program is to predict ADHP performance
+//  around select bound values, then all data doesn't need to be saved. Only the
+//  ongoing successful/mixed/failure status of the points on a more conservative grid. 
+//  There is now a new mode that calculates this online instead of collecting all the
+//  data and feeding it to a Jupyter notebook. 
+
 #include "TSearch.h"
 #include "CTRNN.h"
 #include "random.h"
@@ -5,21 +11,36 @@
 
 // Task params
 const double TransientDuration = 500; //seconds without HP, made pretty long for this analysis (considering HP is off)
-const double RunDuration = 50; //seconds to look for an oscillation cycle
+const double RunDuration = 25; //seconds to look for an oscillation cycle
 const double leaving_tolerance = 0.05; // in state space for greater accuracy
 const double return_tolerance = 0.025; //less than leaving tolerance
 int max_steps = int((RunDuration*3)/StepSize); //how much memory to allocate for the max size outputhistory
 
 const int N = 3;
 
+// new mode for keeping track of the files 
+
 // Input files
 char resfname[] = "./Test3DHPonPyloricSolutions/res1.dat";  //changes for each compilation
-char circuitfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/15/pyloriccircuit.ns";
+char circuitfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/pyloriccircuit.ns";
 char dimsfname[] = "./avgsdimensions.dat";
 
+bool record_all = false;     //previously, we recorded all the averages and their pyloric fitness
+                             //for later data analysis (=true), but we can turn this off (=false)
+char metaparresfname[] = "./metaparres.dat"; //and instead only record the predicted status of the points in HP metapar space
+                                             //the resolution of the evaluated points should be the same as the simulated res
+
 // Output files
-char avgsfname[] = "./Test3DHPonPyloricSolutions/HPAgnosticAverage3D_15slice1.dat"; //changes for each compilation
-char pylfname[] = "./Test3DHPonPyloricSolutions/pyloricslice3D_15slice1.dat"; //changes for each compilation
+// LEGACY MODE: track average at each point
+// char out1fname[] = "./Test3DHPonPyloricSolutions/HPAgnosticAverage3D_15slice1.dat"; //changes for each compilation
+// LEGACY MODE: track pyloric fitness at each point
+// char out2fname[] = "./Test3DHPonPyloricSolutions/pyloricslice3D_15slice1.dat"; //changes for each compilation
+
+// NEW MODE: track the predicted HP status at each point in HP metapar space
+//  will return two matrices of integers for each point in lattice representing numbers of pyloric
+char out1fname[] = "./Test3DHPonPyloricSolutions/predictedADHPstatus_pyloric_39.dat";
+//  and nonpyloric circuits around that average
+char out2fname[] = "./Test3DHPonPyloricSolutions/predictedADHPstatus_nonpyloric_39.dat"; 
 
 int main (int argc, const char* argv[]) 
 {
@@ -36,6 +57,12 @@ int main (int argc, const char* argv[])
 		cerr << "File not found: " << dimsfname << endl;
 		exit(EXIT_FAILURE);
 	}
+    ifstream metaparresfile;
+    metaparresfile.open(metaparresfname);
+    if (!metaparresfile){
+        cerr << "File not found:" << metaparresfname << endl;
+        exit(EXIT_FAILURE);
+    }
     ifstream circuitfile;
     circuitfile.open(circuitfname);
     if (!circuitfile) {
@@ -44,10 +71,10 @@ int main (int argc, const char* argv[])
     }
 
 	// Create files to hold data
-	ofstream avgsfile;
-	avgsfile.open(avgsfname);
-    ofstream pylslicefile;
-	pylslicefile.open(pylfname);
+	ofstream outfile1;
+	outfile1.open(out1fname);
+    ofstream outfile2;
+	outfile2.open(out2fname);
 
     // Organize information about the grid of points, gathered from the res file
     TVector<int> dims(1,N+(N*N));
@@ -55,7 +82,6 @@ int main (int argc, const char* argv[])
 
 	dimsfile >> dims;
 	num_dims = dims.Sum();
-	// cout << num_dims;
 
 	TMatrix<double> resmat(1,num_dims,1,3);
 	TVector<double> parvec(1,num_dims);
@@ -72,6 +98,37 @@ int main (int argc, const char* argv[])
     circuitfile >> Circuit;
 
     Circuit.SetPlasticityPars(dims); //so we can use HP functionality to keep track of the parameters that are being varied
+    int regulated_neurons = Circuit.plasticneurons.Sum();
+    // cout << "regulated neurons = " << regulated_neurons << endl;
+
+    TMatrix<double> metaparresmat(1,regulated_neurons,1,3);
+    for (int i=1;i<=regulated_neurons;i++){
+        for (int j=1;j<=3;j++){
+            metaparresfile >> metaparresmat(i,j);
+            // cout << metaparresmat(i,j) << endl;
+        }
+    }
+
+    TVector<int> metaparres_lengths(1,regulated_neurons);
+    for (int i=1; i<=num_dims; i++){
+        int idxlen = (metaparresmat(i,2) - metaparresmat(i,1))/metaparresmat(i,3);
+        idxlen = idxlen+1; //upper bound is inclusive
+        metaparres_lengths(i) = idxlen;
+    }
+
+    //right now, not general to arbitrary dimensions because I don't know enough about the C++ arrays
+    int pyloriccount[metaparres_lengths(1)][metaparres_lengths(2)][metaparres_lengths(3)]; 
+    int nonpyloriccount[metaparres_lengths(1)][metaparres_lengths(2)][metaparres_lengths(3)];
+    // cout << "arrays defined" << endl;
+    for (int i=0;i<metaparres_lengths(1);i++){
+        for (int j=0;j<metaparres_lengths(2);j++){
+            for (int k=0;k<metaparres_lengths(3);k++){
+                pyloriccount[i][j][k] = 0;
+                nonpyloriccount[i][j][k] = 0;
+            }
+        }
+    }
+    // cout << "arrays filled" << endl;
 
     // Set some variables that will be used in the loop
     TVector<double> acc(1,N); //vector to store the value of the proxy expression for each neuron
@@ -143,14 +200,13 @@ int main (int argc, const char* argv[])
                 }
             }
         }
-        if (stepnum < max_steps-10){
+        int three_cycle_steps = stepnum;
+        while (stepnum < min(three_cycle_steps+10,max_steps)){
             //run for 10 more steps just in case we started right on a PD crossing
-            for (int s=1;s<=10;s++){
-                stepnum ++;
-                Circuit.EulerStep(StepSize,0);
-                for (int i = 1; i <= N; i++){
-                    outputhist(stepnum,i) = Circuit.NeuronOutput(i);
-                }
+            stepnum ++;
+            Circuit.EulerStep(StepSize,0);
+            for (int i = 1; i <= N; i++){
+                outputhist(stepnum,i) = Circuit.NeuronOutput(i);
             }
         }
         //take only the part of the output hist that actually ended up getting filled
@@ -176,9 +232,27 @@ int main (int argc, const char* argv[])
             avg[i] /= first_cycle_stepnum;
         }
 
-        //record all data into files
-        avgsfile << avg << endl;
-        pylslicefile << pyl_fitness << endl;
+        // LEGACY MODE: record all data into files
+        if (record_all){
+            outfile1 << avg << endl;
+            outfile2 << pyl_fitness << endl;
+        }
+        // NEW MODE: record the number of pyloric and nonpyloric hp's with average values closest to each point
+        else{
+            //derive the index of the matrix that corresponds with the point's average values
+            TVector<int> add_idx(1,regulated_neurons);
+            for (int i=1; i<=regulated_neurons; i++){
+                double v = avg(i)-metaparresmat(i,1);
+                int idx = round(v/metaparresmat(i,3));
+                add_idx(i) = idx;
+            }
+            if (pyl_fitness>=.3){
+                pyloriccount[add_idx(1)][add_idx(2)][add_idx(3)] ++;
+            }
+            else{
+                nonpyloriccount[add_idx(1)][add_idx(2)][add_idx(3)] ++;
+            }
+        }
 
         //and then increase the value of the appropriate parameters
 		parvec(num_dims)+=resmat(num_dims,3); //step the last dimension
@@ -191,14 +265,29 @@ int main (int argc, const char* argv[])
 		}
 		if (parvec(1)>resmat(1,2)){
 			finished = true;
+            //NEW MODE
+            if (!record_all){
+                for (int i=0;i<metaparres_lengths(1);i++){
+                    for (int j=0;j<metaparres_lengths(2);j++){
+                        for (int k=0;k<metaparres_lengths(3);k++){
+                            outfile1 << pyloriccount[i][j][k] << " ";
+                            outfile2 << nonpyloriccount[i][j][k] << " ";
+                        }
+                        outfile1 << endl;
+                        outfile2 << endl;
+                    }
+                    outfile1 << endl;
+                    outfile2 << endl;
+                }
+            }
 		}
     }
     //close relevant files
     resfile.close();
     dimsfile.close();
     circuitfile.close();
-    avgsfile.close();
-    pylslicefile.close();
+    outfile1.close();
+    outfile2.close();
 
     return 0;
 }

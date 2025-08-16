@@ -27,21 +27,25 @@ const int indiv_idx = 0; //index of the first individual you'll run, only used i
 const int num_indivs = 1; //how many genomes in the file (100 for Local Run Mode)
 const bool shiftedrho = true;
 
+const bool HPLC_detection = true;
+const double HPLC_detection_dur = 1000;       //how long to continue simulating to check for HPLC (in seconds)
+const double HPLC_detection_threshold = 1;   //how far away in parameter space counts as an ADHP-induced limit cycle
+
 //file that lists the dimensions HP operates in
 //LOCAL MODE
-// char dimsfname[] = "./metapardimensions.dat";
+char dimsfname[] = "./metapardimensions.dat";
 //SUPERCOMPUTER MODE
-char dimsfname[] = "../../../metapardimensions.dat";
+// char dimsfname[] = "../../../metapardimensions.dat";
 
 // file that lists HP parameter space specifications -- Bounds differ between HP mechanisms
 //LOCAL MODE
-// char resfname[] = "./metaparres.dat";
+char resfname[] = "./metaparres\ copy.dat";
 //SUPERCOMPUTER MODE
-char resfname[] = "../../../metaparres.dat";
+// char resfname[] = "../../../metaparres.dat";
 
 // Things that are the same between ADHP mechanisms
 const double range = 0; //assume constant range across neurons
-const double Btauval = 150; //right in the middle of evol range
+const double Btauval = 180; //right in the middle of evol range
 const double SWval = 0; //(in seconds)
 
 const bool range_encoding = true;
@@ -131,10 +135,10 @@ int main(int argc, const char* argv[])
         CTRNN Circuit(3);
 
         // One circuit only mode
-        // ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/59/pyloriccircuit.ns");
+        ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/18/pyloriccircuit.ns");
 
         // Parallel Supercomputer Mode
-        ifs.open("./pyloriccircuit.ns");
+        // ifs.open("./pyloriccircuit.ns");
 
         ifs >> Circuit;
 
@@ -154,20 +158,29 @@ int main(int argc, const char* argv[])
         // char indiv_char[Max_Digits + sizeof(char)];
         // std::sprintf(indiv_char, "%d", indiv);
             
-        // char outfile[(Max_Digits) + (sizeof(char)) + 51+15];
+        // char outfile[(Max_Digits) + (sizeof(char)) + 51+18];
         // strcpy(outfile, "./Specifically Evolved HP mechanisms/Every Circuit/");
         // strcat(outfile, indiv_char);
         // strcat(outfile, "/HPparslice.dat");
 
         // Parallel Supercomputer Mode OR 
         // char outfile[] = "./HPparslice_newrho_res5.dat";
-        char outfile[] = "./HPparslice_3D_res3.dat";
+        // char outfile[] = "./HPparslice_3D_res3.dat";
 
         // Only one cicuit/HP pair mode
-        // char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/59/HPparslicerangepoint1_rest.dat";
+        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/HPparslice3D_test.dat";
 
         HPparspacefile.open(outfile);
         ifs.close();
+
+        ofstream HPLCfile;
+
+        //Supercomputer Mode
+        // char HPLCdetectionfname[] = "./HPLC.dat";
+        //Local mode
+        char HPLCdetectionfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/HPparslice3D_HPLCtest.dat";
+
+        HPLCfile.open(HPLCdetectionfname);
 
         //Define HPs based on position in parspace slice
         bool finished = false;
@@ -197,6 +210,10 @@ int main(int argc, const char* argv[])
             // cout << "after phen set" << endl;
             //Check grid of initial points to see how many end up pyloric (will just be counting, not keeping fitness)
             int pyloric_count = 0;
+            
+            //initialize HPLC detector
+            bool HPLC_detected = false;
+
             //Start from each point on the given grid
             for (int ic=1;ic<=num_pts;ic++){
                 for (int paridx=1;paridx<=num;paridx++){
@@ -225,13 +242,42 @@ int main(int argc, const char* argv[])
                 if (pyloricness >= .3){
                     pyloric_count ++;
                 }
+
+                //check for HPLC using the parameters set out in preamble
+                if(HPLC_detection && !HPLC_detected){
+                    TVector<double> start_pars(1,num);
+                    for (int i = 1; i <= num; i++){
+                        start_pars[i] = Circuit.ArbDParam(i);
+                    }
+                    double distance = 0;
+                    for (double t=StepSize; t<=HPLC_detection_dur; t+=StepSize){
+                        Circuit.EulerStep(StepSize,true);
+                        for (int i=1;i<=num;i++){
+                            distance += pow(start_pars[i]-Circuit.ArbDParam(i),2);
+                        }
+                        distance = pow(distance,.5);
+                        if (distance > HPLC_detection_threshold){
+                            HPLC_detected = true;
+                            break;
+                        }
+                        distance = 0;
+                    }
+                }
             }
+    
             HPparspacefile << pyloric_count << " ";
+            if (HPLC_detection){
+                HPLCfile << HPLC_detected << " ";
+            }
+
             //and then increase the value of the appropriate parameters
             parvec(num)+=resmat(num,3); //step the last dimension
             for (int i=(num-1); i>=1; i-=1){ //start at the second to last dimension and count backwards to see if the next dimension has completed a run
                 if(parvec(i+1)>resmat(i+1,2)){   //if the next dimension is over its max
                     HPparspacefile << endl;
+                    if (HPLC_detection){
+                        HPLCfile << endl;
+                    }
                     parvec(i+1) = resmat(i+1,1); //set it to its min
                     parvec(i) += resmat(i,3);    //and step the current dimension
                 }
@@ -241,8 +287,10 @@ int main(int argc, const char* argv[])
             }
         }
         HPparspacefile.close();
+        if (HPLC_detection){
+            HPLCfile.close();
+        }
     }
-    ifs.close();
 
     return 0;
 }
