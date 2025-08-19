@@ -16,7 +16,7 @@ using namespace std;
 // const double TransientDuration = 500; //seconds without HP
 // const double PlasticDuration1 = 5000; //seconds allowing HP to act
 // const double PlasticDuration2 = 5000; //number of seconds to wait before testing again, to make sure not relying on precise timing
-const double TestDuration = 30; //maximum number of seconds allowed to locate 3 cycles of the rhythm
+const double TestDuration = 100; //maximum number of seconds allowed to locate 3 cycles of the rhythm
 const bool HPequilibrate = false; //is HP on during the transient/equilibration period? 
 const bool HPtest = true;       //is HP on during test (shouldn't matter if platicity time constants are slow enough, *****but seems to be mattering in select cases****)
 // const double StepSize = 0.1;
@@ -83,7 +83,7 @@ void BurstTimesfromOutputHist(TMatrix<double> &OutputHistory, TVector<double> &f
 	}
 	if (PDstartcount < 3){
 		cout << "unable to find two full cycles; may want to increase transient, lengthen runtime, or speed up slowest timescale" << endl;
-		cout << features << endl;
+		// cout << features << endl;
 		return;
 	}
 	// at the two points where PD crosses up, are the other two neurons approximately in the same place?
@@ -322,7 +322,7 @@ double PyloricPerformance(CTRNN &Agent)
 double PyloricPerformance(CTRNN &Agent, double TransientDur)
 {
 	// Initialize the outputs at 0.5 for all neurons in the circuit
-	Agent.RandomizeCircuitOutput(0.5, 0.5);
+	// Agent.RandomizeCircuitOutput(0.5, 0.5);
 
 	// Run the circuit for an initial transient; HP is on or off (depending on global setting) and fitness is not evaluated
 	for (double t = StepSize; t <= TransientDur; t += StepSize) {
