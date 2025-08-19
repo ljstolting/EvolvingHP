@@ -9,8 +9,11 @@
 #include "random.h"
 #include "pyloric.h"
 
+// Cobbled parallelism
+const double slice_step = 0.25;
+
 // Task params
-const double TransientDuration = 500; //seconds without HP, made pretty long for this analysis (considering HP is off)
+const double TransientDuration = 50; //seconds without HP 
 const double RunDuration = 25; //seconds to look for an oscillation cycle
 const double leaving_tolerance = 0.05; // in state space for greater accuracy
 const double return_tolerance = 0.025; //less than leaving tolerance
@@ -21,13 +24,17 @@ const int N = 3;
 // new mode for keeping track of the files 
 
 // Input files
-char resfname[] = "./Test3DHPonPyloricSolutions/res1.dat";  //changes for each compilation
-char circuitfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/pyloriccircuit.ns";
-char dimsfname[] = "./avgsdimensions.dat";
+// char resfname[] = "./Test3DHPonPyloricSolutions/res_high_test.dat";  //changes for each compilation
+// char circuitfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/pyloriccircuit.ns";
+// char dimsfname[] = "./avgsdimensions.dat";
+//Supercomputer
+char resfname[] = "../../../Test3DHPonPyloricSolutions/res_high.dat";  //changes for each compilation
+char circuitfname[] = "../../../Specifically Evolved HP mechanisms/Every Circuit/39/pyloriccircuit.ns";
+char dimsfname[] = "../../../avgsdimensions.dat";
 
 bool record_all = false;     //previously, we recorded all the averages and their pyloric fitness
                              //for later data analysis (=true), but we can turn this off (=false)
-char metaparresfname[] = "./metaparres.dat"; //and instead only record the predicted status of the points in HP metapar space
+char metaparresfname[] = "../../../metaparres.dat"; //and instead only record the predicted status of the points in HP metapar space
                                              //the resolution of the evaluated points should be the same as the simulated res
 
 // Output files
@@ -38,9 +45,13 @@ char metaparresfname[] = "./metaparres.dat"; //and instead only record the predi
 
 // NEW MODE: track the predicted HP status at each point in HP metapar space
 //  will return two matrices of integers for each point in lattice representing numbers of pyloric
-char out1fname[] = "./Test3DHPonPyloricSolutions/predictedADHPstatus_pyloric_39.dat";
-//  and nonpyloric circuits around that average
-char out2fname[] = "./Test3DHPonPyloricSolutions/predictedADHPstatus_nonpyloric_39.dat"; 
+// char out1fname[] = "./Test3DHPonPyloricSolutions/predictedADHPstatus_pyloric_39.dat";
+// //  and nonpyloric circuits around that average
+// char out2fname[] = "./Test3DHPonPyloricSolutions/predictedADHPstatus_nonpyloric_39.dat"; 
+
+//Supercomputer
+char out1fname[] = "./predictedADHPstatus_pyloric_39.dat";
+char out2fname[] = "./predictedADHPstatus_nonpyloric_39.dat"; 
 
 int main (int argc, const char* argv[]) 
 {
@@ -90,9 +101,19 @@ int main (int argc, const char* argv[])
 		for(int j=1;j<=3;j++){
 			resfile >> resmat(i,j);
 		}
-		parvec(i) = resmat(i,1); //initialize the parameter values at the lowest given bound
 	}
 
+    //no longer actually takes first dim from file but takes from the executable call for parallelism
+    if (argc>1){
+        int slicenum = atoi(argv[1]);
+        resmat(1,1) = resmat(1,1)+(slicenum*slice_step); //zero-indexing
+        resmat(1,2) = resmat(1,1)+slice_step-resmat(1,3); //can't figure out how to get the par1=16 slice in there but eh not important
+    }   
+    cout << resmat(1,1) << " " << resmat(1,2) << endl;
+
+    for(int i=1;i<num_dims;i++){
+		parvec(i) = resmat(i,1); //initialize the parameter values at the lowest given bound
+    }
     // Create CTRNN and load in parameters
     CTRNN Circuit(N);
     circuitfile >> Circuit;
