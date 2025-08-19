@@ -1,5 +1,5 @@
 #!/bin/bash
-#not run yet
+
 for ((i = 0; i < 320; i += 1));
 do
   sbatch --export=JB=$i lindsaygeneral.sh
