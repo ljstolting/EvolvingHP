@@ -28,24 +28,24 @@ const int num_indivs = 1; //how many genomes in the file (100 for Local Run Mode
 const bool shiftedrho = true;
 
 const bool HPLC_detection = true;
-const double HPLC_detection_dur = 1000;       //how long to continue simulating to check for HPLC (in seconds)
-const double HPLC_detection_threshold = 1;   //how far away in parameter space counts as an ADHP-induced limit cycle
+const double HPLC_detection_dur = 100;       //how long to continue simulating to check for HPLC (in seconds)
+const double HPLC_detection_threshold = .5;   //how far away in parameter space counts as an ADHP-induced limit cycle
 
 //file that lists the dimensions HP operates in
 //LOCAL MODE
-char dimsfname[] = "./metapardimensions.dat";
+// char dimsfname[] = "./metapardimensions.dat";
 //SUPERCOMPUTER MODE
-// char dimsfname[] = "../../../metapardimensions.dat";
+char dimsfname[] = "../../metapardimensions2D.dat";
 
 // file that lists HP parameter space specifications -- Bounds differ between HP mechanisms
 //LOCAL MODE
-char resfname[] = "./metaparres\ copy.dat";
+// char resfname[] = "./metaparres\ copy.dat";
 //SUPERCOMPUTER MODE
-// char resfname[] = "../../../metaparres.dat";
+char resfname[] = "../../metaparres2D.dat";
 
 // Things that are the same between ADHP mechanisms
 const double range = 0; //assume constant range across neurons
-const double Btauval = 180; //right in the middle of evol range
+const double Btauval = 150; //right in the middle of evol range
 const double SWval = 0; //(in seconds)
 
 const bool range_encoding = true;
@@ -85,20 +85,20 @@ int main(int argc, const char* argv[])
 	}
 
     // 2D GRID OF POINTS (spacing in each dimension)
-    // int resolution = 5;
-    // TVector<double> par_vals(1,resolution);
-    // par_vals[1] = -10;
-    // par_vals[2] = -5;
-    // par_vals[3] = 0;
-    // par_vals[4] = 5;
-    // par_vals[5] = 10;
-
-    // 3D GRID OF POINTS
-    int resolution = 3;
+    int resolution = 5;
     TVector<double> par_vals(1,resolution);
     par_vals[1] = -10;
-    par_vals[2] = 0;
-    par_vals[3] = 10;
+    par_vals[2] = -5;
+    par_vals[3] = 0;
+    par_vals[4] = 5;
+    par_vals[5] = 10;
+
+    // 3D GRID OF POINTS
+    // int resolution = 3;
+    // TVector<double> par_vals(1,resolution);
+    // par_vals[1] = -10;
+    // par_vals[2] = 0;
+    // par_vals[3] = 10;
 
     int num_pts = pow(resolution,num);
     TMatrix<double> ptlist(1,num_pts,1,num);
@@ -135,10 +135,10 @@ int main(int argc, const char* argv[])
         CTRNN Circuit(3);
 
         // One circuit only mode
-        ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/18/pyloriccircuit.ns");
+        // ifs.open("./Specifically Evolved HP mechanisms/Every Circuit/18/pyloriccircuit.ns");
 
         // Parallel Supercomputer Mode
-        // ifs.open("./pyloriccircuit.ns");
+        ifs.open("./pyloriccircuit.ns");
 
         ifs >> Circuit;
 
@@ -164,11 +164,11 @@ int main(int argc, const char* argv[])
         // strcat(outfile, "/HPparslice.dat");
 
         // Parallel Supercomputer Mode OR 
-        // char outfile[] = "./HPparslice_newrho_res5.dat";
+        char outfile[] = "./HPparslice_newrho_res5_HPofftest.dat";
         // char outfile[] = "./HPparslice_3D_res3.dat";
 
         // Only one cicuit/HP pair mode
-        char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/HPparslice3D_test.dat";
+        // char outfile[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/HPparslice3D_test.dat";
 
         HPparspacefile.open(outfile);
         ifs.close();
@@ -176,9 +176,9 @@ int main(int argc, const char* argv[])
         ofstream HPLCfile;
 
         //Supercomputer Mode
-        // char HPLCdetectionfname[] = "./HPLC.dat";
+        char HPLCdetectionfname[] = "./HPLC.dat";
         //Local mode
-        char HPLCdetectionfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/HPparslice3D_HPLCtest.dat";
+        // char HPLCdetectionfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/18/HPparslice3D_HPLCtest.dat";
 
         HPLCfile.open(HPLCdetectionfname);
 

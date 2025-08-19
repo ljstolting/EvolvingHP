@@ -18,7 +18,7 @@ using namespace std;
 // const double PlasticDuration2 = 5000; //number of seconds to wait before testing again, to make sure not relying on precise timing
 const double TestDuration = 100; //maximum number of seconds allowed to locate 3 cycles of the rhythm
 const bool HPequilibrate = false; //is HP on during the transient/equilibration period? 
-const bool HPtest = true;       //is HP on during test (shouldn't matter if platicity time constants are slow enough, *****but seems to be mattering in select cases****)
+const bool HPtest = false;       //is HP on during test (shouldn't matter if platicity time constants are slow enough, *****but seems to be mattering in select cases****)
 // const double StepSize = 0.1;
 const double StepSize = 0.05;
 const int TestSteps = TestDuration/StepSize; // in steps
