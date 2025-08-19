@@ -10,7 +10,7 @@
 #include "pyloric.h"
 
 // Cobbled parallelism
-const double slice_step = 0.25;
+const double slice_step = 0.1;
 
 // Task params
 const double TransientDuration = 50; //seconds without HP 
@@ -274,7 +274,7 @@ int main (int argc, const char* argv[])
                 nonpyloriccount[add_idx(1)][add_idx(2)][add_idx(3)] ++;
             }
         }
-
+        // cout << parvec << endl;
         //and then increase the value of the appropriate parameters
 		parvec(num_dims)+=resmat(num_dims,3); //step the last dimension
 		for (int i=(num_dims-1); i>=1; i-=1){ //start at the second to last dimension and count backwards to see if the next dimension has completed a run
