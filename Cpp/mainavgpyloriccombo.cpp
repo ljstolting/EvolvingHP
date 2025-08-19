@@ -10,11 +10,11 @@
 #include "pyloric.h"
 
 // Cobbled parallelism
-const double slice_step = 0.25;
+const double slice_step = 0.1;
 
 // Task params
 const double TransientDuration = 50; //seconds without HP 
-const double RunDuration = 25; //seconds to look for an oscillation cycle
+const double RunDuration = 50; //seconds to look for an oscillation cycle
 const double leaving_tolerance = 0.05; // in state space for greater accuracy
 const double return_tolerance = 0.025; //less than leaving tolerance
 int max_steps = int((RunDuration*3)/StepSize); //how much memory to allocate for the max size outputhistory
@@ -24,11 +24,11 @@ const int N = 3;
 // new mode for keeping track of the files 
 
 // Input files
-// char resfname[] = "./Test3DHPonPyloricSolutions/res_high_test.dat";  //changes for each compilation
+// char resfname[] = "./Test3DHPonPyloricSolutions/res_high_test.dat";  
 // char circuitfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/pyloriccircuit.ns";
 // char dimsfname[] = "./avgsdimensions.dat";
 //Supercomputer
-char resfname[] = "../../../Test3DHPonPyloricSolutions/res_high.dat";  //changes for each compilation
+char resfname[] = "../../../Test3DHPonPyloricSolutions/res_high.dat";  
 char circuitfname[] = "../../../Specifically Evolved HP mechanisms/Every Circuit/39/pyloriccircuit.ns";
 char dimsfname[] = "../../../avgsdimensions.dat";
 
@@ -107,7 +107,7 @@ int main (int argc, const char* argv[])
     if (argc>1){
         int slicenum = atoi(argv[1]);
         resmat(1,1) = resmat(1,1)+(slicenum*slice_step); //zero-indexing
-        resmat(1,2) = resmat(1,1)+slice_step-resmat(1,3); //can't figure out how to get the par1=16 slice in there but eh not important
+        resmat(1,2) = resmat(1,1)+slice_step; //possible that this double counts some stuff, but double counting things won't change the outcome in this scheme
     }   
     cout << resmat(1,1) << " " << resmat(1,2) << endl;
 

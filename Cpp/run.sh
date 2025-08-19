@@ -1,6 +1,6 @@
 #!/bin/bash
 #not run yet
-for ((i = 20; i < 128; i += 1));
+for ((i = 0; i < 320; i += 1));
 do
   sbatch --export=JB=$i lindsaygeneral.sh
   sleep 3
