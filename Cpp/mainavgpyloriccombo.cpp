@@ -21,8 +21,11 @@ const double slice_step = 0.1;
 // Task params
 const double TransientDuration = 50; //seconds without HP 
 const double RunDuration = 10; //max seconds to look for a single oscillation cycle
-const double leaving_tolerance = 3*StepSize; // in state space for greater accuracy
-const double return_tolerance = 2*StepSize; //less than leaving tolerance
+                               //if the cycle is not detected properly, the averaging could be slightly off, but 
+                               //the pyloric fitness function will ultimately make the call as long as it left
+                               //the bubble
+const double leaving_tolerance = 5*StepSize; // was in state space for greater accuracy, but 
+const double return_tolerance = 4*StepSize; //less than leaving tolerance
 int max_steps = int((RunDuration*4)/StepSize); //how much memory to allocate for the max size outputhistory
 
 const int N = 3;
@@ -249,7 +252,6 @@ int main (int argc, const char* argv[])
 
             if (left && (dist < return_tolerance)){
                 returned = true;
-                left = false;
             }
         }
         //calculate average
@@ -276,9 +278,9 @@ int main (int argc, const char* argv[])
             }
         }
         if(cont){
-            outfile1 << Circuit.biases << " " << avg << " ";
+            outfile1 << " " << Circuit.biases << " " << avg << " ";
             //if oscillitory
-            if (returned){
+            if (left){ //changed this to be left because it allows the tolerance to have another try
                 int first_cycle_stepnum = stepnum;
                 for (int i=1;i<=3*first_cycle_stepnum;i++){
                     //run for three more cycles, to ensure 3 PD starts
@@ -305,7 +307,7 @@ int main (int argc, const char* argv[])
             TVector<double> featuresvec(1,8);
             featuresvec.FillContents(0);
             featuresvec(8) = t;
-            if (returned){
+            if (left){
                 // cout << cycle_count << " cycles" << endl;
                 BurstTimesfromOutputHist(newoutputhist,featuresvec);
                 pyl_fitness = PyloricFitFromFeatures(featuresvec);
