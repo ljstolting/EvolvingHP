@@ -16,16 +16,16 @@ using namespace std;
 // const double TransientDuration = 500; //seconds without HP
 // const double PlasticDuration1 = 5000; //seconds allowing HP to act
 // const double PlasticDuration2 = 5000; //number of seconds to wait before testing again, to make sure not relying on precise timing
-const double TestDuration = 150; //maximum number of seconds allowed to locate 3 cycles of the rhythm
+const double TestDuration = 100; //maximum number of seconds allowed to locate 3 cycles of the rhythm
 const bool HPequilibrate = false; //is HP on during the transient/equilibration period? 
-const bool HPtest = false;       //is HP on during test (shouldn't matter if platicity time constants are slow enough, *****but seems to be mattering in select cases****)
+const bool HPtest = true;       //is HP on during test (shouldn't matter if platicity time constants are slow enough, *****but seems to be mattering in select cases****)
 // const double StepSize = 0.1;
-const double StepSize = 0.05;
+const double StepSize = 0.025;
 const int TestSteps = TestDuration/StepSize; // in steps
 
 // Detection params
 const double burstthreshold = .5; //threshold that must be crossed for detecting bursts
-const double tolerance = .15; //for detecting double periodicity
+const double tolerance = 3*StepSize; //for detecting double periodicity
 
 // Evaluation params (adjust the fitness function)
 const double scaling_factor = 0.05;   //how much is awarded for each binary criteria met (changes importance relative to timing award)
@@ -115,7 +115,7 @@ void BurstTimesfromOutputHist(TMatrix<double> &OutputHistory, TVector<double> &f
 				if (OutputHistory(step+1,1)>burstthreshold){
 					LPstart = step;
 					LPstartcount ++;
-					//cout << "LPstart";
+					// cout << "LPstart: " << LPstart;
 				}
 			}
 		}
@@ -311,7 +311,7 @@ double PyloricPerformance(CTRNN &Agent)
 
 	TVector<double> features(1,8);
 	BurstTimesfromOutputHist(OutputHistory, features);
-	// cout << features << endl;
+	cout << features << endl;
 
 	fitness = PyloricFitFromFeatures(features);
 

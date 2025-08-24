@@ -34,7 +34,7 @@ const int N = 3;
 bool record_all = false;     //previously, we recorded all the averages and their pyloric fitness
                              //for later data analysis (=true), but we can turn this off (=false)
 // new mode for debugging, keep track only of the calculated circuits that are relevant to a given point in meta-parameter space
-bool audit_mode = true; 
+bool audit_mode = false; 
 
 // Input files:
 
@@ -50,7 +50,7 @@ char circuitfname[] = "../../../Specifically Evolved HP mechanisms/Every Circuit
 char dimsfname[] = "../../../avgsdimensions.dat";
 char metaparresfname[] = "../../../metaparres.dat"; //and instead only record the predicted status of the points in HP metapar space
                                              //the resolution of the evaluated points should be the same as the simulated res
-char ptofinterestfname[] = "./pt_of_interest.dat";
+char ptofinterestfname[] = "../../prediction_audit/0/pt_of_interest.dat";
 
 // Output files
 // LEGACY MODE: track average at each point
@@ -61,16 +61,16 @@ char ptofinterestfname[] = "./pt_of_interest.dat";
 // ONLINE PROCESSING MODE: track the predicted HP status at each point in HP metapar space
 //  will return two matrices of integers for each point in lattice representing numbers of pyloric
 // char out1fname[] = "./Test3DHPonPyloricSolutions/predictedADHPstatus_pyloric_39.dat";
-// //  and nonpyloric circuits around that average
+//  and nonpyloric circuits around that average
 // char out2fname[] = "./Test3DHPonPyloricSolutions/predictedADHPstatus_nonpyloric_39.dat"; 
 
 //Supercomputer
-// char out1fname[] = "./predictedADHPstatus_pyloric_39.dat";
-// char out2fname[] = "./predictedADHPstatus_nonpyloric_39.dat"; 
+char out1fname[] = "./predictedADHPstatus_pyloric_39.dat";
+char out2fname[] = "./predictedADHPstatus_nonpyloric_39.dat"; 
 
 // AUDIT MODE (supercomputer):
-char out1fname[] = "./relevant_pt_data.dat";           //biases, exact avgs, pyloric fitness, pyloric features, leftward stability
-char out2fname[] = "./relevant_pt_trajectories.dat";   //trajectories over RunDuration
+// char out1fname[] = "./relevant_pt_data.dat";           //biases, exact avgs, pyloric fitness, pyloric features, leftward stability
+// char out2fname[] = "./relevant_pt_trajectories.dat";   //trajectories over RunDuration
 double avgs_track[3201][3201][N]; //zero-indexed matrix to keep running track of averages for stability
 
 int main (int argc, const char* argv[]) 
@@ -278,7 +278,7 @@ int main (int argc, const char* argv[])
             }
         }
         if(cont){
-            outfile1 << " " << Circuit.biases << " " << avg << " ";
+            if (audit_mode){outfile1 << " " << Circuit.biases << " " << avg << " ";}
             //if oscillitory
             if (left){ //changed this to be left because it allows the tolerance to have another try
                 int first_cycle_stepnum = stepnum;
