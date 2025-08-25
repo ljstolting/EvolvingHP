@@ -9,9 +9,8 @@
 //#define PRINTOFILE
 
 // Task params
-const bool HPon = true; //HP on during the recording period?
-const double TransientDuration = 150; //Seconds with HP off
-const double PlasticDuration = 100000; //Seconds with HP running (or if HP is off, how long to record the trajectory)
+const double TransientDuration = 50; //Seconds with HP off
+const double PlasticDuration = 50000; //Seconds with HP running (or if HP is off, how long to record the trajectory)
 // const double StepSize = 0.025;
 
 // Nervous system params
@@ -29,12 +28,13 @@ const double TMIN = .1;
 const double TMAX = 2;
 // note that the bounds for the second neuron's bias will not be used if the HP file does not indicate that that bias is being regulated
 // SINGLE POINT MODE
-// const double BRlb1 = 6;   
-// const double BRub1 = 6;
-// const double BRlb2 = 0;
-// const double BRub2 = 0;
-// const double BRlb3 = 7;
-// const double BRub3 = 7;
+// const double BRlb1 = -2.06;   
+// const double BRub1 = BRlb1;
+// const double BRlb2 = -8.03;
+// const double BRub2 = BRlb2;
+// const double BRlb3 = 1.9;
+// const double BRub3 = BRlb3;
+// -2.06 -8.03 1.9
 
 // RANDOM POINTS MODE 
 const double BRlb1 = -16;   
@@ -44,37 +44,41 @@ const double BRub2 = 16;
 const double BRlb3 = -16;
 const double BRub3 = 16;
 
-const double WR = 10;
-const int num_ICs = 25;
+const double WR = 20;
+const int num_ICs = 200;
 
 // Mode
 const bool random_mode = false; //randomize in other dimensions besides HP dimensions 
 const bool taus_set = false; //in random mode, do we want the taus to be variable
 
 //Filenames
-char Nfname[] = "./Specifically Evolved HP mechanisms/Every Circuit//39/pyloriccircuit.ns";
-char HPfname[] = "./Specifically Evolved HP mechanisms/Every Circuit//39/3D2/bestind.dat";
-// char HPfname[] = "./Specifically Evolved HP mechanisms/Every Circuit//39/3D2/HP3Dfor15.dat";
+char Nfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/pyloriccircuit.ns";
+char HPfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/3D3/bestind.dat";
+// char HPfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/3D3/HP3Dfor15.dat";
 // char HPfname[] = "./bestindtest.dat";
-// char HPfname[] = "./Convenient HP Mechanisms/nullHP.dat";
+// char HPfname[] = "./Convenient HP Mechanisms/nullHP3D.dat";
 // char HPfname[] = "./Specifically Evolved HP mechanisms/Pete/2D/33/bestind.dat";
 // char Fitnessesfname[] = "./Convenient HP Mechanisms/Petefitbad.dat";
-char Fitnessesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit//39/3D2/fit_test.dat";
-// char Fitnessesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit//39/Other Plane Trajectories/fit.dat";
+char Fitnessesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/3D3/fit_HPofftest.dat";
+// char Fitnessesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/Other Plane Trajectories/fit.dat";
+// char Fitnessesfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/testfit.dat";
 // char ICsfname[] = "./Convenient HP Mechanisms/Peteicsbad.dat";
-// char ICsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit//39/Other Plane Trajectories/ics.dat";
-char ICsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit//39/3D2/ics_test.dat";
+// char ICsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/Other Plane Trajectories/ics.dat";
+char ICsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/3D3/ics_HPofftest.dat";
+// char ICsfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/testics.dat";
 // char biastrackfname[] = "./Convenient HP Mechanisms/Petebiastrackbad.dat";
-char biastrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit//39/3D2/biastrack_test.dat";
-// char biastrackfname[] = "Specifically Evolved HP mechanisms/Every Circuit/39/Other Plane Trajectories/biastrack.dat";
+char biastrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/3D3/biastrack_HPofftest.dat";
+// char biastrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/testbiastrack.dat";
+// char biastrackfname[] = "Specifically Evolved HP mechanisms/Every Circuit/1/Other Plane Trajectories/biastrack.dat";
 // char statestrackfname[] = "./Convenient HP Mechanisms/Petestatestrackbad.dat";
 // char statestrackfname[] = "./teststatestrack.dat";
-char statestrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit//39/3D2/statestrack.dat";
-// char statestrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit//39/Other Plane Trajectories/evolved.dat";
+char statestrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/3D3/statestrack.dat";
+// char statestrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/teststatestrack.dat";
+// char statestrackfname[] = "./Specifically Evolved HP mechanisms/Every Circuit/39/Other Plane Trajectories/evolved.dat";
 
-const bool trackstates =false;
-const int trackstatesinterval = 50; //Track neural outputs for every X trials
-const bool trackparams = true;
+const bool trackstates = false;
+const int trackstatesinterval = 1; //Track neural outputs for every X trials
+const bool trackparams = false;
 const int trackparamsinterval = 1; //Track biases for every X trials
 const int trackingstepinterval = 2; //make the tracking files smaller by only recording every Xth step (though all steps are integrated)
 
@@ -135,10 +139,6 @@ int main(){
     ifs >> Circuit; 
     Circuit.ShiftedRho(shiftedrho_tf);
 
-    // Set of random circuit parameters to pull from
-    TVector<double> genotype(1,CTRNNVectSize);
-    TVector<double> phenotype(1,CTRNNVectSize);
-
     // Set the proper HP parameters 
     ifstream HPifs;
     HPifs.open(HPfname);
@@ -151,8 +151,12 @@ int main(){
     // }
     Circuit.SetHPPhenotype(HPifs,StepSize,true);
 
-    cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(1) << " " << Circuit.PlasticityUB(2) << " " << Circuit.PlasticityUB(3) << endl;
-    cout << Circuit.SlidingWindow(1) << endl;
+    // cout << Circuit.PlasticityLB(1) << " " << Circuit.PlasticityLB(2) << " " << Circuit.PlasticityLB(3) << " " << Circuit.PlasticityUB(1) << " " << Circuit.PlasticityUB(2) << " " << Circuit.PlasticityUB(3) << endl;
+    // cout << Circuit.SlidingWindow(1) << endl;
+
+    // Set of random circuit parameters to pull from
+    TVector<double> genotype(1,CTRNNVectSize);
+    TVector<double> phenotype(1,CTRNNVectSize);
 
     for (int i = 0;i<num_ICs;i++){
         long randomseed = static_cast<long>(time(NULL));
@@ -213,7 +217,7 @@ int main(){
                 }
             }
         }
-
+        // cout << Circuit.biases << endl << Circuit.weights << endl;
 
         Circuit.RandomizeCircuitOutput(0.5,0.5);
         Circuit.WindowReset();
@@ -248,9 +252,26 @@ int main(){
                     statestrack << Circuit.NeuronOutput(j) << " ";
                 }
                 statestrack << endl;}
-            Circuit.EulerStep(StepSize,HPon);
+            Circuit.EulerStep(StepSize,true);
             tstep ++;
         }
+        //Adding an HP off period for testing purposes 
+        for(double t=0;t<TransientDuration;t+=StepSize){
+            if (trackparams && (i%trackparamsinterval==0) && (tstep % trackingstepinterval == 0)){
+                for(int j = 1; j<= Circuit.plasticitypars.Sum(); j++){
+                    biastrack << Circuit.ArbDParam(j) << " "; //record only the parameters that are changing throughout the run
+                }
+                biastrack << endl;
+            }
+			if (trackstates && (i%trackstatesinterval==0) && (tstep%trackingstepinterval==0)){
+                for (int j = 1; j <= Circuit.size; j++){
+                    statestrack << Circuit.NeuronOutput(j) << " ";
+                }
+                statestrack << endl;}
+            Circuit.EulerStep(StepSize,false);
+            tstep ++;
+        }
+
         if (trackparams && (i%trackparamsinterval==0)) {biastrack << endl;}
 		if (trackstates && (i%trackstatesinterval==0)) {statestrack << endl;}
 
@@ -263,9 +284,9 @@ int main(){
         } 
         ICsfile << endl << endl;
 
-        // Test for Pyloricness with HP
+        // Test for Pyloricness with or without HP (HPtest in pyloric.h file)
         // double fit = PyloricPerformance(Circuit,biastrack,statestrack);
-        double fit = PyloricPerformance(Circuit);
+        double fit = PyloricPerformance(Circuit,TransientDuration);
 
         fitnesses << fit << endl;
         // if(fit > .3){cout << "pyloric found" << endl;}
